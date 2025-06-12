@@ -1,0 +1,26 @@
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+# Docker
+docker-compose.override.yml
+
+# PHPUnit
+/phpunit.xml
+.phpunit.result.cache
+
+# IDE related files
+/.idea/
+/.vscode/
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
