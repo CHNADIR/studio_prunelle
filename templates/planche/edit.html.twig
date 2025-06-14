@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Planche{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1>Modifier la Planche</h1>
+
+        {{ include('planche/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+
+        {% if planche.imageFilename %}
+            <div class="mt-3">
+                <p>Image actuelle :</p>
+                <img src="{{ ('planches/' ~ planche.imageFilename) | imagine_filter('planche_thumbnail') }}" alt="Image actuelle de {{ planche.nom }}" style="max-width: 150px;">
+            </div>
+        {% endif %}
+
+        <div class="mt-3">
+             <a href="{{ path('app_planche_index') }}" class="btn btn-secondary">Retour à la liste</a>
+        </div>
+    </div>
+{% endblock %}

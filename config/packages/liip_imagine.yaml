@@ -1,0 +1,35 @@
+liip_imagine:
+    # configure resolvers
+    resolvers:
+        default:
+            web_path: ~ # Le cache sera généré dans public/media/cache par défaut
+
+    # Définir un loader pour les fichiers stockés en privé
+    loaders:
+        private_filesystem_loader:
+            filesystem:
+                # Chemin racine où LiipImagine cherchera les images sources pour ce loader
+                # %kernel.project_dir% se réfère à la racine de votre projet Symfony.
+                # 'var/uploads' est le répertoire où UploaderHelper stocke les images.
+                data_root: '%kernel.project_dir%/var/uploads'
+
+    filter_sets:
+        planche_thumbnail:
+            data_loader: private_filesystem_loader # Utiliser notre loader privé
+            quality: 75
+            filters:
+                thumbnail: { size: [100, 100], mode: outbound }
+        planche_medium:
+            data_loader: private_filesystem_loader # Utiliser notre loader privé
+            quality: 85
+            filters:
+                relative_resize: { widen: 400 }
+
+    # Le data_loader global n'est plus nécessaire si chaque filter_set spécifie le sien.
+    # data_loader: filesystem # Peut être commenté ou supprimé
+
+    # Le cache (images générées) est toujours dans public/media/cache par défaut.
+    # Nous allons sécuriser l'accès à ce cache via security.yaml.
+    cache: default 
+
+    driver: gd

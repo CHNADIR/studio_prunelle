@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Prises de Vue{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Liste des Prises de Vue</h1>
+        <a href="{{ path('app_prise_de_vue_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter une prise de vue
+        </a>
+    </div>
+
+    <form method="get" action="{{ path('app_prise_de_vue_index') }}" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Rechercher par photographe, école, thème, date (YYYY-MM-DD)..." value="{{ current_search|default('') }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Rechercher</button>
+            {% if current_search %}
+                <a href="{{ path('app_prise_de_vue_index') }}" class="btn btn-outline-danger" title="Effacer la recherche"><i class="bi bi-x-lg"></i></a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>{{ knp_pagination_sortable(prise_de_vues, 'ID', 'pdv.id') }}</th>
+                    <th>{{ knp_pagination_sortable(prise_de_vues, 'Date', 'pdv.date') }}</th>
+                    <th>{{ knp_pagination_sortable(prise_de_vues, 'Photographe', 'pdv.photographe') }}</th>
+                    <th>{{ knp_pagination_sortable(prise_de_vues, 'École', 'e.nom') }}</th> {# Tri sur le nom de l'école via l'alias 'e' #}
+                    <th>{{ knp_pagination_sortable(prise_de_vues, 'Thème', 'th.nom') }}</th> {# Tri sur le nom du thème via l'alias 'th' #}
+                    <th>{{ knp_pagination_sortable(prise_de_vues, 'Nb Élèves', 'pdv.nombreEleves') }}</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for prise_de_vue in prise_de_vues %}
+                <tr>
+                    <td>{{ prise_de_vue.id }}</td>
+                    <td>{{ prise_de_vue.date ? prise_de_vue.date|date('d/m/Y H:i') : '' }}</td>
+                    <td>{{ prise_de_vue.photographe }}</td>
+                    <td>{{ prise_de_vue.ecole ? prise_de_vue.ecole.nom : 'N/A' }}</td>
+                    <td>{{ prise_de_vue.theme ? prise_de_vue.theme.nom : 'N/A' }}</td>
+                    <td>{{ prise_de_vue.nombreEleves }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_prise_de_vue_show', {'id': prise_de_vue.id}) }}" class="btn btn-info" title="Voir"><i class="bi bi-eye"></i></a>
+                            <a href="{{ path('app_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center fst-italic">Aucune prise de vue trouvée.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="navigation d-flex justify-content-center mt-3">
+        {{ knp_pagination_render(prise_de_vues) }}
+    </div>
+    <div class="text-center text-muted small">
+        Affichage de {{ prise_de_vues.getTotalItemCount > 0 ? prise_de_vues.getPaginationData().firstItemNumber : 0 }}
+        à {{ prise_de_vues.getPaginationData().lastItemNumber }}
+        sur {{ prise_de_vues.getTotalItemCount }} prise(s) de vue.
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit TypePrise{% endblock %}
+
+{% block body %}
+    <h1>Edit TypePrise</h1>
+
+    {{ include('type_prise/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_type_prise_index') }}">back to list</a>
+
+    {{ include('type_prise/_delete_form.html.twig') }}
+{% endblock %}

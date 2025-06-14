@@ -1,0 +1,7 @@
+{{ form_start(form) }}
+    {{ form_widget(form) }}
+    <button type="submit" class="btn btn-primary mt-3">
+        {# Utilise le button_label passé ou une clé de traduction par défaut #}
+        {{ button_label|default('form.button.save'|trans) }}
+    </button>
+{{ form_end(form) }}

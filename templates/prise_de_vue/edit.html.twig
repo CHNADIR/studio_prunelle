@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit PriseDeVue{% endblock %}
+
+{% block body %}
+    <h1>Edit PriseDeVue</h1>
+
+    {{ include('prise_de_vue/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_prise_de_vue_index') }}">back to list</a>
+
+    {{ include('prise_de_vue/_delete_form.html.twig') }}
+{% endblock %}

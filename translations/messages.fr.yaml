@@ -1,0 +1,11 @@
+# translations/messages.fr.yaml
+ecole.new.title: "Créer une nouvelle école"
+ecole.new.page_title: "Nouvelle École"
+link.back_to_list: "Retour à la liste"
+form.button.save: "Sauvegarder"
+form.button.create: "Créer"
+form.button.update: "Mettre à jour"
+# Ajoutez d'autres traductions générales ici si nécessaire
+
+prise_de_vue.new.page_title: "Nouvelle Prise de Vue"
+prise_de_vue.new.title: "Créer une nouvelle prise de vue"

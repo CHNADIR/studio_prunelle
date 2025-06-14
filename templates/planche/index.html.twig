@@ -1,0 +1,74 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Planches{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Liste des Planches</h1>
+        <a href="{{ path('app_planche_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter une planche
+        </a>
+    </div>
+
+    <form method="get" action="{{ path('app_planche_index') }}" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Rechercher par nom, catégorie..." value="{{ current_search|default('') }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Rechercher</button>
+            {% if current_search %}
+                <a href="{{ path('app_planche_index') }}" class="btn btn-outline-danger" title="Effacer la recherche"><i class="bi bi-x-lg"></i></a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>{{ knp_pagination_sortable(planches, 'ID', 'p.id') }}</th>
+                    <th>{{ knp_pagination_sortable(planches, 'Nom', 'p.nom') }}</th>
+                    <th>{{ knp_pagination_sortable(planches, 'Catégorie', 'p.categorie') }}</th>
+                    <th>Image</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for planche in planches %}
+                <tr>
+                    <td>{{ planche.id }}</td>
+                    <td>{{ planche.nom }}</td>
+                    <td>{{ planche.categorie }}</td>
+                    <td>
+                        {% if planche.imageFilename %}
+                            {# Le chemin est 'planches/' suivi du nom de fichier, relatif au data_root de LiipImagine #}
+                            <img src="{{ ('planches/' ~ planche.imageFilename) | imagine_filter('planche_thumbnail') }}" alt="{{ planche.nom }}" style="max-width: 50px; max-height: 50px;">
+                        {% else %}
+                            <span class="text-muted fst-italic">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_planche_show', {'id': planche.id}) }}" class="btn btn-info" title="Voir"><i class="bi bi-eye"></i></a>
+                            <a href="{{ path('app_planche_edit', {'id': planche.id}) }}" class="btn btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center fst-italic">Aucune planche trouvée.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="navigation d-flex justify-content-center mt-3">
+        {{ knp_pagination_render(planches) }}
+    </div>
+    <div class="text-center text-muted small">
+        Affichage de {{ planches.getTotalItemCount > 0 ? planches.getPaginationData().firstItemNumber : 0 }}
+        à {{ planches.getPaginationData().lastItemNumber }}
+        sur {{ planches.getTotalItemCount }} planche(s).
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil - {{ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="jumbotron">
+        <h1 class="display-4">Bienvenue sur Studio Prunelle</h1>
+        <p class="lead">Système de gestion des prises de vue pour écoles</p>
+        <hr class="my-4">
+        <p>Utilisez la navigation ci-dessus pour accéder aux différentes sections</p>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">Écoles</div>
+                <div class="card-body">
+                    <p>Gérer les écoles clientes</p>
+                    <a href="{{ path('app_ecole_index') }}" class="btn btn-primary">Voir les écoles</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">Prises de vue</div>
+                <div class="card-body">
+                    <p>Gérer les séances photo</p>
+                    <a href="{{ path('app_prise_de_vue_index') }}" class="btn btn-primary">Voir les prises de vue</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">Référentiels</div>
+                <div class="card-body">
+                    <p>Gérer les données de référence</p>
+                    <a href="{{ path('app_theme_index') }}" class="btn btn-primary">Voir les thèmes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Informations générales</div>
+                <div class="card-body">
+                    {{ form_row(form.date) }}
+                    {{ form_row(form.photographe) }}
+                    {{ form_row(form.ecole) }}
+                    {{ form_row(form.typePrise) }}
+                    {{ form_row(form.theme) }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Détails de la séance</div>
+                <div class="card-body">
+                    {{ form_row(form.nombreEleves) }}
+                    {{ form_row(form.nombreClasses) }}
+                    {{ form_row(form.typeVente) }}
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">Tarification</div>
+                <div class="card-body">
+                    {{ form_row(form.prixEcole) }}
+                    {{ form_row(form.prixParent) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">Planches sélectionnées</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Planches individuelles</h5>
+                    {{ form_widget(form.planchesIndividuel) }}
+                </div>
+                <div class="col-md-6">
+                    <h5>Planches fratrie</h5>
+                    {{ form_widget(form.planchesFratrie) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        {{ form_row(form.commentaire) }}
+    </div>
+
+    <button class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+{{ form_end(form) }}

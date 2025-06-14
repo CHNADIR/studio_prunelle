@@ -1,0 +1,108 @@
+security:
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    providers:
+        # used to reload user from session & other features (e.g. switch_user)
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            provider: app_user_provider
+            # Configuration du formulaire de connexion
+            form_login:
+                login_path: app_login # Nom de la route pour la page de connexion
+                check_path: app_login # Nom de la route pour la soumission du formulaire de connexion
+                username_parameter: email # AJOUTEZ CETTE LIGNE
+                password_parameter: password # AJOUTEZ OU VÉRIFIEZ CETTE LIGNE
+                default_target_path: app_home # Route de redirection après connexion réussie
+                enable_csrf: true
+            # Configuration de la déconnexion
+            logout:
+                path: app_logout # Nom de la route pour la déconnexion
+                # target: app_any_route # Décommentez et configurez si vous voulez une redirection spécifique après la déconnexion
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#the-firewall
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+
+    # Hiérarchie des rôles : ROLE_ADMIN hérite des permissions de ROLE_USER
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER
+
+    access_control:
+        # Sécuriser l'accès au contrôleur d'images originales (si utilisé)
+        - { path: ^/secure-files, roles: ROLE_USER } # Ou un rôle plus spécifique
+
+        # Sécuriser l'accès au cache de LiipImagineBundle
+        # Cette règle doit être placée AVANT des règles plus générales comme ^/
+        # et après des règles plus spécifiques comme ^/(_(profiler|wdt)|css|images|js)/
+        - { path: ^/media/cache, roles: ROLE_USER } # Exige au moins ROLE_USER pour accéder aux images générées
+
+        # Règles pour l'administrateur (ROLE_ADMIN)
+        # Gestion des utilisateurs (inscription par l'admin) - Предполагаемый путь /admin/user
+        - { path: ^/admin/user/new, roles: ROLE_ADMIN }
+        - { path: ^/admin/user/\d+/edit, roles: ROLE_ADMIN } # Si l'admin peut modifier les utilisateurs
+        - { path: ^/admin/user/\d+$, methods: [POST], roles: ROLE_ADMIN } # Si l'admin peut supprimer des utilisateurs
+        - { path: ^/admin/user, roles: ROLE_ADMIN } # Liste des utilisateurs pour l'admin
+
+        # Opérations de création, modification, suppression (CUD) pour les entités par ROLE_ADMIN
+        # Ecole
+        - { path: ^/ecole/new, roles: ROLE_ADMIN }
+        - { path: ^/ecole/\d+/edit, roles: ROLE_ADMIN }
+        - { path: ^/ecole/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+
+        # PriseDeVue
+        - { path: ^/prise/de/vue/new, roles: ROLE_ADMIN }
+        - { path: ^/prise/de/vue/\d+/edit, roles: ROLE_ADMIN }
+        - { path: ^/prise/de/vue/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+        - { path: ^/prise/de/vue, roles: ROLE_USER }  # Couvre index et show
+
+        # Référentiels (Theme, TypePrise, TypeVente, Planche) - CUD par ROLE_ADMIN
+        # Le cahier des charges indique "d'autre [...] peuvent être rajoutée par un utilisateur du système".
+        # Par sécurité et cohérence avec la gestion des utilisateurs par l'admin,
+        # nous attribuons la gestion des référentiels à ROLE_ADMIN.
+        # Si "utilisateur du système" signifie ROLE_USER, ces règles devront être adaptées.
+        - { path: ^/theme/new, roles: ROLE_ADMIN }
+        - { path: ^/theme/\d+/edit, roles: ROLE_ADMIN }
+        - { path: ^/theme/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+
+        - { path: ^/type/prise/new, roles: ROLE_ADMIN }
+        - { path: ^/type/prise/\d+/edit, roles: ROLE_ADMIN }
+        - { path: ^/type/prise/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+
+        - { path: ^/type/vente/new, roles: ROLE_ADMIN }
+        - { path: ^/type/vente/\d+/edit, roles: ROLE_ADMIN }
+        - { path: ^/type/vente/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+
+        - { path: ^/planche/new, roles: ROLE_ADMIN }
+        - { path: ^/planche/\d+/edit, roles: ROLE_ADMIN }
+        - { path: ^/planche/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+        - { path: ^/planche, roles: ROLE_USER }       # Couvre index et show
+
+        # Page d'accueil (accessible aux utilisateurs connectés)
+        - { path: ^/$, roles: ROLE_USER } # En supposant que app_home est à la racine '/'
+
+        # La page de connexion (définie par login_path) est implicitement accessible
+        # aux utilisateurs non authentifiés (IS_AUTHENTICATED_ANONYMOUSLY).
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon

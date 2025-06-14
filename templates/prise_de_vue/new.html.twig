@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'prise_de_vue.new.page_title'|trans }}{% endblock %}
+
+{% block body %}
+    <h1>{{ 'prise_de_vue.new.title'|trans }}</h1>
+
+    {# Si vous voulez un bouton "Créer" spécifiquement ici, passez le label #}
+    {# Sinon, le _form.html.twig utilisera son label par défaut (probablement "Sauvegarder") #}
+    {{ include('prise_de_vue/_form.html.twig', {'button_label': 'form.button.create'|trans }) }}
+
+    <a href="{{ path('app_prise_de_vue_index') }}">{{ 'link.back_to_list'|trans }}</a>
+{% endblock %}

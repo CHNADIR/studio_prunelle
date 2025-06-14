@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Types de Vente{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Liste des Types de Vente</h1>
+        <a href="{{ path('app_type_vente_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter un type de vente
+        </a>
+    </div>
+
+    <form method="get" action="{{ path('app_type_vente_index') }}" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Rechercher par nom..." value="{{ current_search|default('') }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Rechercher</button>
+            {% if current_search %}
+                <a href="{{ path('app_type_vente_index') }}" class="btn btn-outline-danger" title="Effacer la recherche"><i class="bi bi-x-lg"></i></a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>{{ knp_pagination_sortable(type_ventes, 'ID', 'tv.id') }}</th>
+                    <th>{{ knp_pagination_sortable(type_ventes, 'Nom', 'tv.nom') }}</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for type_vente in type_ventes %}
+                <tr>
+                    <td>{{ type_vente.id }}</td>
+                    <td>{{ type_vente.nom }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_type_vente_show', {'id': type_vente.id}) }}" class="btn btn-info" title="Voir"><i class="bi bi-eye"></i></a>
+                            <a href="{{ path('app_type_vente_edit', {'id': type_vente.id}) }}" class="btn btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3" class="text-center fst-italic">Aucun type de vente trouvé.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="navigation d-flex justify-content-center mt-3">
+        {{ knp_pagination_render(type_ventes) }}
+    </div>
+    <div class="text-center text-muted small">
+        Affichage de {{ type_ventes.getTotalItemCount > 0 ? type_ventes.getPaginationData().firstItemNumber : 0 }}
+        à {{ type_ventes.getPaginationData().lastItemNumber }}
+        sur {{ type_ventes.getTotalItemCount }} type(s) de vente.
+    </div>
+</div>
+{% endblock %}

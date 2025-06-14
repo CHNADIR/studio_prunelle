@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'ecole.new.page_title'|trans }}{% endblock %}
+
+{% block body %}
+    <h1>{{ 'ecole.new.title'|trans }}</h1>
+
+    {{ include('ecole/_form.html.twig', { 'button_label': 'form.button.create'|trans }) }} {# Suggestion: passer un label traduisible #}
+
+    <a href="{{ path('app_ecole_index') }}">{{ 'link.back_to_list'|trans }}</a>
+{% endblock %}

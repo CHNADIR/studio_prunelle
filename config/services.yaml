@@ -20,5 +20,16 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    # configure services manually - add your service configuration here
+    App\Service\UploaderHelper:
+        arguments:
+            $kernelProjectDir: '%kernel.project_dir%'
+            # Les autres arguments (SluggerInterface, Filesystem, LoggerInterface)
+            # devraient être autowirés correctement car ce sont des services.
+            # Si vous rencontrez des problèmes avec eux, vous pouvez aussi les lister ici.
+            # $slugger: '@Symfony\Component\String\Slugger\SluggerInterface' # Exemple si autowiring échoue
+            # $filesystem: '@Symfony\Component\Filesystem\Filesystem'       # Exemple si autowiring échoue
+            # $logger: '@Psr\Log\LoggerInterface'                           # Exemple si autowiring échoue
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

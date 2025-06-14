@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des écoles{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Liste des écoles</h1>
+            <a href="{{ path('app_ecole_new') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ajouter une école
+            </a>
+        </div>
+
+        {# Formulaire de recherche simple #}
+        <form method="get" action="{{ path('app_ecole_index') }}" class="mb-3">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher par nom, ville, code..." value="{{ current_search|default('') }}">
+                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Rechercher</button>
+                 {% if current_search %}
+                    <a href="{{ path('app_ecole_index') }}" class="btn btn-outline-danger" title="Effacer la recherche"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        {# knp_pagination_sortable(paginationObject, 'Titre Affiche', 'champ.entite') #}
+                        <th>{{ knp_pagination_sortable(ecoles, 'Code', 'e.code') }}</th>
+                        <th>{{ knp_pagination_sortable(ecoles, 'Nom', 'e.nom') }}</th>
+                        <th>{{ knp_pagination_sortable(ecoles, 'Ville', 'e.ville') }}</th>
+                        <th>{{ knp_pagination_sortable(ecoles, 'C. Postal', 'e.codePostal') }}</th>
+                        <th>Téléphone</th>
+                        <th>{{ knp_pagination_sortable(ecoles, 'Statut', 'e.active') }}</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for ecole in ecoles %} {# ecoles est maintenant l'objet de pagination #}
+                    <tr>
+                        <td>{{ ecole.code }}</td>
+                        <td>{{ ecole.nom }}</td>
+                        <td>{{ ecole.ville }}</td>
+                        <td>{{ ecole.codePostal }}</td>
+                        <td>{{ ecole.telephone }}</td>
+                        <td>
+                            <span class="badge {{ ecole.active ? 'bg-success' : 'bg-danger' }}">
+                                {{ ecole.active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ path('app_ecole_show', {'id': ecole.id}) }}" class="btn btn-info" title="Voir"><i class="bi bi-eye"></i></a>
+                                <a href="{{ path('app_ecole_edit', {'id': ecole.id}) }}" class="btn btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                {# Le formulaire de suppression est généralement séparé pour la sécurité CSRF #}
+                                {# Vous pouvez inclure le _delete_form.html.twig ici si vous le souhaitez, ou un lien vers une page de confirmation #}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center fst-italic">Aucune école trouvée.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Affichage des contrôles de pagination #}
+        <div class="navigation d-flex justify-content-center mt-3">
+            {{ knp_pagination_render(ecoles) }}
+        </div>
+        <div class="text-center text-muted small">
+            Affichage de {{ ecoles.getTotalItemCount > 0 ? ecoles.getPaginationData().firstItemNumber : 0 }}
+            à {{ ecoles.getPaginationData().lastItemNumber }}
+            sur {{ ecoles.getTotalItemCount }} école(s).
+        </div>
+    </div>
+{% endblock %}
