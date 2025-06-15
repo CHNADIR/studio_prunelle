@@ -1,7 +1,17 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button type="submit" class="btn btn-primary mt-3">
-        {# Utilise le button_label passé ou une clé de traduction par défaut #}
-        {{ button_label|default('form.button.save'|trans) }}
-    </button>
+    {{ form_errors(form) }}
+
+    {{ form_row(form.code) }}
+    {{ form_row(form.genre) }}
+    {{ form_row(form.nom) }}
+    {{ form_row(form.rue) }}
+    {{ form_row(form.ville) }}
+    {{ form_row(form.codePostal) }}
+    {{ form_row(form.telephone) }}
+    {{ form_row(form.email) }}
+    {{ form_row(form.active) }}
+    {# Si vous avez ajouté tamponEcole et qu'il est dans le formulaire : #}
+    {# {{ form_row(form.tamponEcole) }} #}
+
+    <button type="submit" class="btn btn-primary mt-3">{{ button_label|default('form.button.save'|trans) }}</button>
 {{ form_end(form) }}

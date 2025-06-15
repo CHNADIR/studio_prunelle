@@ -17,103 +17,166 @@ Studio Prunelle est une application web dédiée à la gestion des prises de vue
 - Gestion sécurisée des images uploadées
 - Interface de recherche et filtrage des données
 
-## Prérequis
+## Prérequis pour l'environnement Docker (Recommandé)
 
-- PHP 8.2 ou supérieur
-- MySQL 8.0 ou supérieur
-- Composer
-- Symfony CLI
-- Node.js et NPM (pour les assets)
-- Xdebug (pour les rapports de couverture de code)
+- Docker
+- Docker Compose
 
-## Installation
+## Installation et Lancement avec Docker (Recommandé)
 
-```bash
-# Cloner le dépôt
-git clone git@github.com:votre-compte/studio_prunelle.git
-cd studio_prunelle
+1.  **Cloner le projet :**
+    ```bash
+    git clone git@github.com:votre-compte/studio_prunelle.git # Remplacez par l'URL de votre dépôt
+    cd studio_prunelle
+    ```
 
-# Installer les dépendances
-composer install
-npm install
+2.  **(Optionnel) Configuration locale spécifique :**
+    Si vous avez besoin de surcharger des variables d'environnement spécifiques pour votre poste (non recommandé si vous utilisez la configuration Docker fournie), vous pouvez créer un fichier `.env.local`. Ce fichier n'est pas versionné.
+    ```bash
+    cp .env .env.local # Par exemple, puis modifiez .env.local
+    ```
+    *Note : Pour l'environnement Docker, les variables d'environnement clés comme `DATABASE_URL` et `APP_SECRET` sont déjà configurées dans `docker-compose.yml`.*
 
-# Configurer la base de données dans [.env.local](http://_vscodecontentref_/0)
-# DATABASE_URL=mysql://user:password@127.0.0.1:3306/studio_prunelle
+3.  **Construire les images Docker :**
+    (Surtout nécessaire après des modifications du `Dockerfile` ou la première fois)
+    ```bash
+    docker-compose build
+    ```
 
-# Créer la base de données et exécuter les migrations
-php bin/console doctrine:database:create
-php bin/console doctrine:migrations:migrate
+4.  **Démarrer les services Docker :**
+    ```bash
+    docker-compose up -d
+    ```
+    Cela démarrera les conteneurs pour l'application PHP, le serveur web Nginx, la base de données MySQL et PhpMyAdmin.
 
-# Charger les fixtures pour les données de test
-php bin/console doctrine:fixtures:load
+5.  **Installer les dépendances Composer (si non fait par le build ou pour mettre à jour) :**
+    Normalement, `composer install` est exécuté lors du `docker-compose build`. Si vous avez besoin de le relancer :
+    ```bash
+    docker-compose exec app composer install
+    ```
 
-# Compiler les assets
-npm run build
+6.  **Exécuter les migrations de la base de données :**
+    ```bash
+    docker-compose exec app php bin/console doctrine:migrations:migrate
+    ```
+    Répondez `yes` si une confirmation est demandée.
 
-# Démarrer le serveur de développement
-symfony server:start
+7.  **(Optionnel) Charger les données de test (fixtures) :**
+    ```bash
+    docker-compose exec app php bin/console doctrine:fixtures:load
+    ```
+    Répondez `yes` si une confirmation est demandée.
 
-# Démarrer les services Docker
-docker-compose up -d
-# Lance les conteneurs définis dans docker-compose.yml (comme MySQL, PHPMyAdmin)
+8.  **Accéder à l'application :**
+    *   Application Studio Prunelle : [http://localhost:8000](http://localhost:8000)
+    *   PhpMyAdmin (gestion base de données) : [http://localhost:8081](http://localhost:8081)
+        *   Serveur : `db`
+        *   Utilisateur (root) : `root` / Mot de passe : `secret`
+        *   Utilisateur (applicatif) : `user_prunelle` / Mot de passe : `password_prunelle`
 
-# Arrêter les services Docker
-docker-compose down
-# Arrête les conteneurs actifs
+## Commandes Docker courantes
 
-# Installer des extensions PHP nécessaires
-sudo apt install php8.2-mbstring
-sudo apt install php8.2-xml
-sudo apt install php8.2-xdebug
-# Installation des extensions PHP requises pour les tests et la couverture de code
+*   **Arrêter les services :**
+    ```bash
+    docker-compose down
+    ```
+*   **Voir les logs d'un service (ex: app) :**
+    ```bash
+    docker-compose logs -f app
+    ```
+*   **Exécuter une commande dans le conteneur `app` (ex: tests PHPUnit) :**
+    ```bash
+    docker-compose exec app php vendor/bin/phpunit
+    ```
+*   **Exécuter une commande Symfony console :**
+    ```bash
+    docker-compose exec app php bin/console <votre_commande>
+    ```
+    Exemple : `docker-compose exec app php bin/console cache:clear`
 
-# Activer une extension PHP
-sudo phpenmod -v 8.2 mbstring
-# Active l'extension mbstring pour PHP 8.2 spécifiquement
-````
+*   **Reconstruire une image spécifique (ex: app) :**
+    ```bash
+    docker-compose build app
+    ```
 
-# Exécuter tous les tests
-php bin/phpunit
-# Lance l'exécution de tous les tests définis dans phpunit.dist.xml
+## Développement des assets (JavaScript/CSS)
 
-# Exécuter les tests d'une suite spécifique
-php bin/phpunit --testsuite Unit
-# Lance uniquement les tests de la suite "Unit"
+Les assets sont gérés avec Webpack Encore.
+*   **Pour compiler les assets pour le développement :**
+    ```bash
+    docker-compose exec app npm run dev
+    ```
+*   **Pour surveiller les changements et recompiler automatiquement :**
+    ```bash
+    docker-compose exec app npm run watch
+    ```
+*   **Pour compiler les assets pour la production (fait lors du `docker-compose build`) :**
+    ```bash
+    docker-compose exec app npm run build
+    ```
 
-# Exécuter les tests d'un fichier spécifique
-php bin/phpunit tests/Unit/Service/UploaderHelperTest.php
-# Lance uniquement les tests contenus dans UploaderHelperTest.php
+---
 
-# Exécuter les tests d'un repository spécifique
-php bin/phpunit tests/Unit/Repository/PriseDeVueRepositoryTest.php
-# Lance uniquement les tests du repository PriseDeVue
+## Installation Manuelle (Sans Docker - Moins Recommandé pour la collaboration)
 
-# Générer un rapport TestDox HTML
-php bin/phpunit --testdox-html=docs/testdox.html
-# Génère une documentation HTML à partir des noms des méthodes de test
+Si vous ne souhaitez pas utiliser Docker, vous pouvez suivre ces étapes (assurez-vous d'avoir PHP, Composer, Node.js, NPM et un serveur MySQL configurés localement).
 
-# Générer un rapport de couverture de code HTML
-php bin/phpunit --coverage-html=var/coverage-report
-# Génère un rapport détaillé de la couverture de code en format HTML
+- **Prérequis locaux :**
+    - PHP 8.2 ou supérieur (avec extensions `pdo_mysql`, `intl`, `zip`, `gd`, `opcache`, `mbstring`, `xml`, `exif`, `bcmath`, `sockets`)
+    - MySQL 8.0 ou supérieur
+    - Composer
+    - Symfony CLI (optionnel, pour `symfony server:start`)
+    - Node.js et NPM
 
-# Création de la base de données de test
-php bin/console doctrine:schema:update --env=test --force
-# Met à jour le schéma de base de données de test à partir des entités Doctrine
+- **Étapes :**
+    ```bash
+    # 1. Cloner le dépôt (si pas déjà fait)
+    # git clone ...
+    # cd studio_prunelle
 
-# Exécution du serveur de développement
-symfony server:start
-# Démarre le serveur web local de Symfony pour tester l'application
+    # 2. Configurer .env.local
+    cp .env .env.local
+    # Modifiez .env.local pour y mettre votre DATABASE_URL locale, par exemple :
+    # DATABASE_URL="mysql://root:votre_mot_de_passe_mysql@127.0.0.1:3306/prunelle?serverVersion=8.4&charset=utf8mb4"
 
-# Vérifier la version de PHP
-php --version
-# Affiche la version de PHP utilisée
+    # 3. Installer les dépendances PHP
+    composer install
 
-# Lister les extensions PHP installées
-php -m
-# Affiche toutes les extensions PHP actuellement chargées
+    # 4. Installer les dépendances Node.js
+    npm install
 
-# Vérifier la présence d'une extension spécifique
-php -m | grep xdebug
-# Vérifie si l'extension Xdebug est installée et active
-````
+    # 5. Créer la base de données (si elle n'existe pas)
+    php bin/console doctrine:database:create
+
+    # 6. Exécuter les migrations
+    php bin/console doctrine:migrations:migrate
+
+    # 7. (Optionnel) Charger les fixtures
+    php bin/console doctrine:fixtures:load
+
+    # 8. Compiler les assets
+    npm run build # ou npm run dev / npm run watch
+
+    # 9. Démarrer le serveur de développement Symfony
+    symfony server:start
+    # Ou utilisez votre configuration Apache/Nginx locale.
+    ```
+
+## Tests
+
+Les commandes de test suivantes peuvent être exécutées localement ou via Docker (`docker-compose exec app ...`).
+
+*   **Exécuter tous les tests :**
+    ```bash
+    php vendor/bin/phpunit
+    ```
+*   **Exécuter les tests d'une suite spécifique :**
+    ```bash
+    php vendor/bin/phpunit --testsuite Unit
+    ```
+*   **Générer un rapport de couverture de code HTML :**
+    ```bash
+    php vendor/bin/phpunit --coverage-html=var/coverage-report
+    ```
+    (Assurez-vous que Xdebug est configuré pour la couverture si vous exécutez localement).
 

@@ -90,6 +90,18 @@ class PriseDeVue
     #[Assert\Length(max: 5000, maxMessage: "Le commentaire ne doit pas dépasser {{ limit }} caractères.")]
     private ?string $commentaire = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $frequence = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $baseDeDonneeUtilisee = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $jourDecharge = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $endroitInstallation = null;
+
     public function __construct()
     {
         $this->planchesIndividuel = new ArrayCollection();
@@ -277,6 +289,54 @@ class PriseDeVue
     public function setCommentaire(?string $commentaire): static
     {
         $this->commentaire = $commentaire;
+
+        return $this;
+    }
+
+    public function getFrequence(): ?string
+    {
+        return $this->frequence;
+    }
+
+    public function setFrequence(?string $frequence): static
+    {
+        $this->frequence = $frequence;
+
+        return $this;
+    }
+
+    public function getBaseDeDonneeUtilisee(): ?string
+    {
+        return $this->baseDeDonneeUtilisee;
+    }
+
+    public function setBaseDeDonneeUtilisee(?string $baseDeDonneeUtilisee): static
+    {
+        $this->baseDeDonneeUtilisee = $baseDeDonneeUtilisee;
+
+        return $this;
+    }
+
+    public function getJourDecharge(): ?string
+    {
+        return $this->jourDecharge;
+    }
+
+    public function setJourDecharge(?string $jourDecharge): static
+    {
+        $this->jourDecharge = $jourDecharge;
+
+        return $this;
+    }
+
+    public function getEndroitInstallation(): ?string
+    {
+        return $this->endroitInstallation;
+    }
+
+    public function setEndroitInstallation(?string $endroitInstallation): static
+    {
+        $this->endroitInstallation = $endroitInstallation;
 
         return $this;
     }

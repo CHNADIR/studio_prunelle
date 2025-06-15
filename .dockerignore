@@ -1,0 +1,57 @@
+### Git ###
+.git
+.gitignore
+
+### Docker ###
+.dockerignore
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+docker/
+
+### Dependencies (installed in Dockerfile) ###
+vendor/
+node_modules/
+
+### Build artifacts (created in Dockerfile) ###
+public/build/
+
+### Symfony runtime data (managed by Dockerfile/volumes) ###
+var/
+# If you had specific files in var/ you wanted to COPY, you could use !var/somefile
+# But for cache, logs, and volume-managed uploads, ignoring var/ is best.
+
+### Local Environment Files (use environment in docker-compose.yml) ###
+.env
+.env.local
+.env.*.local
+# If you have a .env.dist and your Dockerfile copies it, then:
+# !.env.dist
+
+### Tests & Documentation (if not needed in the final image) ###
+tests/
+docs/
+phpunit.xml
+phpunit.dist.xml
+.phpunit.result.cache
+.phpunit.cache/
+
+### IDE & OS Files ###
+.idea/
+.vscode/
+*.sublime*
+.DS_Store
+Thumbs.db
+
+### Project Files (not needed in the app image) ###
+README.md
+# webpack.config.js # Needed by node_builder stage
+# assets/           # Needed by node_builder stage
+# package.json      # Needed by node_builder stage
+# composer.json     # Needed by PHP stage
+# composer.lock     # Needed by PHP stage
+# symfony.lock      # Needed by PHP stage
+
+### Logs ###
+npm-debug.log
+yarn-error.log

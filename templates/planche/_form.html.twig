@@ -1,4 +1,10 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+    {{ form_errors(form) }}
+
+    {{ form_row(form.nom) }}
+    {{ form_row(form.categorie) }}
+    {{ form_row(form.descriptionContenu) }}
+    {{ form_row(form.imageFile) }}
+
+    <button type="submit" class="btn btn-primary mt-3">{{ button_label|default('form.button.save'|trans) }}</button>
 {{ form_end(form) }}

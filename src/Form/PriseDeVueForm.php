@@ -108,6 +108,26 @@ class PriseDeVueForm extends AbstractType
                 'required' => false,
                 'attr' => ['rows' => 4],
             ])
+            ->add('frequence', TextType::class, [
+                'label' => 'Fréquence',
+                'required' => false,
+                'attr' => ['placeholder' => 'Ex: Annuelle, Ponctuelle']
+            ])
+            ->add('baseDeDonneeUtilisee', TextType::class, [ // Peut-être un ChoiceType si les options sont fixes
+                'label' => 'Base de données utilisée',
+                'required' => false,
+                'attr' => ['placeholder' => 'Ex: Oui, Non, Partielle']
+            ])
+            ->add('jourDecharge', TextType::class, [
+                'label' => 'Jour de décharge',
+                'required' => false,
+                'attr' => ['placeholder' => 'Ex: Lundi Matin']
+            ])
+            ->add('endroitInstallation', TextType::class, [
+                'label' => 'Endroit de l\'installation',
+                'required' => false,
+                'attr' => ['placeholder' => 'Ex: Préau, Salle polyvalente']
+            ])
         ;
     }
 

@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Planche;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType; // Ajoutez cette ligne
+use Symfony\Component\Form\Extension\Core\Type\TextareaType; // Ajoutez cette ligne
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -22,6 +23,14 @@ class PlancheForm extends AbstractType
             ->add('categorie', TextType::class, [
                 'label' => 'Catégorie',
                 'attr' => ['placeholder' => 'Ex: individuel, fratrie, groupe classe']
+            ])
+            ->add('descriptionContenu', TextareaType::class, [
+                'label' => 'Description du contenu',
+                'required' => false,
+                'attr' => [
+                    'rows' => 3,
+                    'placeholder' => 'Ex: 1 page souvenir, 1 portrait 10x15, 4 photos d\'identité...'
+                ]
             ])
             ->add('imageFile', FileType::class, [
                 'label' => 'Image de la planche (JPG, PNG)',

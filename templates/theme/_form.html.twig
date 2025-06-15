@@ -1,4 +1,8 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+    {{ form_errors(form) }} {# Affiche les erreurs globales du formulaire #}
+
+    {{ form_row(form.nom) }} {# Adaptez 'nom' si le champ principal a un autre nom #}
+    {# Ajoutez d'autres form_row(form.autreChamp) si nécessaire #}
+
+    <button type="submit" class="btn btn-primary mt-3">{{ button_label|default('form.button.save'|trans) }}</button>
 {{ form_end(form) }}

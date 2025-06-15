@@ -1,11 +1,14 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Planche{% endblock %}
+{% block title %}{{ 'planche.new.page_title'|trans }}{% endblock %} {# Adaptez la clé de traduction #}
 
 {% block body %}
-    <h1>Create new Planche</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ 'planche.new.title'|trans }}</h1> {# Adaptez la clé de traduction #}
+        <a href="{{ path('app_planche_index') }}" class="btn btn-outline-secondary"> {# Adaptez la route #}
+            <i class="bi bi-arrow-left"></i> {{ 'link.back_to_list'|trans }}
+        </a>
+    </div>
 
-    {{ include('planche/_form.html.twig') }}
-
-    <a href="{{ path('app_planche_index') }}">back to list</a>
+    {{ include('planche/_form.html.twig', {'button_label': 'form.button.create'|trans }) }} {# Adaptez le chemin du template _form #}
 {% endblock %}

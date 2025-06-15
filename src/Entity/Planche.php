@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\PlancheRepository;
+use Doctrine\DBAL\Types\Types; // Assurez-vous que cette ligne est présente
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -23,6 +24,9 @@ class Planche
     #[Assert\NotBlank(message: "La catégorie ne peut pas être vide.")]
     #[Assert\Length(max: 20, maxMessage: "La catégorie ne doit pas dépasser {{ limit }} caractères.")]
     private ?string $categorie = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $descriptionContenu = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $imageFilename = null;
@@ -64,6 +68,18 @@ class Planche
     public function setImageFilename(?string $imageFilename): static
     {
         $this->imageFilename = $imageFilename;
+
+        return $this;
+    }
+
+    public function getDescriptionContenu(): ?string
+    {
+        return $this->descriptionContenu;
+    }
+
+    public function setDescriptionContenu(?string $descriptionContenu): static
+    {
+        $this->descriptionContenu = $descriptionContenu;
 
         return $this;
     }

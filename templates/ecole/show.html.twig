@@ -82,7 +82,12 @@
                                         <td>
                                             {% if pdv.planchesIndividuel is not empty %}
                                                 {% for planche in pdv.planchesIndividuel %} 
-                                                    <span class="badge bg-secondary">{{ planche.nom }}</span>
+                                                    <span class="badge bg-secondary" title="{{ planche.descriptionContenu|default('') }}">
+                                                        {{ planche.nom }}
+                                                        {% if planche.descriptionContenu %}
+                                                            <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ planche.descriptionContenu }}"></i>
+                                                        {% endif %}
+                                                    </span>
                                                 {% endfor %}
                                             {% else %}
                                                 N/A
@@ -91,7 +96,12 @@
                                         <td>
                                             {% if pdv.planchesFratrie is not empty %}
                                                 {% for planche in pdv.planchesFratrie %}
-                                                    <span class="badge bg-info text-dark">{{ planche.nom }}</span>
+                                                    <span class="badge bg-info text-dark" title="{{ planche.descriptionContenu|default('') }}">
+                                                        {{ planche.nom }}
+                                                        {% if planche.descriptionContenu %}
+                                                            <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ planche.descriptionContenu }}"></i>
+                                                        {% endif %}
+                                                    </span>
                                                 {% endfor %}
                                             {% else %}
                                                 N/A

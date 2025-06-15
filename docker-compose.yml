@@ -7,10 +7,52 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_DATABASE: prunelle
+      MYSQL_USER: user_prunelle # Ajout d'un utilisateur spécifique pour l'application
+      MYSQL_PASSWORD: password_prunelle # Mot de passe pour cet utilisateur
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql # Pour créer l'utilisateur et accorder les droits
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: # Optionnel: pour correspondre à votre utilisateur local et éviter les problèmes de permission
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: prunelle-app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html:cached # Montez votre code source pour le développement
+      # Volume nommé pour var/uploads pour la persistance des fichiers uploadés
+      - app_uploads:/var/www/html/var/uploads
+    environment:
+      # Assurez-vous que ces variables correspondent à celles de votre .env ou .env.local
+      # ou qu'elles sont correctement gérées par Symfony
+      APP_ENV: dev
+      APP_DEBUG: 1
+      APP_SECRET: '694b888b82ebc91e7165b89a08b52b1b' # Utiliser le même secret par défaut que .env
+      # L'URL de la base de données pointe vers le service 'db'
+      DATABASE_URL: "mysql://user_prunelle:password_prunelle@db:3306/prunelle?serverVersion=8.4&charset=utf8mb4"
+    depends_on:
+      - db
+    # user: "${UID:-1000}:${GID:-1000}" # Exécute en tant qu'utilisateur spécifié
+
+  webserver:
+    image: nginx:alpine
+    container_name: prunelle-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80" # Accédez à l'application via http://localhost:8000
+    volumes:
+      - .:/var/www/html:cached # Montez votre code source pour Nginx
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      # Volume nommé pour var/uploads pour que Nginx puisse servir les fichiers si nécessaire (pas typique pour les fichiers privés)
+      # - app_uploads:/var/www/html/var/uploads 
+    depends_on:
+      - app
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -19,7 +61,13 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
+      PMA_USER: root # Ou user_prunelle
+      PMA_PASSWORD: secret # Ou password_prunelle
     ports:
-      - "8080:80"
+      - "8081:80" # Changé pour éviter conflit avec le port 8080 de la config originale
+    depends_on:
+      - db
+
 volumes:
   db_data:
+  app_uploads: # Volume pour les fichiers uploadés persistants
