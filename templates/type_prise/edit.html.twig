@@ -1,13 +1,23 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit TypePrise{% endblock %}
+{% block title %}Modifier {{ entity_name_singular|title }}: {{ type_prise.nom }}{% endblock %}
 
 {% block body %}
-    <h1>Edit TypePrise</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Modifier {{ entity_name_singular|title }}: <span class="text-primary">{{ type_prise.nom }}</span></h1>
+        <a href="{{ path(index_route_name) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
 
-    {{ include('type_prise/_form.html.twig', {'button_label': 'Update'}) }}
+    {{ include('type_prise/_form.html.twig', {'button_label': 'Mettre à jour', 'form': form}) }}
 
-    <a href="{{ path('app_type_prise_index') }}">back to list</a>
-
-    {{ include('type_prise/_delete_form.html.twig') }}
+    {% if is_granted('ROLE_ADMIN') and not is_new %}
+    <div class="mt-3">
+        {# Simplification: pas besoin de passer delete_route_name car la route est codée en dur dans le template #}
+        {{ include('type_prise/_delete_form.html.twig', { 'type_prise': type_prise }) }}
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

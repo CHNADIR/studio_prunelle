@@ -2,6 +2,8 @@
 
 namespace App\Tests\Functional\Controller;
 
+use App\DataFixtures\EcoleFixture; // Assurez-vous que EcoleFixture est bien importée et utilisée
+use App\DataFixtures\UserFixture;  // Assurez-vous que UserFixture est bien importée et utilisée
 use App\Entity\Ecole;
 use App\Repository\EcoleRepository;
 use App\Repository\UserRepository;
@@ -31,40 +33,56 @@ class EcoleControllerTest extends WebTestCase
         $this->entityManager = $container->get(EntityManagerInterface::class);
         $this->databaseTool = $container->get(DatabaseToolCollection::class)->get();
 
-        // Charger les fixtures nécessaires pour ces tests
         $this->databaseTool->loadFixtures([
-            'App\DataFixtures\UserFixture', // Pour avoir admin@studioprunelle.fr et user@studioprunelle.fr
-            'App\DataFixtures\EcoleFixture',  // Pour avoir au moins une école de test
+            UserFixture::class,
+            EcoleFixture::class,
         ]);
     }
 
     public function testIndexPageForAnonymous(): void
     {
-        // Adaptons le test au comportement actuel de l'application
         $this->client->request('GET', '/ecole/');
-        $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h1', 'Liste des écoles');
+        // Route ^/ecole/$ requiert ROLE_RESPONSABLE_ADMINISTRATIF
+        $this->assertResponseRedirects('/connexion', Response::HTTP_FOUND);
     }
 
-    public function testIndexPageForAuthenticatedUser(): void
+    public function testIndexPageForSimpleUser(): void // Utilisateur avec ROLE_USER
     {
-        $testUser = $this->userRepository->findOneByEmail('user@studioprunelle.fr');
-        $this->client->loginUser($testUser);
+        $simpleUser = $this->userRepository->findOneByEmail(UserFixture::SIMPLE_USER_REFERENCE);
+        $this->client->loginUser($simpleUser);
+
+        $this->client->request('GET', '/ecole/');
+        // Route ^/ecole/$ requiert ROLE_RESPONSABLE_ADMINISTRATIF, ROLE_USER ne suffit pas
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testIndexPageForPhotographeUser(): void
+    {
+        $photographeUser = $this->userRepository->findOneByEmail(UserFixture::PHOTOGRAPHE1_USER_REFERENCE);
+        $this->client->loginUser($photographeUser);
+
+        $this->client->request('GET', '/ecole/');
+        // Route ^/ecole/$ requiert ROLE_RESPONSABLE_ADMINISTRATIF, ROLE_PHOTOGRAPHE ne suffit pas
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testIndexPageForResponsableAdministratifUser(): void
+    {
+        $respAdminUser = $this->userRepository->findOneByEmail(UserFixture::RESP_ADMIN_USER_REFERENCE);
+        $this->client->loginUser($respAdminUser);
 
         $this->client->request('GET', '/ecole/');
         $this->assertResponseIsSuccessful();
-        // Adapter l'assertion pour correspondre au texte réel dans la page
         $this->assertSelectorTextContains('h1', 'Liste des écoles');
     }
 
     public function testIndexPageForAdminUser(): void
     {
-        $adminUser = $this->userRepository->findOneByEmail('admin@studioprunelle.fr');
+        $adminUser = $this->userRepository->findOneByEmail(UserFixture::ADMIN_USER_REFERENCE);
         $this->client->loginUser($adminUser);
 
         $this->client->request('GET', '/ecole/');
         $this->assertResponseIsSuccessful();
-        // Adapter l'assertion pour correspondre au texte réel dans la page
         $this->assertSelectorTextContains('h1', 'Liste des écoles');
     }
 
@@ -72,59 +90,77 @@ class EcoleControllerTest extends WebTestCase
     public function testNewEcolePageAccessForAnonymous(): void
     {
         $this->client->request('GET', '/ecole/new');
+        // Route ^/ecole/new requiert ROLE_RESPONSABLE_ADMINISTRATIF
         $this->assertResponseRedirects('/connexion', Response::HTTP_FOUND);
     }
 
-    public function testNewEcolePageAccessForUser(): void
+    public function testNewEcolePageAccessForSimpleUser(): void
     {
-        $testUser = $this->userRepository->findOneByEmail('user@studioprunelle.fr');
-        $this->client->loginUser($testUser);
+        $simpleUser = $this->userRepository->findOneByEmail(UserFixture::SIMPLE_USER_REFERENCE);
+        $this->client->loginUser($simpleUser);
+        $this->client->request('GET', '/ecole/new');
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+    
+    public function testNewEcolePageAccessForPhotographeUser(): void
+    {
+        $photographeUser = $this->userRepository->findOneByEmail(UserFixture::PHOTOGRAPHE1_USER_REFERENCE);
+        $this->client->loginUser($photographeUser);
         $this->client->request('GET', '/ecole/new');
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
     }
 
-    public function testNewEcolePageAccessAndSubmitForAdmin(): void
+    private function submitNewEcoleForm(string $buttonText = 'Créer'): void
     {
-        $adminUser = $this->userRepository->findOneByEmail('admin@studioprunelle.fr');
-        $this->client->loginUser($adminUser);
-
-        $crawler = $this->client->request('GET', '/ecole/new');
-        $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h1', 'Créer une nouvelle école');
-
-        // Déboguer pour trouver le bouton réel
-        $buttonText = 'Créer'; // Selon la traduction dans _form.html.twig
-        
-        // Regardez le HTML pour identifier le bon bouton
-        // file_put_contents('debug_form.html', $crawler->html());
-        
-        $form = $crawler->selectButton($buttonText)->form([
-            'ecole_form[code]' => 'TEST1',
-            'ecole_form[genre]' => 'Maternelle Test',
-            'ecole_form[nom]' => 'École Test New',
-            'ecole_form[rue]' => '1 Rue du Test',
-            'ecole_form[ville]' => 'Testville',
-            'ecole_form[codePostal]' => '00001',
-            'ecole_form[telephone]' => '0102030405',
-            'ecole_form[email]' => 'newecole@test.com',
+        $form = $this->client->getCrawler()->selectButton($buttonText)->form([
+            'ecole_form[code]' => 'TESTN1',
+            'ecole_form[genre]' => 'Maternelle Test New',
+            'ecole_form[nom]' => 'École Test New Form',
+            'ecole_form[rue]' => '1 Rue du Test New',
+            'ecole_form[ville]' => 'Testville New',
+            'ecole_form[codePostal]' => '00002',
+            'ecole_form[telephone]' => '0102030406',
+            'ecole_form[email]' => 'newecoleform@test.com',
             'ecole_form[active]' => true,
         ]);
         $this->client->submit($form);
 
         $this->assertResponseRedirects('/ecole/', Response::HTTP_SEE_OTHER);
-        $crawler = $this->client->followRedirect();
+        $this->client->followRedirect();
         $this->assertSelectorTextContains('.alert-success', 'École créée avec succès.');
 
-        $newEcole = $this->ecoleRepository->findOneBy(['code' => 'TEST1']);
+        $newEcole = $this->ecoleRepository->findOneBy(['code' => 'TESTN1']);
         $this->assertNotNull($newEcole);
-        $this->assertSame('École Test New', $newEcole->getNom());
+        $this->assertSame('École Test New Form', $newEcole->getNom());
+    }
+
+    public function testNewEcolePageAccessAndSubmitForResponsableAdministratif(): void
+    {
+        $respAdminUser = $this->userRepository->findOneByEmail(UserFixture::RESP_ADMIN_USER_REFERENCE);
+        $this->client->loginUser($respAdminUser);
+
+        $this->client->request('GET', '/ecole/new');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('h1', 'Créer une nouvelle école');
+        $this->submitNewEcoleForm();
+    }
+
+    public function testNewEcolePageAccessAndSubmitForAdmin(): void
+    {
+        $adminUser = $this->userRepository->findOneByEmail(UserFixture::ADMIN_USER_REFERENCE);
+        $this->client->loginUser($adminUser);
+
+        $this->client->request('GET', '/ecole/new');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('h1', 'Créer une nouvelle école');
+        $this->submitNewEcoleForm('Créer'); // Le bouton peut être "Créer" ou "Enregistrer"
     }
 
 
     // --- Tests pour l'affichage (show) ---
     public function testShowEcolePageAccess(): void
     {
-        $ecole = $this->ecoleRepository->findOneBy([]); // Prend la première école des fixtures
+        $ecole = $this->ecoleRepository->findOneBy([]);
         if (!$ecole) {
             $this->markTestSkipped('Aucune école trouvée dans les fixtures pour le test show.');
         }
@@ -132,44 +168,43 @@ class EcoleControllerTest extends WebTestCase
 
         // Anonymous
         $this->client->request('GET', $url);
-        $this->assertResponseRedirects('/connexion', Response::HTTP_FOUND);
+        // Route ^/ecole/\d+$ requiert ROLE_PHOTOGRAPHE
+        $this->assertResponseRedirects('/connexion', Response::HTTP_FOUND); // Ligne 141 originale, l'attente est correcte.
 
-        // ROLE_USER
-        $testUser = $this->userRepository->findOneByEmail('user@studioprunelle.fr');
-        $this->client->loginUser($testUser);
+        // ROLE_USER (simple)
+        $simpleUser = $this->userRepository->findOneByEmail(UserFixture::SIMPLE_USER_REFERENCE);
+        $this->client->loginUser($simpleUser);
+        $this->client->request('GET', $url);
+        // ROLE_USER n'est pas ROLE_PHOTOGRAPHE
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+
+        // ROLE_PHOTOGRAPHE
+        $photographeUser = $this->userRepository->findOneByEmail(UserFixture::PHOTOGRAPHE1_USER_REFERENCE);
+        $this->client->loginUser($photographeUser);
         $this->client->request('GET', $url);
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h1', $ecole->getNom()); // Vérifie que le nom de l'école est affiché
+        $this->assertSelectorTextContains('h1', 'Fiche École: ' . $ecole->getNom());
+
+        // ROLE_RESPONSABLE_ADMINISTRATIF
+        $respAdminUser = $this->userRepository->findOneByEmail(UserFixture::RESP_ADMIN_USER_REFERENCE);
+        $this->client->loginUser($respAdminUser);
+        $this->client->request('GET', $url);
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('h1', 'Fiche École: ' . $ecole->getNom());
 
         // ROLE_ADMIN
-        $adminUser = $this->userRepository->findOneByEmail('admin@studioprunelle.fr');
+        $adminUser = $this->userRepository->findOneByEmail(UserFixture::ADMIN_USER_REFERENCE);
         $this->client->loginUser($adminUser);
         $this->client->request('GET', $url);
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h1', $ecole->getNom());
+        $this->assertSelectorTextContains('h1', 'Fiche École: ' . $ecole->getNom());
     }
 
     // --- Tests pour l'édition (edit) ---
-    public function testEditEcolePageAccessAndSubmitForAdmin(): void
+    private function submitEditEcoleForm(Ecole $ecole, string $updatedNom, string $buttonText = 'Mettre à jour'): void
     {
-        $adminUser = $this->userRepository->findOneByEmail('admin@studioprunelle.fr');
-        $this->client->loginUser($adminUser);
-
-        $ecole = $this->ecoleRepository->findOneBy([]);
-        if (!$ecole) {
-            $this->markTestSkipped('Aucune école trouvée dans les fixtures pour le test edit.');
-        }
-        $ecoleId = $ecole->getId(); // Conserver l'ID pour référence future
-        $url = '/ecole/' . $ecoleId . '/edit';
-
-        $crawler = $this->client->request('GET', $url);
-        $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h1', 'Edit Ecole');
-
-        $updatedNom = 'École Test Editée';
-        $form = $crawler->selectButton('Update')->form([
+        $form = $this->client->getCrawler()->selectButton($buttonText)->form([
             'ecole_form[nom]' => $updatedNom,
-            // Gardez les autres champs
             'ecole_form[code]' => $ecole->getCode(),
             'ecole_form[genre]' => $ecole->getGenre(),
             'ecole_form[rue]' => $ecole->getRue(),
@@ -182,90 +217,142 @@ class EcoleControllerTest extends WebTestCase
         $this->client->submit($form);
 
         $this->assertResponseRedirects('/ecole/', Response::HTTP_SEE_OTHER);
-        $crawler = $this->client->followRedirect();
+        $this->client->followRedirect();
         $this->assertSelectorTextContains('.alert-success', 'École modifiée avec succès.');
 
-        // Récupérer une nouvelle référence à l'entité après modification
-        $updatedEcole = $this->ecoleRepository->find($ecoleId);
-        $this->assertNotNull($updatedEcole);
-        $this->assertSame($updatedNom, $updatedEcole->getNom());
+        $this->entityManager->refresh($ecole); // Recharger l'entité
+        $this->assertSame($updatedNom, $ecole->getNom());
+    }
+    
+    public function testEditEcolePageAccessForAnonymous(): void
+    {
+        $ecole = $this->ecoleRepository->findOneBy([]);
+        if (!$ecole) $this->markTestSkipped('Aucune école.');
+        $this->client->request('GET', '/ecole/' . $ecole->getId() . '/edit');
+        $this->assertResponseRedirects('/connexion', Response::HTTP_FOUND);
     }
 
-    public function testEditEcolePageAccessForUser(): void
+    public function testEditEcolePageAccessForSimpleUser(): void
     {
-        $testUser = $this->userRepository->findOneByEmail('user@studioprunelle.fr');
-        $this->client->loginUser($testUser);
+        $simpleUser = $this->userRepository->findOneByEmail(UserFixture::SIMPLE_USER_REFERENCE);
+        $this->client->loginUser($simpleUser);
         $ecole = $this->ecoleRepository->findOneBy([]);
-        if (!$ecole) {
-            $this->markTestSkipped('Aucune école trouvée dans les fixtures.');
-        }
+        if (!$ecole) $this->markTestSkipped('Aucune école.');
+        $this->client->request('GET', '/ecole/' . $ecole->getId() . '/edit');
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+    
+    public function testEditEcolePageAccessForPhotographeUser(): void
+    {
+        $photographeUser = $this->userRepository->findOneByEmail(UserFixture::PHOTOGRAPHE1_USER_REFERENCE);
+        $this->client->loginUser($photographeUser);
+        $ecole = $this->ecoleRepository->findOneBy([]);
+        if (!$ecole) $this->markTestSkipped('Aucune école.');
         $this->client->request('GET', '/ecole/' . $ecole->getId() . '/edit');
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
     }
 
+    public function testEditEcolePageAccessAndSubmitForResponsableAdministratif(): void
+    {
+        $respAdminUser = $this->userRepository->findOneByEmail(UserFixture::RESP_ADMIN_USER_REFERENCE);
+        $this->client->loginUser($respAdminUser);
+
+        $ecole = $this->ecoleRepository->findOneBy([]);
+        if (!$ecole) $this->markTestSkipped('Aucune école.');
+        
+        $this->client->request('GET', '/ecole/' . $ecole->getId() . '/edit');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('h1', 'Modifier École: ' . $ecole->getNom());
+        $this->submitEditEcoleForm($ecole, 'École Éditée par RespAdmin');
+    }
+
+    public function testEditEcolePageAccessAndSubmitForAdmin(): void
+    {
+        $adminUser = $this->userRepository->findOneByEmail(UserFixture::ADMIN_USER_REFERENCE);
+        $this->client->loginUser($adminUser);
+
+        $ecole = $this->ecoleRepository->findOneBy([]);
+        if (!$ecole) $this->markTestSkipped('Aucune école.');
+
+        $this->client->request('GET', '/ecole/' . $ecole->getId() . '/edit');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('h1', 'Modifier École: ' . $ecole->getNom());
+        $this->submitEditEcoleForm($ecole, 'École Test Editée Admin', 'Mettre à jour');
+    }
+
+
     // --- Tests pour la suppression (delete) ---
+    private function performDeleteEcole(Ecole $ecole): void
+    {
+        $ecoleId = $ecole->getId();
+        $crawler = $this->client->request('GET', '/ecole/' . $ecoleId); // Aller sur la page show pour le formulaire
+        $this->assertResponseIsSuccessful();
+
+        // S'assurer que le formulaire de suppression existe pour cet utilisateur
+        $deleteFormSelector = 'form[action$="/ecole/' . $ecoleId . '"] button.btn-danger';
+        $this->assertSelectorExists($deleteFormSelector);
+        
+        $form = $crawler->filter($deleteFormSelector)->form();
+        $this->client->submit($form);
+
+        $this->assertResponseRedirects('/ecole/', Response::HTTP_SEE_OTHER);
+        $this->client->followRedirect();
+        $this->assertSelectorTextContains('.alert-success', 'École supprimée avec succès.');
+
+        $this->assertNull($this->ecoleRepository->find($ecoleId));
+    }
+
+    public function testDeleteEcoleActionForResponsableAdministratif(): void
+    {
+        $respAdminUser = $this->userRepository->findOneByEmail(UserFixture::RESP_ADMIN_USER_REFERENCE);
+        $this->client->loginUser($respAdminUser);
+        
+        $ecole = $this->ecoleRepository->findOneByCode('69002'); // École des Roses par exemple
+        if (!$ecole) $this->markTestSkipped('École spécifique pour suppression non trouvée.');
+        
+        $this->performDeleteEcole($ecole);
+    }
+
     public function testDeleteEcoleActionForAdmin(): void
     {
-        $adminUser = $this->userRepository->findOneByEmail('admin@studioprunelle.fr');
+        $adminUser = $this->userRepository->findOneByEmail(UserFixture::ADMIN_USER_REFERENCE);
         $this->client->loginUser($adminUser);
         
-        $ecole = $this->ecoleRepository->findOneBy([]);
-        if (!$ecole) {
-            $this->markTestSkipped('Aucune école trouvée dans les fixtures pour le test delete.');
-        }
-        $ecoleId = $ecole->getId();
-        
-        // Activer le profil du navigateur pour maintenir la session entre les requêtes
-        $this->client->followRedirects();
-        
-        // 1. D'abord, visitez une page quelconque pour établir une session
-        $this->client->request('GET', '/');
-        
-        // 2. Appliquer une modification directe à la base de données
-        // au lieu d'utiliser une requête HTTP avec un token CSRF
-        $this->entityManager->remove($ecole);
-        $this->entityManager->flush();
-        
-        // 3. Vérifier que l'école a bien été supprimée
-        $deletedEcole = $this->ecoleRepository->find($ecoleId);
-        $this->assertNull($deletedEcole);
-        
-        // 4. Vérifier que la page d'index affiche désormais une liste sans cette école
-        $crawler = $this->client->request('GET', '/ecole/');
-        $this->assertResponseIsSuccessful();
-        
-        // Essayez de trouver l'ID de l'école dans la page
-        // (en supposant que l'ID soit affiché quelque part)
-        $this->assertSelectorNotExists('a[href="/ecole/'.$ecoleId.'"]');
+        $ecole = $this->ecoleRepository->findOneByCode('75001'); // École des Lilas par exemple
+        if (!$ecole) $this->markTestSkipped('École spécifique pour suppression non trouvée.');
+
+        $this->performDeleteEcole($ecole);
     }
 
-     public function testDeleteEcoleActionForUser(): void
+    public function testDeleteEcoleActionForbiddenForOtherRoles(): void
     {
-        $testUser = $this->userRepository->findOneByEmail('user@studioprunelle.fr');
-        $this->client->loginUser($testUser);
+        $rolesToTest = [
+            UserFixture::SIMPLE_USER_REFERENCE => 'simple user',
+            UserFixture::PHOTOGRAPHE1_USER_REFERENCE => 'photographe'
+        ];
 
         $ecole = $this->ecoleRepository->findOneBy([]);
-        if (!$ecole) {
-            $this->markTestSkipped('Aucune école trouvée dans les fixtures.');
-        }
+        if (!$ecole) $this->markTestSkipped('Aucune école.');
         $urlShow = '/ecole/' . $ecole->getId();
-        $crawler = $this->client->request('GET', $urlShow); // Accéder à la page pour voir si le bouton est là
 
-        // Si l'utilisateur n'a pas le droit, le formulaire de suppression ne devrait pas être là,
-        // ou la soumission devrait être bloquée.
-        // Ici, on vérifie si le bouton existe. S'il n'existe pas, c'est une forme de test d'accès.
-        $this->assertSelectorNotExists('form[action$="/ecole/' . $ecole->getId() . '"] button:contains("Supprimer")');
-        // Alternativement, si le bouton est là mais l'action est protégée :
-        // $form = $crawler->selectButton('Supprimer')->form();
-        // $this->client->submit($form);
-        // $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+        foreach ($rolesToTest as $userReference => $roleName) {
+            $user = $this->userRepository->findOneByEmail($userReference);
+            $this->client->loginUser($user);
+            
+            $crawler = $this->client->request('GET', $urlShow);
+            $this->assertResponseIsSuccessful(); // Ils peuvent voir la page show
+            // Vérifier que le formulaire/bouton de suppression n'est PAS présent
+            $this->assertSelectorNotExists('form[action$="/ecole/' . $ecole->getId() . '"] button.btn-danger', "Le bouton supprimer ne devrait pas être visible pour $roleName.");
+
+            // Tenter une requête POST directe devrait aussi être interdit
+            $this->client->request('POST', '/ecole/' . $ecole->getId());
+            $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN, "La suppression POST devrait être interdite pour $roleName.");
+        }
     }
-
 
     protected function tearDown(): void
     {
         parent::tearDown();
-        // Pour éviter les fuites de mémoire avec Doctrine
         if ($this->entityManager) {
             $this->entityManager->close();
             $this->entityManager = null;
@@ -274,16 +361,5 @@ class EcoleControllerTest extends WebTestCase
         $this->userRepository = null;
         $this->ecoleRepository = null;
         $this->databaseTool = null;
-    }
-
-    /**
-     * Méthode utilitaire pour générer un token CSRF valide
-     */
-    private static function generateCsrfToken($client, $tokenId): string
-    {
-        return $client->getContainer()
-            ->get('security.csrf.token_manager')
-            ->getToken($tokenId)
-            ->getValue();
     }
 }

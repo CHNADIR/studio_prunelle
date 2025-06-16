@@ -1,0 +1,28 @@
+{# filepath: templates/admin/user/_form.html.twig #}
+{{ form_start(form) }}
+    {{ form_errors(form) }}
+
+    {{ form_row(form.email) }}
+    {{ form_row(form.roles) }}
+
+    <div class="mb-3">
+        {{ form_label(form.plainPassword.first) }}
+        {{ form_widget(form.plainPassword.first, {'attr': {'class': 'form-control'}}) }}
+        <div class="form-text text-muted">
+            Laissez vide si vous ne souhaitez pas changer le mot de passe. Minimum 8 caractères.
+        </div>
+        {{ form_errors(form.plainPassword.first) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.plainPassword.second) }}
+        {{ form_widget(form.plainPassword.second, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.plainPassword.second) }}
+    </div>
+    
+    {{ form_rest(form) }} {# Pour tout champ non explicitement rendu #}
+
+    <button type="submit" class="btn btn-primary mt-3">
+        <i class="bi bi-save"></i> {{ button_label|default('Enregistrer') }}
+    </button>
+{{ form_end(form) }}

@@ -12,6 +12,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const ROLE_USER = 'ROLE_USER';
+    public const ROLE_PHOTOGRAPHE = 'ROLE_PHOTOGRAPHE';
+    public const ROLE_RESPONSABLE_ADMINISTRATIF = 'ROLE_RESPONSABLE_ADMINISTRATIF';
+    public const ROLE_ADMIN = 'ROLE_ADMIN';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -32,13 +37,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Assert\NotBlank(message: "Le mot de passe ne peut pas être vide.", groups: ['registration', 'password_update'])] // groups pour cibler quand valider
+    #[Assert\NotBlank(message: "Le mot de passe ne peut pas être vide.", groups: ['registration', 'password_update'])]
     #[Assert\Length(
         min: 8,
         minMessage: "Votre mot de passe doit contenir au moins {{ limit }} caractères.",
         groups: ['registration', 'password_update']
     )]
-    // Vous pourriez ajouter d'autres contraintes comme Regex pour la complexité
     private ?string $password = null;
 
     public function getId(): ?int
@@ -75,7 +79,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+        $roles[] = self::ROLE_USER;
 
         return array_unique($roles);
     }
@@ -116,6 +120,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __toString(): string
     {
-        return $this->email; // ou une autre propriété appropriée
+        return $this->email ?? 'Utilisateur sans email';
     }
 }

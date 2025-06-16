@@ -16,6 +16,11 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            logout:
+                path: app_logout
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800 # 1 semaine
             # Configuration du formulaire de connexion
             form_login:
                 login_path: app_login # Nom de la route pour la page de connexion
@@ -24,75 +29,71 @@ security:
                 password_parameter: password # AJOUTEZ OU VÉRIFIEZ CETTE LIGNE
                 default_target_path: app_home # Route de redirection après connexion réussie
                 enable_csrf: true
-            # Configuration de la déconnexion
-            logout:
-                path: app_logout # Nom de la route pour la déconnexion
-                # target: app_any_route # Décommentez et configurez si vous voulez une redirection spécifique après la déconnexion
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
 
     # Hiérarchie des rôles : ROLE_ADMIN hérite des permissions de ROLE_USER
     role_hierarchy:
-        ROLE_ADMIN: ROLE_USER
+        ROLE_ADMIN: [ROLE_USER, ROLE_RESPONSABLE_ADMINISTRATIF, ROLE_PHOTOGRAPHE, ROLE_GESTION_REFERENTIELS]
+        ROLE_RESPONSABLE_ADMINISTRATIF: [ROLE_USER]
+        ROLE_PHOTOGRAPHE: [ROLE_USER]
 
     access_control:
-        # Sécuriser l'accès au contrôleur d'images originales (si utilisé)
-        - { path: ^/secure-files, roles: ROLE_USER } # Ou un rôle plus spécifique
+        # --- Accès Public ---
+        # - { path: ^/connexion, roles: IS_AUTHENTICATED_ANONYMOUSLY } # Déjà géré par form_login
+        # - { path: ^/inscription, roles: IS_AUTHENTICATED_ANONYMOUSLY } # Si vous avez une inscription publique
 
-        # Sécuriser l'accès au cache de LiipImagineBundle
-        # Cette règle doit être placée AVANT des règles plus générales comme ^/
-        # et après des règles plus spécifiques comme ^/(_(profiler|wdt)|css|images|js)/
-        - { path: ^/media/cache, roles: ROLE_USER } # Exige au moins ROLE_USER pour accéder aux images générées
+        # --- Accès ROLE_USER (base pour tous les connectés) ---
+        - { path: ^/$, roles: ROLE_USER } # Page d'accueil
+        - { path: ^/secure-files, roles: ROLE_USER }
+        - { path: ^/media/cache, roles: ROLE_USER }
 
-        # Règles pour l'administrateur (ROLE_ADMIN)
-        # Gestion des utilisateurs (inscription par l'admin) - Предполагаемый путь /admin/user
-        - { path: ^/admin/user/new, roles: ROLE_ADMIN }
-        - { path: ^/admin/user/\d+/edit, roles: ROLE_ADMIN } # Si l'admin peut modifier les utilisateurs
-        - { path: ^/admin/user/\d+$, methods: [POST], roles: ROLE_ADMIN } # Si l'admin peut supprimer des utilisateurs
-        - { path: ^/admin/user, roles: ROLE_ADMIN } # Liste des utilisateurs pour l'admin
+        # --- Accès ROLE_PHOTOGRAPHE ---
+        # Le photographe peut voir son planning (index des prises de vue) et les détails d'une prise de vue
+        # La logique pour ne voir que SES prises de vue sera dans le contrôleur/Voter
+        - { path: ^/prise/de/vue$, methods: [GET], roles: [ROLE_PHOTOGRAPHE, ROLE_RESPONSABLE_ADMINISTRATIF] } # Index
+        - { path: ^/prise/de/vue/\d+$, methods: [GET], roles: [ROLE_PHOTOGRAPHE, ROLE_RESPONSABLE_ADMINISTRATIF] } # Show
+        # Le photographe peut voir les détails d'une école (pour les infos de la séance)
+        - { path: ^/ecole/\d+$, methods: [GET], roles: [ROLE_PHOTOGRAPHE, ROLE_RESPONSABLE_ADMINISTRATIF] } # Show Ecole
+        # Le photographe peut ajouter un commentaire (modifier une PriseDeVue existante)
+        # La permission d'édition sera affinée par le Voter (uniquement le champ commentaire ou si c'est sa PDV)
+        - { path: ^/prise/de/vue/\d+/edit$, methods: [GET, POST], roles: [ROLE_PHOTOGRAPHE, ROLE_RESPONSABLE_ADMINISTRATIF] } # Edit PriseDeVue (pour commentaire)
 
-        # Opérations de création, modification, suppression (CUD) pour les entités par ROLE_ADMIN
-        # Ecole
-        - { path: ^/ecole/new, roles: ROLE_ADMIN }
-        - { path: ^/ecole/\d+/edit, roles: ROLE_ADMIN }
-        - { path: ^/ecole/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+        # --- Accès ROLE_RESPONSABLE_ADMINISTRATIF ---
+        # Gestion des écoles
+        - { path: ^/ecole/new, roles: ROLE_RESPONSABLE_ADMINISTRATIF }
+        - { path: ^/ecole/\d+/edit, roles: ROLE_RESPONSABLE_ADMINISTRATIF }
+        - { path: ^/ecole/\d+$, methods: [POST], roles: ROLE_RESPONSABLE_ADMINISTRATIF } # Delete Ecole
+        - { path: ^/ecole$, methods: [GET], roles: ROLE_RESPONSABLE_ADMINISTRATIF } # Index Ecole (peut voir toutes les écoles)
 
-        # PriseDeVue
-        - { path: ^/prise/de/vue/new, roles: ROLE_ADMIN }
-        - { path: ^/prise/de/vue/\d+/edit, roles: ROLE_ADMIN }
-        - { path: ^/prise/de/vue/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
-        - { path: ^/prise/de/vue, roles: ROLE_USER }  # Couvre index et show
+        # Organisation des séances de prise de vue (CRUD complet sur PriseDeVue)
+        - { path: ^/prise/de/vue/new, roles: ROLE_RESPONSABLE_ADMINISTRATIF }
+        - { path: ^/prise/de/vue/\d+/edit, roles: ROLE_RESPONSABLE_ADMINISTRATIF } # Peut modifier toutes les PDV
+        - { path: ^/prise/de/vue/\d+$, methods: [POST], roles: ROLE_RESPONSABLE_ADMINISTRATIF } # Delete PriseDeVue
+        # L'index et le show des prises de vue sont déjà couverts par ROLE_PHOTOGRAPHE, et ROLE_RESP_ADMIN en hérite
 
-        # Référentiels (Theme, TypePrise, TypeVente, Planche) - CUD par ROLE_ADMIN
-        # Le cahier des charges indique "d'autre [...] peuvent être rajoutée par un utilisateur du système".
-        # Par sécurité et cohérence avec la gestion des utilisateurs par l'admin,
-        # nous attribuons la gestion des référentiels à ROLE_ADMIN.
-        # Si "utilisateur du système" signifie ROLE_USER, ces règles devront être adaptées.
-        - { path: ^/theme/new, roles: ROLE_ADMIN }
-        - { path: ^/theme/\d+/edit, roles: ROLE_ADMIN }
-        - { path: ^/theme/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
+        # --- Accès ROLE_ADMIN (Administrateur Technique) ---
+        # Gestion des utilisateurs
+        - { path: ^/admin/user, roles: ROLE_ADMIN } # CRUD utilisateurs
 
-        - { path: ^/type/prise/new, roles: ROLE_ADMIN }
-        - { path: ^/type/prise/\d+/edit, roles: ROLE_ADMIN }
-        - { path: ^/type/prise/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
-
-        - { path: ^/type/vente/new, roles: ROLE_ADMIN }
-        - { path: ^/type/vente/\d+/edit, roles: ROLE_ADMIN }
-        - { path: ^/type/vente/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
-
-        - { path: ^/planche/new, roles: ROLE_ADMIN }
-        - { path: ^/planche/\d+/edit, roles: ROLE_ADMIN }
-        - { path: ^/planche/\d+$, methods: [POST], roles: ROLE_ADMIN } # Suppression
-        - { path: ^/planche, roles: ROLE_USER }       # Couvre index et show
-
-        # Page d'accueil (accessible aux utilisateurs connectés)
-        - { path: ^/$, roles: ROLE_USER } # En supposant que app_home est à la racine '/'
-
-        # La page de connexion (définie par login_path) est implicitement accessible
-        # aux utilisateurs non authentifiés (IS_AUTHENTICATED_ANONYMOUSLY).
+        # --- IMPORTANT: Ordre modifié - Les règles spécifiques d'abord ---
+        
+        # Les photographes peuvent voir les planches (règles spécifiques)
+        - { path: ^/planche$, methods: [GET], roles: ROLE_PHOTOGRAPHE } # Index Planche
+        - { path: ^/planche/\d+$, methods: [GET], roles: ROLE_PHOTOGRAPHE } # Show Planche
+        
+        # --- Ensuite, règles de gestion des référentiels ---
+        
+        # Gestion des référentiels (Theme, TypePrise, TypeVente, Planche)
+        - { path: ^/theme, roles: [ROLE_ADMIN, ROLE_GESTION_REFERENTIELS] }
+        - { path: ^/type/prise, roles: [ROLE_ADMIN, ROLE_GESTION_REFERENTIELS] }
+        - { path: ^/type/vente, roles: [ROLE_ADMIN, ROLE_GESTION_REFERENTIELS] }
+        # CRUD complet sur les planches (édition, création, suppression)
+        - { path: ^/planche/new, roles: [ROLE_ADMIN, ROLE_GESTION_REFERENTIELS] }
+        - { path: ^/planche/\d+/edit, roles: [ROLE_ADMIN, ROLE_GESTION_REFERENTIELS] }
+        - { path: ^/planche/\d+$, methods: [POST], roles: [ROLE_ADMIN, ROLE_GESTION_REFERENTIELS] } # DELETE
+        # Capturer les autres routes de /planche qui ne sont pas déjà couvertes
+        - { path: ^/planche/, roles: [ROLE_ADMIN, ROLE_GESTION_REFERENTIELS] }
+        
+        # ... autres règles
 
 when@test:
     security:

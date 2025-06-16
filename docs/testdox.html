@@ -53,101 +53,25 @@
     <body>
         <h2>Ecole Controller (App\Tests\Functional\Controller\EcoleController)</h2>
         <ul>
-            <li class="success">Index page for anonymous</li>
-            <li class="success">Index page for authenticated user</li>
-            <li class="success">Index page for admin user</li>
+            <li class="defect">Index page for anonymous</li>
+            <li class="defect">Index page for simple user</li>
+            <li class="defect">Index page for photographe user</li>
+            <li class="defect">Index page for responsable administratif user</li>
+            <li class="defect">Index page for admin user</li>
             <li class="success">New ecole page access for anonymous</li>
-            <li class="success">New ecole page access for user</li>
-            <li class="success">New ecole page access and submit for admin</li>
-            <li class="success">Show ecole page access</li>
-            <li class="success">Edit ecole page access and submit for admin</li>
-            <li class="success">Edit ecole page access for user</li>
-            <li class="success">Delete ecole action for admin</li>
-            <li class="success">Delete ecole action for user</li>
-        </ul>
-        <h2>Ecole Voter (App\Tests\Unit\Security\Voter\EcoleVoter)</h2>
-        <ul>
-            <li class="success">Vote with data set "Admin can VIEW an Ecole"</li>
-            <li class="success">Vote with data set "Admin can EDIT an Ecole"</li>
-            <li class="success">Vote with data set "Admin can DELETE an Ecole"</li>
-            <li class="success">Vote with data set "Admin can CREATE (subject Ecole)"</li>
-            <li class="success">Vote with data set "Admin can CREATE (subject null)"</li>
-            <li class="success">Vote with data set "Admin can CREATE (subject class)"</li>
-            <li class="success">Vote with data set "User can VIEW an Ecole"</li>
-            <li class="success">Vote with data set "User cannot EDIT an Ecole"</li>
-            <li class="success">Vote with data set "User cannot DELETE an Ecole"</li>
-            <li class="success">Vote with data set "User cannot CREATE (subject Ecole)"</li>
-            <li class="success">Vote with data set "User cannot CREATE (subject null)"</li>
-            <li class="success">Vote with data set "Anonymous cannot VIEW Ecole"</li>
-            <li class="success">Vote with data set "Anonymous cannot CREATE Ecole"</li>
-            <li class="success">Vote with data set "Unsupported attribute results in ABSTAIN"</li>
-            <li class="success">Vote with data set "VIEW with non-Ecole subject results in ABSTAIN"</li>
-            <li class="success">Vote with data set "EDIT with null subject results in ABSTAIN"</li>
-            <li class="success">Vote with data set "DELETE with null subject results in ABSTAIN"</li>
-            <li class="success">Vote with data set "User cannot CREATE with non-Ecole subject (stdClass)"</li>
-            <li class="success">Vote with data set "Admin can CREATE with non-Ecole subject (stdClass)"</li>
-        </ul>
-        <h2>Happy Path Admin (App\Tests\Functional\HappyPathAdmin)</h2>
-        <ul>
-            <li class="success">Admin workflow</li>
-        </ul>
-        <h2>Prise De Vue Repository (App\Tests\Unit\Repository\PriseDeVueRepository)</h2>
-        <ul>
-            <li class="success">Find recent by ecole</li>
-            <li class="success">Standard find by</li>
-        </ul>
-        <h2>Prise De Vue Voter (App\Tests\Unit\Security\Voter\PriseDeVueVoter)</h2>
-        <ul>
-            <li class="success">Vote with data set "Admin can VIEW"</li>
-            <li class="success">Vote with data set "Admin can EDIT"</li>
-            <li class="success">Vote with data set "Admin can DELETE"</li>
-            <li class="success">Vote with data set "Photographer can VIEW their PriseDeVue"</li>
-            <li class="success">Vote with data set "Photographer can EDIT their PriseDeVue"</li>
-            <li class="success">Vote with data set "Photographer can DELETE their PriseDeVue"</li>
-            <li class="success">Vote with data set "Other User cannot VIEW photographer PriseDeVue"</li>
-            <li class="success">Vote with data set "Other User cannot EDIT photographer PriseDeVue"</li>
-            <li class="success">Vote with data set "Other User cannot DELETE photographer PriseDeVue"</li>
-            <li class="success">Vote with data set "Anonymous cannot VIEW PriseDeVue"</li>
-            <li class="success">Vote with data set "Unsupported attribute results in ABSTAIN"</li>
-            <li class="success">Vote with data set "VIEW with non-PriseDeVue subject (stdClass) results in ABSTAIN"</li>
-            <li class="success">Vote with data set "VIEW with null subject results in ABSTAIN"</li>
-            <li class="success">Vote with data set "EDIT with null subject results in ABSTAIN"</li>
-        </ul>
-        <h2>Uploader Helper (App\Tests\Unit\Service\UploaderHelper)</h2>
-        <ul>
-            <li class="success">Upload planche image success new file</li>
-            <li class="success">Upload planche image success replacing existing file</li>
-            <li class="success">Upload planche image creates directory if not exists</li>
-            <li class="success">Upload planche image move throws exception</li>
-            <li class="success">Remove planche image success</li>
-            <li class="success">Remove planche image file does not exist</li>
-            <li class="success">Remove planche image null filename</li>
-            <li class="success">Remove planche image filesystem throws exception</li>
-            <li class="success">Get private file path</li>
-        </ul>
-        <h2>Validation (App\Tests\Unit\Entity\Validation)</h2>
-        <ul>
-            <li class="success">Ecole validation with data set "Valid Ecole"</li>
-            <li class="success">Ecole validation with data set "Ecole with invalid code (too long)"</li>
-            <li class="success">Ecole validation with data set "Ecole with blank code"</li>
-            <li class="success">Ecole validation with data set "Ecole with blank nom"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue complètement valide"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec date nulle"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec photographe vide"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec photographe trop court"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec ecole nulle"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec typePrise nul"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec theme nul"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec nombreEleves nul"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec nombreEleves négatif"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec nombreClasses nul"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec nombreClasses négatif"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec typeVente nul"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec prixEcole nul"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec prixEcole négatif"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec prixParent nul"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec prixParent négatif"</li>
-            <li class="success">Prise de vue validation with data set "PriseDeVue avec prixParent zéro (invalide car Assert\Positive)"</li>
+            <li class="defect">New ecole page access for simple user</li>
+            <li class="defect">New ecole page access for photographe user</li>
+            <li class="defect">New ecole page access and submit for responsable administratif</li>
+            <li class="defect">New ecole page access and submit for admin</li>
+            <li class="defect">Show ecole page access</li>
+            <li class="success">Edit ecole page access for anonymous</li>
+            <li class="defect">Edit ecole page access for simple user</li>
+            <li class="defect">Edit ecole page access for photographe user</li>
+            <li class="defect">Edit ecole page access and submit for responsable administratif</li>
+            <li class="defect">Edit ecole page access and submit for admin</li>
+            <li class="defect">Delete ecole action for responsable administratif</li>
+            <li class="defect">Delete ecole action for admin</li>
+            <li class="defect">Delete ecole action forbidden for other roles</li>
         </ul>
     </body>
 </html>

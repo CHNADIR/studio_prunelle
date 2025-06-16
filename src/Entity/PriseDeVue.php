@@ -17,10 +17,10 @@ class PriseDeVue
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)] // Changé pour DATETIME_MUTABLE pour correspondre au type de formulaire
     #[Assert\NotNull(message: "La date est obligatoire.")]
     #[Assert\Type(\DateTimeInterface::class, message: "La date n'est pas valide.")]
-    private ?\DateTime $date = null;
+    private ?\DateTimeInterface $date = null; // Changé pour DateTimeInterface
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Le nom du photographe est obligatoire.")]
@@ -28,28 +28,31 @@ class PriseDeVue
     private ?string $photographe = null;
 
     #[ORM\ManyToOne(inversedBy: 'priseDeVues')]
+    #[ORM\JoinColumn(nullable: false)] // Assurez-vous que l'école est toujours requise
     #[Assert\NotNull(message: "L'école est obligatoire.")]
     #[Assert\Valid]
     private ?Ecole $ecole = null;
 
     #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
     #[Assert\NotNull(message: "Le type de prise est obligatoire.")]
     #[Assert\Valid]
     private ?TypePrise $typePrise = null;
 
     #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
     #[Assert\NotNull(message: "Le thème est obligatoire.")]
     #[Assert\Valid]
     private ?Theme $theme = null;
 
     #[ORM\Column]
     #[Assert\NotNull(message: "Le nombre d'élèves est obligatoire.")]
-    #[Assert\Positive(message: "Le nombre d'élèves doit être un nombre positif.")]
+    #[Assert\PositiveOrZero(message: "Le nombre d'élèves doit être un nombre positif ou zéro.")] // PositiveOrZero si 0 est permis
     private ?int $nombreEleves = null;
 
     #[ORM\Column]
     #[Assert\NotNull(message: "Le nombre de classes est obligatoire.")]
-    #[Assert\Positive(message: "Le nombre de classes doit être un nombre positif.")]
+    #[Assert\PositiveOrZero(message: "Le nombre de classes doit être un nombre positif ou zéro.")]
     private ?int $nombreClasses = null;
 
     #[ORM\ManyToOne]
@@ -76,13 +79,13 @@ class PriseDeVue
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Assert\NotBlank(message: "Le prix école est obligatoire.")]
-    #[Assert\Positive(message: "Le prix école doit être un nombre positif.")]
+    #[Assert\PositiveOrZero(message: "Le prix école doit être un nombre positif ou zéro.")]
     #[Assert\Regex(pattern: "/^\d+(\.\d{1,2})?$/", message: "Le prix école doit être un nombre décimal valide (ex: 10.50).")]
     private ?string $prixEcole = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Assert\NotBlank(message: "Le prix parent est obligatoire.")]
-    #[Assert\Positive(message: "Le prix parent doit être un nombre positif.")]
+    #[Assert\PositiveOrZero(message: "Le prix parent doit être un nombre positif ou zéro.")]
     #[Assert\Regex(pattern: "/^\d+(\.\d{1,2})?$/", message: "Le prix parent doit être un nombre décimal valide (ex: 10.50).")]
     private ?string $prixParent = null;
 
@@ -113,12 +116,12 @@ class PriseDeVue
         return $this->id;
     }
 
-    public function getDate(): ?\DateTime
+    public function getDate(): ?\DateTimeInterface
     {
         return $this->date;
     }
 
-    public function setDate(\DateTime $date): static
+    public function setDate(\DateTimeInterface $date): static
     {
         $this->date = $date;
 
@@ -343,6 +346,12 @@ class PriseDeVue
 
     public function __toString(): string
     {
-        return $this->photographe; // ou une autre propriété appropriée
+        return sprintf(
+            'PDV #%s - %s (%s) - %s',
+            $this->getId() ?? 'N/A',
+            $this->getEcole() ? $this->getEcole()->getNom() : 'École non définie',
+            $this->getDate() ? $this->getDate()->format('d/m/Y') : 'Date non définie',
+            $this->getPhotographe() ?? 'Photographe non défini'
+        );
     }
 }

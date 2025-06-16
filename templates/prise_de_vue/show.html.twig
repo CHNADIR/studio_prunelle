@@ -1,50 +1,110 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}PriseDeVue{% endblock %}
+{% block title %}Détail Prise de Vue #{{ prise_de_vue.id }}{% endblock %}
 
 {% block body %}
-    <h1>PriseDeVue</h1>
+<div class="container mt-4">
+    <h1>Détail Prise de Vue #{{ prise_de_vue.id }}</h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ prise_de_vue.id }}</td>
-            </tr>
-            <tr>
-                <th>Date</th>
-                <td>{{ prise_de_vue.date ? prise_de_vue.date|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Photographe</th>
-                <td>{{ prise_de_vue.photographe }}</td>
-            </tr>
-            <tr>
-                <th>NombreEleves</th>
-                <td>{{ prise_de_vue.nombreEleves }}</td>
-            </tr>
-            <tr>
-                <th>NombreClasses</th>
-                <td>{{ prise_de_vue.nombreClasses }}</td>
-            </tr>
-            <tr>
-                <th>PrixEcole</th>
-                <td>{{ prise_de_vue.prixEcole }}</td>
-            </tr>
-            <tr>
-                <th>PrixParent</th>
-                <td>{{ prise_de_vue.prixParent }}</td>
-            </tr>
-            <tr>
-                <th>Commentaire</th>
-                <td>{{ prise_de_vue.commentaire }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="card">
+        <div class="card-header">
+            Informations principales
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless table-sm">
+                <tbody>
+                    <tr><th style="width: 30%;">ID</th><td>{{ prise_de_vue.id }}</td></tr>
+                    <tr><th>Date</th><td>{{ prise_de_vue.date ? prise_de_vue.date|date('d/m/Y H:i') : 'N/A' }}</td></tr>
+                    <tr><th>Photographe</th><td>{{ prise_de_vue.photographe|default('N/A') }}</td></tr>
+                    <tr>
+                        <th>École</th>
+                        <td>
+                            {% if prise_de_vue.ecole %}
+                                {% if is_granted(constant('App\\Security\\Voter\\EcoleVoter::VIEW'), prise_de_vue.ecole) %}
+                                    <a href="{{ path('app_ecole_show', {'id': prise_de_vue.ecole.id}) }}">{{ prise_de_vue.ecole.nom }}</a>
+                                {% else %}
+                                    {{ prise_de_vue.ecole.nom }}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr><th>Type de Prise</th><td>{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : 'N/A' }}</td></tr>
+                    <tr><th>Thème</th><td>{{ prise_de_vue.theme ? prise_de_vue.theme.nom : 'N/A' }}</td></tr>
+                    <tr><th>Type de Vente</th><td>{{ prise_de_vue.typeVente ? prise_de_vue.typeVente.nom : 'N/A' }}</td></tr>
+                    <tr><th>Nombre d'Élèves</th><td>{{ prise_de_vue.nombreEleves|default('N/A') }}</td></tr>
+                    <tr><th>Nombre de Classes</th><td>{{ prise_de_vue.nombreClasses|default('N/A') }}</td></tr>
+                    <tr><th>Prix École</th><td>{{ prise_de_vue.prixEcole|number_format(2, ',', ' ') }} €</td></tr>
+                    <tr><th>Prix Parent Conseillé</th><td>{{ prise_de_vue.prixParent|number_format(2, ',', ' ') }} €</td></tr>
+                    <tr><th>Commentaire</th><td>{{ prise_de_vue.commentaire|nl2br|default('Aucun commentaire') }}</td></tr>
+                    <tr><th>Fréquence</th><td>{{ prise_de_vue.frequence|default('N/A') }}</td></tr>
+                    <tr><th>Base de Donnée Utilisée</th><td>{{ prise_de_vue.baseDeDonneeUtilisee|default('N/A') }}</td></tr>
+                    <tr><th>Jour de Décharge</th><td>{{ prise_de_vue.jourDecharge|default('N/A') }}</td></tr>
+                    <tr><th>Endroit Installation</th><td>{{ prise_de_vue.endroitInstallation|default('N/A') }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <a href="{{ path('app_prise_de_vue_index') }}">back to list</a>
+    <div class="card mt-3">
+        <div class="card-header bg-light">Planches Associées</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Planches Individuelles</h5>
+                    {% if prise_de_vue.planchesIndividuel is not empty %}
+                        <ul class="list-group">
+                        {% for planche in prise_de_vue.planchesIndividuel %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ planche.nom|replace({' ad F A \\d+': ''})|raw }}
+                                <span class="badge bg-primary rounded-pill">{{ planche.categorie }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Aucune planche individuelle associée.</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <h5 class="card-title">Planches Fratrie</h5>
+                    {% if prise_de_vue.planchesFratrie is not empty %}
+                        <ul class="list-group">
+                        {% for planche in prise_de_vue.planchesFratrie %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ planche.nom|replace({' ad F A \\d+': ''})|raw }}
+                                <span class="badge bg-primary rounded-pill">{{ planche.categorie }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Aucune planche fratrie associée.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <a href="{{ path('app_prise_de_vue_edit', {'id': prise_de_vue.id}) }}">edit</a>
 
-    {{ include('prise_de_vue/_delete_form.html.twig') }}
+    <div class="mt-3 d-flex justify-content-between">
+        <a href="{{ path('app_prise_de_vue_index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Retour à la liste
+        </a>
+        <div>
+            {% if is_granted(constant('App\\Security\\Voter\\PriseDeVueVoter::EDIT_COMMENT'), prise_de_vue) or is_granted(constant('App\\Security\\Voter\\PriseDeVueVoter::EDIT'), prise_de_vue) %}
+                <a href="{{ path('app_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-warning me-2">
+                    <i class="bi bi-pencil"></i> 
+                    {% if is_granted(constant('App\\Security\\Voter\\PriseDeVueVoter::EDIT'), prise_de_vue) %}
+                        Modifier
+                    {% else %}
+                        Ajouter/Modifier Commentaire
+                    {% endif %}
+                </a>
+            {% endif %}
+            {% if is_granted(constant('App\\Security\\Voter\\PriseDeVueVoter::DELETE'), prise_de_vue) %}
+                {{ include('prise_de_vue/_delete_form.html.twig') }}
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

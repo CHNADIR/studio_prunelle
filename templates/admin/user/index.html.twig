@@ -1,0 +1,79 @@
+{# filepath: templates/admin/user/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestion des Utilisateurs</h1>
+        <a href="{{ path('app_admin_user_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter un utilisateur
+        </a>
+    </div>
+
+    <form method="get" action="{{ path('app_admin_user_index') }}" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Rechercher par email..." value="{{ current_search|default('') }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Rechercher</button>
+            {% if current_search %}
+                <a href="{{ path('app_admin_user_index') }}" class="btn btn-outline-danger" title="Effacer la recherche"><i class="bi bi-x-lg"></i></a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>{{ knp_pagination_sortable(users, 'ID', 'u.id') }}</th>
+                    <th>{{ knp_pagination_sortable(users, 'Email', 'u.email') }}</th>
+                    <th>Rôles</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user_item in users %}
+                <tr>
+                    <td>{{ user_item.id }}</td>
+                    <td>{{ user_item.email }}</td>
+                    <td>
+                        {% for role in user_item.roles %}
+                            <span class="badge 
+                                {% if role == 'ROLE_ADMIN' %}bg-danger
+                                {% elseif role == 'ROLE_RESPONSABLE_ADMINISTRATIF' %}bg-warning text-dark
+                                {% elseif role == 'ROLE_PHOTOGRAPHE' %}bg-info text-dark
+                                {% else %}bg-secondary
+                                {% endif %}
+                            ">{{ role|replace({'ROLE_': ''})|lower|capitalize }}</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">Aucun</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_admin_user_show', {'id': user_item.id}) }}" class="btn btn-info" title="Voir"><i class="bi bi-eye"></i></a>
+                            <a href="{{ path('app_admin_user_edit', {'id': user_item.id}) }}" class="btn btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                            {# Le formulaire de suppression est inclus ci-dessous ou peut être un bouton ouvrant un modal #}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" class="text-center fst-italic">Aucun utilisateur trouvé.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="navigation d-flex justify-content-center mt-3">
+        {{ knp_pagination_render(users) }}
+    </div>
+    <div class="text-center text-muted small">
+        Affichage de {{ users.getTotalItemCount > 0 ? users.getPaginationData().firstItemNumber : 0 }}
+        à {{ users.getPaginationData().lastItemNumber }}
+        sur {{ users.getTotalItemCount }} utilisateur(s).
+    </div>
+</div>
+{% endblock %}

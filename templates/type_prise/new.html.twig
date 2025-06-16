@@ -1,11 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New TypePrise{% endblock %}
+{% block title %}Créer un nouveau {{ entity_name_singular }}{% endblock %}
 
 {% block body %}
-    <h1>Create new TypePrise</h1>
+<div class="container mt-4">
+    <h1>Créer un nouveau {{ entity_name_singular }}</h1>
 
-    {{ include('type_prise/_form.html.twig') }}
+    {{ include('type_prise/_form.html.twig', {'form': form, 'button_label': 'Créer'}) }}
 
-    <a href="{{ path('app_type_prise_index') }}">back to list</a>
+    <a href="{{ path(index_route_name) }}" class="btn btn-link mt-3">Retour à la liste</a>
+</div>
 {% endblock %}

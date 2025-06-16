@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail Utilisateur: {{ user.email }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Détail Utilisateur: <span class="text-primary">{{ user.email }}</span></h1>
+        <a href="{{ path('app_admin_user_index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-borderless table-sm">
+                <tbody>
+                    <tr>
+                        <th style="width: 20%;">ID</th>
+                        <td>{{ user.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ user.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Rôles</th>
+                        <td>
+                            {% for role in user.roles %}
+                                <span class="badge 
+                                    {% if role == 'ROLE_ADMIN' %}bg-danger
+                                    {% elseif role == 'ROLE_RESPONSABLE_ADMINISTRATIF' %}bg-warning text-dark
+                                    {% elseif role == 'ROLE_PHOTOGRAPHE' %}bg-info text-dark
+                                    {% else %}bg-secondary
+                                    {% endif %}
+                                ">{{ role|replace({'ROLE_': ''})|lower|capitalize }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">Aucun</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+        <a href="{{ path('app_admin_user_edit', {'id': user.id}) }}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Modifier
+        </a>
+        {% if app.user != user %} {# Empêche l'auto-suppression directe via ce bouton #}
+            {{ include('admin/user/_delete_form.html.twig') }}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

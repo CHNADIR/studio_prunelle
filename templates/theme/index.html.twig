@@ -6,9 +6,11 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Liste des Thèmes</h1>
-        <a href="{{ path('app_theme_new') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Ajouter un thème
-        </a>
+        {% if is_granted('ROLE_ADMIN') %}
+            <a href="{{ path('app_theme_new') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ajouter un thème
+            </a>
+        {% endif %}
     </div>
 
     <form method="get" action="{{ path('app_theme_index') }}" class="mb-3">
@@ -25,20 +27,23 @@
         <table class="table table-striped table-hover">
             <thead class="table-dark">
                 <tr>
-                    <th>{{ knp_pagination_sortable(themes, 'ID', 't.id') }}</th>
-                    <th>{{ knp_pagination_sortable(themes, 'Nom', 't.nom') }}</th>
+                    <th>{{ knp_pagination_sortable(thèmes, 'ID', 't.id') }}</th>
+                    <th>{{ knp_pagination_sortable(thèmes, 'Nom', 't.nom') }}</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-            {% for theme in themes %}
+            {% for theme_item in thèmes %} {# Renommé pour éviter conflit #}
                 <tr>
-                    <td>{{ theme.id }}</td>
-                    <td>{{ theme.nom }}</td>
+                    <td>{{ theme_item.id }}</td>
+                    <td>{{ theme_item.nom }}</td>
                     <td>
                         <div class="btn-group btn-group-sm">
-                            <a href="{{ path('app_theme_show', {'id': theme.id}) }}" class="btn btn-info" title="Voir"><i class="bi bi-eye"></i></a>
-                            <a href="{{ path('app_theme_edit', {'id': theme.id}) }}" class="btn btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ path('app_theme_show', {'id': theme_item.id}) }}" class="btn btn-info" title="Voir"><i class="bi bi-eye"></i></a>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <a href="{{ path('app_theme_edit', {'id': theme_item.id}) }}" class="btn btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                {# Le formulaire de suppression est généralement inclus dans la page show ou edit #}
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -52,12 +57,16 @@
     </div>
 
     <div class="navigation d-flex justify-content-center mt-3">
-        {{ knp_pagination_render(themes) }}
+        {{ knp_pagination_render(thèmes) }}
     </div>
     <div class="text-center text-muted small">
-        Affichage de {{ themes.getTotalItemCount > 0 ? themes.getPaginationData().firstItemNumber : 0 }}
-        à {{ themes.getPaginationData().lastItemNumber }}
-        sur {{ themes.getTotalItemCount }} thème(s).
+        {% if thèmes.getTotalItemCount > 0 %}
+            Affichage de {{ thèmes.getPaginationData().firstItemNumber }}
+            à {{ thèmes.getPaginationData().lastItemNumber }}
+            sur {{ thèmes.getTotalItemCount }} thème(s).
+        {% else %}
+            Aucun thème à afficher.
+        {% endif %}
     </div>
 </div>
 {% endblock %}

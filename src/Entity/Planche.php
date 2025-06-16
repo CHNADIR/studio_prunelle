@@ -10,6 +10,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: PlancheRepository::class)]
 class Planche
 {
+    public const CATEGORIE_INDIVIDUEL = 'Individuel';
+    public const CATEGORIE_FRATRIE = 'Fratrie';
+    public const CATEGORIE_GROUPE_CLASSE = 'Groupe classe';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -23,6 +27,7 @@ class Planche
     #[ORM\Column(length: 20)]
     #[Assert\NotBlank(message: "La catégorie ne peut pas être vide.")]
     #[Assert\Length(max: 20, maxMessage: "La catégorie ne doit pas dépasser {{ limit }} caractères.")]
+    #[Assert\Choice(choices: [self::CATEGORIE_INDIVIDUEL, self::CATEGORIE_FRATRIE, self::CATEGORIE_GROUPE_CLASSE], message: "Catégorie invalide.")]
     private ?string $categorie = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -86,6 +91,6 @@ class Planche
 
     public function __toString(): string
     {
-        return $this->nom; // ou une autre propriété appropriée
+        return $this->nom ?? 'Planche sans nom';
     }
 }

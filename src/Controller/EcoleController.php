@@ -71,24 +71,24 @@ class EcoleController extends AbstractController
     #[Route('/{id}', name: 'app_ecole_show', methods: ['GET'])]
     public function show(Ecole $ecole, PriseDeVueRepository $priseDeVueRepository): Response // AJOUTER PriseDeVueRepository
     {
-        $this->denyAccessUnlessGranted(EcoleVoter::VIEW, $ecole, "Vous n'avez pas accès à cette école.");
-
-        // Récupérer les dernières prises de vue pour cette école (par exemple, les 5 dernières)
+        // Récupérer les dernières prises de vue pour cette école
         $dernieresPrisesDeVue = $priseDeVueRepository->findBy(
             ['ecole' => $ecole],
-            ['date' => 'DESC'], // Trier par date décroissante
-            5 // Limiter aux 5 plus récentes
+            ['date' => 'DESC'],
+            5
         );
 
         return $this->render('ecole/show.html.twig', [
             'ecole' => $ecole,
-            'dernieres_prises_de_vue' => $dernieresPrisesDeVue, // PASSER LES PRISES DE VUE AU TEMPLATE
+            'dernieres_prises_de_vue' => $dernieresPrisesDeVue,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'app_ecole_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Ecole $ecole, EntityManagerInterface $entityManager): Response
     {
+        $this->denyAccessUnlessGranted(EcoleVoter::EDIT, $ecole, "Vous n'êtes pas autorisé à modifier cette école.");
+
         $form = $this->createForm(EcoleForm::class, $ecole);
         $form->handleRequest($request);
 
@@ -107,6 +107,8 @@ class EcoleController extends AbstractController
     #[Route('/{id}', name: 'app_ecole_delete', methods: ['POST'])]
     public function delete(Request $request, Ecole $ecole, EntityManagerInterface $entityManager): Response
     {
+        $this->denyAccessUnlessGranted(EcoleVoter::DELETE, $ecole, "Vous n'êtes pas autorisé à supprimer cette école.");
+
         if ($this->isCsrfTokenValid('delete'.$ecole->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($ecole);
             $entityManager->flush();

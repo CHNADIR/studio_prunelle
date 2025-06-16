@@ -1,72 +1,85 @@
+{# /templates/prise_de_vue/_form.html.twig - Améliorations visuelles des sections #}
 {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">{{ 'prise_de_vue.form.section.general_info'|trans }}</div>
-                <div class="card-body">
-                    {{ form_row(form.date) }}
-                    {{ form_row(form.photographe) }}
-                    {{ form_row(form.ecole) }}
-                    {{ form_row(form.typePrise) }}
-                    {{ form_row(form.theme) }}
-                </div>
+    <fieldset class="mb-4">
+        <legend class="fs-5 fw-bold text-primary">{{ 'prise_de_vue.form.section.general_info'|trans }}</legend>
+        <div class="card">
+            <div class="card-body bg-light">
+                {{ form_row(form.date) }}
+                {{ form_row(form.photographe) }}
+                {{ form_row(form.ecole) }}
+                {{ form_row(form.typePrise) }}
+                {{ form_row(form.theme) }}
             </div>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">{{ 'prise_de_vue.form.section.session_details'|trans }}</div>
-                <div class="card-body">
-                    {{ form_row(form.nombreEleves) }}
-                    {{ form_row(form.nombreClasses) }}
-                    {{ form_row(form.typeVente) }}
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">{{ 'prise_de_vue.form.section.pricing'|trans }}</div>
-                <div class="card-body">
-                    {{ form_row(form.prixEcole) }}
-                    {{ form_row(form.prixParent) }}
-                </div>
-            </div>
-        </div>
-    </div>
+    </fieldset>
     
-    <div class="card mb-4">
-        <div class="card-header">{{ 'prise_de_vue.form.section.selected_packages'|trans }}</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    {# Pour les champs EntityType multiple, form_row est généralement préférable pour le label #}
-                    {{ form_row(form.planchesIndividuel) }}
+    <fieldset class="mb-4">
+        <legend class="fs-5 fw-bold text-primary">{{ 'prise_de_vue.form.section.session_details'|trans }}</legend>
+        <div class="card">
+            <div class="card-body bg-light">
+                <div class="row">
+                    <div class="col-md-6">{{ form_row(form.nombreEleves) }}</div>
+                    <div class="col-md-6">{{ form_row(form.nombreClasses) }}</div>
                 </div>
-                <div class="col-md-6">
-                    {{ form_row(form.planchesFratrie) }}
-                </div>
+                {{ form_row(form.typeVente) }}
             </div>
         </div>
-    </div>
+    </fieldset>
     
-    <div class="mb-3">
-        {{ form_row(form.commentaire) }}
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header">{{ 'prise_de_vue.form.section.additional_info'|trans }}</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    {{ form_row(form.frequence) }}
-                    {{ form_row(form.baseDeDonneeUtilisee) }}
-                </div>
-                <div class="col-md-6">
-                    {{ form_row(form.jourDecharge) }}
-                    {{ form_row(form.endroitInstallation) }}
+    <fieldset class="mb-4">
+        <legend class="fs-5 fw-bold text-primary">{{ 'prise_de_vue.form.section.pricing'|trans }}</legend>
+        <div class="card">
+            <div class="card-body bg-light">
+                <div class="row">
+                    <div class="col-md-6">{{ form_row(form.prixEcole) }}</div>
+                    <div class="col-md-6">{{ form_row(form.prixParent) }}</div>
                 </div>
             </div>
         </div>
-    </div>
+    </fieldset>
+    
+    <fieldset class="mb-4">
+        <legend class="fs-5 fw-bold text-primary">{{ 'prise_de_vue.form.section.selected_packages'|trans }}</legend>
+        <div class="card">
+            <div class="card-body bg-light">
+                <div class="row">
+                    <div class="col-md-6">{{ form_row(form.planchesIndividuel) }}</div>
+                    <div class="col-md-6">{{ form_row(form.planchesFratrie) }}</div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    
+    <fieldset class="mb-4">
+        <legend class="fs-5 fw-bold text-primary">Commentaire</legend>
+        <div class="card">
+            <div class="card-body bg-light">
+                {{ form_row(form.commentaire) }}
+            </div>
+        </div>
+    </fieldset>
 
-    <button type="submit" class="btn btn-primary mt-3">{{ button_label|default('form.button.save'|trans) }}</button>
+    <fieldset class="mb-4">
+        <legend class="fs-5 fw-bold text-primary">{{ 'prise_de_vue.form.section.additional_info'|trans }}</legend>
+        <div class="card">
+            <div class="card-body bg-light">
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form_row(form.frequence) }}
+                        {{ form_row(form.baseDeDonneeUtilisee) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_row(form.jourDecharge) }}
+                        {{ form_row(form.endroitInstallation) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> {{ button_label|default('form.button.save'|trans) }}
+        </button>
+    </div>
 {{ form_end(form) }}

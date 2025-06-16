@@ -2,19 +2,18 @@
 
 namespace App\Security\Voter;
 
-use App\Entity\Ecole;
-use App\Entity\User;
+use App\Entity\Planche;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class EcoleVoter extends Voter
+class PlancheVoter extends Voter
 {
-    public const VIEW = 'ECOLE_VIEW';
-    public const EDIT = 'ECOLE_EDIT';
-    public const DELETE = 'ECOLE_DELETE';
-    public const CREATE = 'ECOLE_CREATE';
+    public const VIEW = 'PLANCHE_VIEW';
+    public const EDIT = 'PLANCHE_EDIT';
+    public const DELETE = 'PLANCHE_DELETE';
+    public const CREATE = 'PLANCHE_CREATE';
 
     private Security $security;
 
@@ -25,19 +24,8 @@ class EcoleVoter extends Voter
 
     protected function supports(string $attribute, $subject): bool
     {
-        if (!in_array($attribute, [self::VIEW, self::EDIT, self::DELETE, self::CREATE])) {
-            return false;
-        }
-
-        if ($attribute === self::CREATE) {
-            return true;
-        }
-
-        if (!$subject instanceof Ecole) {
-            return false;
-        }
-
-        return true;
+        return in_array($attribute, [self::VIEW, self::EDIT, self::DELETE, self::CREATE])
+            && ($subject instanceof Planche || $attribute === self::CREATE);
     }
 
     protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
@@ -48,25 +36,19 @@ class EcoleVoter extends Voter
             return false;
         }
 
+        // Les administrateurs peuvent tout faire
         if ($this->security->isGranted('ROLE_ADMIN')) {
             return true;
         }
 
+        // Les responsables administratifs peuvent tout faire
         if ($this->security->isGranted('ROLE_RESPONSABLE_ADMINISTRATIF')) {
-            if ($attribute === self::CREATE) return true;
-
-            if ($subject instanceof Ecole) {
-                 switch ($attribute) {
-                    case self::VIEW:
-                    case self::EDIT:
-                    case self::DELETE:
-                        return true;
-                }
-            }
+            return true;
         }
 
+        // Les photographes peuvent uniquement voir les planches
         if ($this->security->isGranted('ROLE_PHOTOGRAPHE')) {
-            if ($attribute === self::VIEW && $subject instanceof Ecole) {
+            if ($attribute === self::VIEW) {
                 return true;
             }
         }

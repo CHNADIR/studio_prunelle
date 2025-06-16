@@ -3,46 +3,61 @@
 {% block title %}Détail Planche: {{ planche.nom }}{% endblock %}
 
 {% block body %}
-    <div class="container mt-4">
-        <h1>Détail de la Planche</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Détail Planche: <span class="text-primary">{{ planche.nom }}</span></h1>
+        <a href="{{ path('app_planche_index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
 
-        <table class="table">
-            <tbody>
-                <tr>
-                    <th>Id</th>
-                    <td>{{ planche.id }}</td>
-                </tr>
-                <tr>
-                    <th>Nom</th>
-                    <td>{{ planche.nom }}</td>
-                </tr>
-                <tr>
-                    <th>Catégorie</th>
-                    <td>{{ planche.categorie }}</td>
-                </tr>
-                <tr>
-                    <th>Image</th>
-                    <td>
-                        {% if planche.imageFilename %}
-                            <img src="{{ ('planches/' ~ planche.imageFilename) | imagine_filter('planche_medium') }}" alt="{{ planche.nom }}" class="img-fluid" style="max-width: 400px;">
-                            <p class="mt-2">
-                                <a href="{{ path('app_secure_planche_image_original', {'filename': planche.imageFilename }) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
-                                    <i class="bi bi-download"></i> Voir l'original (sécurisé)
-                                </a>
-                            </p>
-                        {% else %}
-                            Aucune image.
-                        {% endif %}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="mt-3">
-            <a href="{{ path('app_planche_index') }}" class="btn btn-secondary">Retour à la liste</a>
-            {% if is_granted('ROLE_ADMIN') %} {# Ou un autre rôle/permission approprié pour l'édition #}
-                <a href="{{ path('app_planche_edit', {'id': planche.id}) }}" class="btn btn-warning">Modifier</a>
-            {% endif %}
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-borderless table-sm">
+                <tbody>
+                    <tr>
+                        <th style="width: 20%;">Id</th>
+                        <td>{{ planche.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Nom</th>
+                        <td>{{ planche.nom }}</td>
+                    </tr>
+                    <tr>
+                        <th>Catégorie</th>
+                        <td>{{ planche.categorie }}</td>
+                    </tr>
+                    <tr>
+                        <th>Description/Contenu</th>
+                        <td>{{ planche.descriptionContenu|nl2br|default('N/A') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Image</th>
+                        <td>
+                            {% if planche.imageFilename %}
+                                <img src="{{ ('planches/' ~ planche.imageFilename) | imagine_filter('planche_medium') }}" alt="{{ planche.nom }}" class="img-fluid mb-2" style="max-width: 400px; border-radius: .25rem;">
+                                <p>
+                                    <a href="{{ path('app_secure_planche_image_original', {'filename': planche.imageFilename }) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                        <i class="bi bi-download"></i> Voir l'original (sécurisé)
+                                    </a>
+                                </p>
+                            {% else %}
+                                Aucune image.
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
+
+    {% if is_granted('ROLE_ADMIN') %}
+    <div class="mt-3 d-flex gap-2">
+        <a href="{{ path('app_planche_edit', {'id': planche.id}) }}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Modifier
+        </a>
+        {{ include('planche/_delete_form.html.twig') }}
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

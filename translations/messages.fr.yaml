@@ -9,3 +9,16 @@ form.button.update: "Mettre à jour"
 
 prise_de_vue.new.page_title: "Nouvelle Prise de Vue"
 prise_de_vue.new.title: "Créer une nouvelle prise de vue"
+
+prise_de_vue:
+  form:
+    section:
+      general_info: "Informations générales"
+      session_details: "Détails de la séance"
+      pricing: "Tarification"
+      selected_packages: "Planches sélectionnées"
+      additional_info: "Informations complémentaires"
+form:
+  button:
+    save: "Enregistrer"
+    update: "Mettre à jour"

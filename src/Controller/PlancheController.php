@@ -2,129 +2,183 @@
 
 namespace App\Controller;
 
+use App\Controller\Abstract\AbstractCrudController; // MODIFIÉ
 use App\Entity\Planche;
 use App\Form\PlancheForm;
-use App\Repository\PlancheRepository;
-use App\Service\UploaderHelper; // Ajoutez cette ligne
-use Doctrine\ORM\EntityManagerInterface;
-use Knp\Component\Pager\PaginatorInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\File\UploadedFile; // Ajoutez cette ligne
+use App\Service\UploaderHelper;
+use Doctrine\ORM\EntityManagerInterface; // Nécessaire pour le constructeur parent
+use Knp\Component\Pager\PaginatorInterface; // Nécessaire pour le constructeur parent
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormInterface; // Pour les types des hooks
 
 #[Route('/planche')]
-final class PlancheController extends AbstractController
+final class PlancheController extends AbstractCrudController // MODIFIÉ
 {
-    #[Route(name: 'app_planche_index', methods: ['GET'])]
-    public function index(
-        PlancheRepository $plancheRepository,
+    private UploaderHelper $uploaderHelper;
+    private ?string $filenameToDelete = null; // Pour stocker le nom du fichier à supprimer
+
+    // Surcharger le constructeur pour injecter UploaderHelper et appeler le parent
+    public function __construct(
+        EntityManagerInterface $entityManager,
         PaginatorInterface $paginator,
-        Request $request
-    ): Response {
-        $queryBuilder = $plancheRepository->createQueryBuilder('p');
+        UploaderHelper $uploaderHelper
+    ) {
+        parent::__construct($entityManager, $paginator);
+        $this->uploaderHelper = $uploaderHelper;
+    }
 
-        $search = $request->query->get('search');
-        if ($search) {
-            $queryBuilder->andWhere('p.nom LIKE :search OR p.categorie LIKE :search')
-                ->setParameter('search', '%' . $search . '%');
+    // --- Implémentation des méthodes abstraites du parent ---
+    protected function getEntityClass(): string
+    {
+        return Planche::class;
+    }
+
+    protected function getFormClass(): string
+    {
+        return PlancheForm::class;
+    }
+
+    protected function getIndexRouteName(): string
+    {
+        return 'app_planche_index';
+    }
+
+    protected function getTemplateBasePath(): string
+    {
+        return 'planche';
+    }
+
+    protected function getEntityNameSingular(): string
+    {
+        return 'planche';
+    }
+
+    protected function getEntityNamePlural(): string
+    {
+        return 'planches';
+    }
+
+    // Surcharger pour correspondre à l'alias utilisé dans les templates KNP Paginator
+    protected function getEntityAlias(): string
+    {
+        return 'p';
+    }
+
+    // Surcharger pour définir les champs sur lesquels la recherche s'applique
+    protected function getSearchableFields(): array
+    {
+        return ['nom', 'categorie'];
+    }
+
+    // --- Hooks pour la gestion des images ---
+
+    protected function beforePersist(object $entity, FormInterface $form, Request $request): void
+    {
+        /** @var Planche $entity */
+        /** @var UploadedFile|null $imageFile */
+        $imageFile = $form->get('imageFile')->getData();
+
+        if ($imageFile) {
+            $newFilename = $this->uploaderHelper->uploadPlancheImage($imageFile);
+            $entity->setImageFilename($newFilename);
         }
+    }
 
-        $pagination = $paginator->paginate(
-            $queryBuilder->getQuery(),
-            $request->query->getInt('page', 1),
-            10, // Limite par page
-            ['defaultSortFieldName' => 'p.nom', 'defaultSortDirection' => 'asc']
-        );
+    protected function beforeUpdate(object $entity, FormInterface $form, Request $request): void
+    {
+        /** @var Planche $entity */
+        $existingImage = $entity->getImageFilename(); // Sauvegarder le nom de l'image existante
 
-        return $this->render('planche/index.html.twig', [
-            'planches' => $pagination,
-            'current_search' => $search,
-        ]);
+        /** @var UploadedFile|null $imageFile */
+        $imageFile = $form->get('imageFile')->getData();
+
+        if ($imageFile) {
+            $newFilename = $this->uploaderHelper->uploadPlancheImage($imageFile, $existingImage);
+            $entity->setImageFilename($newFilename);
+        }
+    }
+
+    protected function beforeRemove(object $entity, Request $request): void
+    {
+        /** @var Planche $entity */
+        if ($entity->getImageFilename()) {
+            // Stocker le nom du fichier pour le supprimer dans afterRemove
+            $this->filenameToDelete = $entity->getImageFilename();
+        }
+    }
+
+    protected function afterRemove(object $entity, Request $request): void
+    {
+        if ($this->filenameToDelete) {
+            $this->uploaderHelper->removePlancheImage($this->filenameToDelete);
+            $this->filenameToDelete = null; // Réinitialiser pour la prochaine suppression potentielle
+        }
+    }
+
+    // --- Actions publiques appelant les méthodes protégées du parent ---
+
+    #[Route(name: 'app_planche_index', methods: ['GET'])]
+    public function index(Request $request): Response
+    {
+        // La sécurité est gérée par security.yaml ou un Voter si configuré
+        // Exemple : $this->denyAccessUnlessGranted('ROLE_GESTION_PLANCHE');
+        return $this->processIndex($request);
     }
 
     #[Route('/new', name: 'app_planche_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, UploaderHelper $uploaderHelper): Response
+    public function new(Request $request): Response
     {
-        $planche = new Planche();
-        $form = $this->createForm(PlancheForm::class, $planche);
-        $form->handleRequest($request);
+        // Exemple : $this->denyAccessUnlessGranted('ROLE_GESTION_PLANCHE');
+        return $this->processNew($request);
+    }
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            /** @var UploadedFile|null $imageFile */
-            $imageFile = $form->get('imageFile')->getData();
+    #[Route('/{id}', name: 'app_planche_show', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function show(int $id): Response
+    {
+        $planche = $this->entityManager->getRepository($this->getEntityClass())->find($id);
 
-            if ($imageFile) {
-                $newFilename = $uploaderHelper->uploadPlancheImage($imageFile);
-                $planche->setImageFilename($newFilename);
-            }
-
-            $entityManager->persist($planche);
-            $entityManager->flush();
-            $this->addFlash('success', 'Planche créée avec succès.');
-            return $this->redirectToRoute('app_planche_index', [], Response::HTTP_SEE_OTHER);
+        if (!$planche) {
+            throw $this->createNotFoundException('La planche n\'existe pas');
         }
 
-        return $this->render('planche/new.html.twig', [
+        // Vérification explicite des droits avec le nouveau Voter
+        $this->denyAccessUnlessGranted('PLANCHE_VIEW', $planche);
+
+        return $this->render($this->getTemplateBasePath() . '/show.html.twig', [
             'planche' => $planche,
-            'form' => $form,
         ]);
     }
 
-    #[Route('/{id}', name: 'app_planche_show', methods: ['GET'])]
-    public function show(Planche $planche, UploaderHelper $uploaderHelper): Response
+    #[Route('/{id}/edit', name: 'app_planche_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function edit(Request $request, int $id): Response // L'entité est récupérée par processEdit
     {
-        return $this->render('planche/show.html.twig', [
-            'planche' => $planche,
-            'uploader_helper' => $uploaderHelper, // Pour obtenir le chemin public
-        ]);
+        return $this->processEdit($request, $id);
     }
 
-    #[Route('/{id}/edit', name: 'app_planche_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Planche $planche, EntityManagerInterface $entityManager, UploaderHelper $uploaderHelper): Response
+    #[Route('/{id}', name: 'app_planche_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function delete(Request $request, int $id): Response // L'entité est récupérée par processDelete
     {
-        $existingImage = $planche->getImageFilename(); // Sauvegarder le nom de l'image existante
-        $form = $this->createForm(PlancheForm::class, $planche);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            /** @var UploadedFile|null $imageFile */
-            $imageFile = $form->get('imageFile')->getData();
-
-            if ($imageFile) {
-                $newFilename = $uploaderHelper->uploadPlancheImage($imageFile, $existingImage);
-                $planche->setImageFilename($newFilename);
-            }
-
-            $entityManager->flush();
-            $this->addFlash('success', 'Planche modifiée avec succès.');
-            return $this->redirectToRoute('app_planche_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->render('planche/edit.html.twig', [
-            'planche' => $planche,
-            'form' => $form,
-            'uploader_helper' => $uploaderHelper, // Pour afficher l'image actuelle
-        ]);
+        return $this->processDelete($request, $id);
     }
 
-    #[Route('/{id}', name: 'app_planche_delete', methods: ['POST'])]
-    public function delete(Request $request, Planche $planche, EntityManagerInterface $entityManager, UploaderHelper $uploaderHelper): Response
+    // Optionnel: Surcharger les paramètres de rendu si besoin d'ajouter des variables spécifiques
+    // pour les templates de Planche (par exemple, uploader_helper si nécessaire dans le template)
+    /*
+    protected function getRenderParametersForShow(object $entity): array
     {
-        $imageFilename = $planche->getImageFilename(); // Récupérer le nom du fichier avant la suppression
-
-        if ($this->isCsrfTokenValid('delete'.$planche->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($planche);
-            $entityManager->flush();
-
-            // Supprimer le fichier image après la suppression de l'entité
-            if ($imageFilename) {
-                $uploaderHelper->removePlancheImage($imageFilename);
-            }
-            $this->addFlash('success', 'Planche supprimée avec succès.');
-        }
-
-        return $this->redirectToRoute('app_planche_index', [], Response::HTTP_SEE_OTHER);
+        $params = parent::getRenderParametersForShow($entity);
+        // $params['uploader_helper'] = $this->uploaderHelper; // Si vous en avez besoin directement dans le template show
+        return $params;
     }
+
+    protected function getRenderParametersForNewEdit(FormInterface $form, object $entity): array
+    {
+        $params = parent::getRenderParametersForNewEdit($form, $entity);
+        // $params['uploader_helper'] = $this->uploaderHelper; // Si vous en avez besoin directement dans les templates new/edit
+        return $params;
+    }
+    */
 }
