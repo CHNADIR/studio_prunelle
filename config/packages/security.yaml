@@ -31,6 +31,7 @@ security:
         - { path: ^/login$, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/admin/prise-de-vue, roles: [ROLE_ADMIN, ROLE_PHOTOGRAPHE] }
         - { path: ^/photographe, roles: ROLE_PHOTOGRAPHE }
         - { path: ^/superadmin, roles: ROLE_SUPERADMIN }
         

@@ -149,11 +149,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(error => {
                     console.error('Erreur:', error);
                     
-                    // Afficher une notification d'erreur
-                    NotificationService.showError('Erreur lors du chargement du formulaire');
+                    // Utiliser le service de notification pour une gestion centralisée des erreurs
+                    NotificationService.showError('Erreur lors du chargement du formulaire', 5000);
                     
-                    // Supprimer la modal
-                    modal.remove();
+                    // Ajouter une animation de sortie (conforme au pattern UX mentionné)
+                    modal.classList.add('animate__animated', 'animate__fadeOut');
+                    setTimeout(() => {
+                        modal.remove();
+                    }, 300);
                 });
         });
     });

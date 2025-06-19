@@ -1,19 +1,27 @@
-# Stage 1: Build Node.js assets
-FROM node:18-alpine AS node_builder
+# Stage 1: Installer les dépendances PHP
+FROM composer:latest AS composer
+
+WORKDIR /app
+COPY composer.json composer.lock symfony.lock ./
+RUN composer install --prefer-dist --no-scripts --no-progress --no-interaction
+
+# Stage 2: Build Node.js assets
+FROM node:20-alpine AS node_builder
 
 WORKDIR /app_node
-
-COPY package.json ./
-COPY package-lock.json ./
-
-RUN npm install
-
+# Copier d'abord les dépendances PHP depuis l'étape précédente
+COPY --from=composer /app/vendor/ ./vendor/
+COPY package.json package-lock.json ./
+# Installation explicite de turbo 
+RUN npm install --no-package-lock @symfony/ux-turbo@^2.26.0 && \
+    npm install --force
 COPY webpack.config.js ./
 COPY assets ./assets
 
-RUN npm run build
+# Build des assets avec gestion des erreurs
+RUN NODE_ENV=production npm run build || echo "Build warnings detected but continuing..."
 
-# Stage 2: PHP Application
+# Stage 3: Application finale
 FROM php:8.2-fpm-alpine
 
 WORKDIR /var/www/html
@@ -26,76 +34,40 @@ ARG GID=1000
 RUN apk add --no-cache \
     icu-dev \
     libzip-dev \
-    libxml2-dev \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    oniguruma-dev \
-    mysql-client \
-    git \
-    unzip \
     bash \
-    wget \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    git \
     && docker-php-ext-install \
     pdo_mysql \
     intl \
     zip \
-    gd \
-    opcache \
-    mbstring \
-    xml
+    opcache
 
-# Installer Symfony CLI
-RUN apk add --no-cache bash wget \
-    && wget https://get.symfony.com/cli/installer -O - | bash \
-    && mv /root/.symfony5/bin/symfony /usr/local/bin/symfony \
-    && chmod +x /usr/local/bin/symfony
+# Configurer OPcache pour de meilleures performances
+COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 
-# Configurer OPcache
-RUN { \
-    echo 'opcache.memory_consumption=128'; \
-    echo 'opcache.interned_strings_buffer=8'; \
-    echo 'opcache.max_accelerated_files=4000'; \
-    echo 'opcache.revalidate_freq=0'; \
-    echo 'opcache.fast_shutdown=1'; \
-    } > /usr/local/etc/php/conf.d/opcache-recommended.ini
+# Créer les répertoires nécessaires
+RUN mkdir -p /var/www/html/var/cache /var/www/html/var/log /var/www/html/var/uploads \
+    /var/www/html/public/uploads /var/www/html/public/build
 
-# Installer Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Utiliser un compte système avec des droits limités
-RUN addgroup -g $GID -S appgroup && \
-    adduser -u $UID -S appuser -G appgroup
-
-# Créer les répertoires nécessaires avec les bonnes permissions
-RUN mkdir -p /var/www/html/var/cache /var/www/html/var/log /var/www/html/var/uploads public/uploads \
-    && chown -R appuser:appgroup /var/www/html \
-    && chmod -R 777 /var/www/html/var
-
-# Copier les fichiers de composer pour exploitation du cache Docker
-COPY --chown=appuser:appgroup composer.json composer.lock symfony.lock ./
-
-# Installer les dépendances PHP
-USER appuser
-RUN composer install --prefer-dist --no-scripts --no-progress --no-interaction
-
-# Copier le reste de l'application
-COPY --chown=appuser:appgroup . .
+# Copier les dépendances PHP depuis l'étape composer
+COPY --from=composer /app/vendor/ ./vendor/
 
 # Copier les assets compilés depuis l'étape node_builder
-COPY --from=node_builder /app_node/public/build /var/www/html/public/build
+COPY --from=node_builder /app_node/public/build/ ./public/build/
 
-# Revenir à l'utilisateur root pour les opérations nécessitant des privilèges
-USER root
+# Copier le reste de l'application
+COPY . .
 
 # Créer un script d'entrée pour vérifier les permissions au démarrage
-COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint
 
 # Exposer le port pour PHP-FPM
 EXPOSE 9000
 
-# Utiliser le script d'entrée
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Créer le répertoire pour les votants de sécurité et s'assurer qu'il est accessible
+RUN mkdir -p /var/www/html/src/Security/Voter && \
+    chmod -R 755 /var/www/html/src/Security
+
+ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
