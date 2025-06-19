@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Planche index{% endblock %}
+
+{% block body %}
+    <h1>Planche index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Usage</th>
+                <th>Formats</th>
+                <th>PrixEcole</th>
+                <th>PrixParents</th>
+                <th>CreatedAt</th>
+                <th>UpdatedAt</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for planche in planches %}
+            <tr>
+                <td>{{ planche.id }}</td>
+                <td>{{ planche.nom }}</td>
+                <td>{{ planche.type }}</td>
+                <td>{{ planche.usage }}</td>
+                <td>{{ planche.formats ? planche.formats|json_encode : '' }}</td>
+                <td>{{ planche.prixEcole }}</td>
+                <td>{{ planche.prixParents }}</td>
+                <td>{{ planche.createdAt ? planche.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ planche.updatedAt ? planche.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_planche_show', {'id': planche.id}) }}">show</a>
+                    <a href="{{ path('app_planche_edit', {'id': planche.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="10">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_planche_new') }}">Create new</a>
+{% endblock %}

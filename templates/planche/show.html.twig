@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Planche{% endblock %}
+
+{% block body %}
+    <h1>Planche</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ planche.id }}</td>
+            </tr>
+            <tr>
+                <th>Nom</th>
+                <td>{{ planche.nom }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{{ planche.type }}</td>
+            </tr>
+            <tr>
+                <th>Usage</th>
+                <td>{{ planche.usage }}</td>
+            </tr>
+            <tr>
+                <th>Formats</th>
+                <td>{{ planche.formats ? planche.formats|json_encode : '' }}</td>
+            </tr>
+            <tr>
+                <th>PrixEcole</th>
+                <td>{{ planche.prixEcole }}</td>
+            </tr>
+            <tr>
+                <th>PrixParents</th>
+                <td>{{ planche.prixParents }}</td>
+            </tr>
+            <tr>
+                <th>CreatedAt</th>
+                <td>{{ planche.createdAt ? planche.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>UpdatedAt</th>
+                <td>{{ planche.updatedAt ? planche.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_planche_index') }}">back to list</a>
+
+    <a href="{{ path('app_planche_edit', {'id': planche.id}) }}">edit</a>
+
+    {{ include('planche/_delete_form.html.twig') }}
+{% endblock %}

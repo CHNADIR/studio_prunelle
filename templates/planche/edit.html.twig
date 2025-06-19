@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Planche{% endblock %}
+
+{% block body %}
+    <h1>Edit Planche</h1>
+
+    {{ include('planche/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_planche_index') }}">back to list</a>
+
+    {{ include('planche/_delete_form.html.twig') }}
+{% endblock %}
