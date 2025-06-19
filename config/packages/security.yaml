@@ -1,0 +1,40 @@
+security:
+    enable_authenticator_manager: true
+    password_hashers:
+        App\Entity\User:
+            algorithm: auto
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        
+        main:
+            pattern: ^/
+            provider: app_user_provider
+            custom_authenticator:
+                - App\Security\LoginFormAuthenticator
+            logout:
+                path: app_logout
+                target: home
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800 # 1 semaine
+
+    access_control:
+        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/photographe, roles: ROLE_PHOTOGRAPHE }
+        - { path: ^/superadmin, roles: ROLE_SUPERADMIN }
+        
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER
+        ROLE_PHOTOGRAPHE: ROLE_USER
+        ROLE_SUPERADMIN: [ROLE_ADMIN, ROLE_PHOTOGRAPHE]
