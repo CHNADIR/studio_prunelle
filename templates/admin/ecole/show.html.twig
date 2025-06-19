@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fiche École - {{ ecole.nom }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Fiche École</h1>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            {{ ecole.nom }}
+        </div>
+        <div class="card-body">
+            <p><strong>Code :</strong> {{ ecole.code }}</p>
+            <p><strong>Genre :</strong> {{ ecole.genre }}</p>
+            <p><strong>Adresse :</strong> {{ ecole.adresse }}</p>
+            <p><strong>Ville :</strong> {{ ecole.ville }}</p>
+            <p><strong>Code Postal :</strong> {{ ecole.codePostal }}</p>
+            <p><strong>Téléphone :</strong> {{ ecole.telephone }}</p>
+            <p><strong>Email :</strong> {{ ecole.email ?: 'N/A' }}</p>
+            <p>
+                <strong>Active :</strong>
+                <span class="badge {{ ecole.active ? 'bg-success' : 'bg-danger' }}">
+                    {{ ecole.active ? 'Oui' : 'Non' }}
+                </span>
+            </p>
+        </div>
+    </div>
+
+    <a href="{{ path('admin_ecole_index') }}" class="btn btn-secondary">
+        Retour à la liste
+    </a>
+    <a href="{{ path('admin_ecole_edit', {'id': ecole.id}) }}" class="btn btn-warning">
+        Modifier l'école
+    </a>
+
+    {% if is_granted(constant('App\\Security\\Voter\\EcoleVoter::DELETE'), ecole) %}
+        {{ include('ecole/_delete_form.html.twig') }}
+    {% endif %}
+</div>
+{% endblock %}

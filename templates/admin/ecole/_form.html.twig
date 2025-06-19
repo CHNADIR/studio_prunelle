@@ -1,0 +1,59 @@
+{{ form_start(form) }}
+    <div class="mb-3">
+        {{ form_label(form.code) }}
+        {{ form_widget(form.code, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.code) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.genre) }}
+        {{ form_widget(form.genre, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.genre) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.nom) }}
+        {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.nom) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.adresse) }}
+        {{ form_widget(form.adresse, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.adresse) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.ville) }}
+        {{ form_widget(form.ville, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.ville) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.codePostal) }}
+        {{ form_widget(form.codePostal, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.codePostal) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.telephone) }}
+        {{ form_widget(form.telephone, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.telephone) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.email) }}
+        {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.email) }}
+    </div>
+
+    <div class="form-check mb-3">
+        {{ form_widget(form.active, {'attr': {'class': 'form-check-input'}}) }}
+        {{ form_label(form.active, null, {'label_attr': {'class': 'form-check-label'}}) }}
+        {{ form_errors(form.active) }}
+    </div>
+
+    <button class="btn btn-primary">
+        {{ button_label|default('Enregistrer') }}
+    </button>
+{{ form_end(form) }}

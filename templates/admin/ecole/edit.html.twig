@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier École{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Modifier École</h1>
+
+    {% include 'admin/ecole/_form.html.twig' with {'form': form, 'button_label': 'Mettre à jour'} %}
+
+    <a href="{{ path('admin_ecole_index') }}" class="btn btn-secondary mt-2">
+        Annuler
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Écoles{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Liste des Écoles</h1>
+        <a href="{{ path('admin_ecole_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter une école
+        </a>
+    </div>
+
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Code</th>
+                <th>Genre</th>
+                <th>Nom</th>
+                <th>Ville</th>
+                <th>Téléphone</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for ecole_item in ecoles %}
+            <tr>
+                <td>{{ ecole_item.code }}</td>
+                <td>{{ ecole_item.genre }}</td>
+                <td>
+                    <a href="{{ path('admin_ecole_show', { id: ecole_item.id }) }}">
+                        {{ ecole_item.nom }}
+                    </a>
+                </td>
+                <td>{{ ecole_item.ville }}</td>
+                <td>{{ ecole_item.telephone }}</td>
+                <td>
+                    <span class="badge {{ ecole_item.active ? 'bg-success' : 'bg-danger' }}">
+                        {{ ecole_item.active ? 'Active' : 'Inactive' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ path('admin_ecole_edit', { id: ecole_item.id }) }}"
+                       class="btn btn-sm btn-warning">
+                       <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="{{ path('admin_ecole_delete', { id: ecole_item.id }) }}"
+                          method="post"
+                          style="display:inline"
+                          onsubmit="return confirm('Supprimer ?');">
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('delete' ~ ecole_item.id) }}">
+                        <button class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    Aucune école n’a été trouvée.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
