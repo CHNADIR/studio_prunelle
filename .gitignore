@@ -45,3 +45,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 ###< Logs ###
+
+# Documentation interne
+/patterns.md
+/prd.md
+/sprint.md

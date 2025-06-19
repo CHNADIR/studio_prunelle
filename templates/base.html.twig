@@ -69,7 +69,12 @@
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                     <li><a class="dropdown-item" href="#">Mon profil</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ path('app_logout') }}">Déconnexion</a></li>
+                                    <li>
+                                        <form action="{{ path('app_logout') }}" method="post" class="dropdown-item p-0">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                                            <button type="submit" class="btn btn-link dropdown-item text-start w-100 p-2">Déconnexion</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </li>
                         {% else %}
@@ -94,5 +99,19 @@
                 <span class="text-muted">© 2025 Studio Prunelle. Tous droits réservés.</span>
             </div>
         </footer>
+
+        <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Intercepter tous les clics sur les liens vers /logout
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('a');
+        if (target && target.getAttribute('href') === '/logout') {
+            e.preventDefault();
+            // Soumettre le formulaire de déconnexion le plus proche
+            document.querySelector('form[action="/logout"]').submit();
+        }
+    });
+});
+</script>
     </body>
 </html>

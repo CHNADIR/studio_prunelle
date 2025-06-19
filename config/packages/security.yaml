@@ -1,11 +1,16 @@
 security:
     enable_authenticator_manager: true
+    
+    # Configuration du hachage de mot de passe avec Argon2id
     password_hashers:
         App\Entity\User:
-            algorithm: auto
+            algorithm: 'argon2id'
+            memory_cost: 65536  # 64 MB
+            time_cost: 4
 
+    # Définition du provider d'utilisateurs
     providers:
-        app_user_provider:
+        entity_provider:
             entity:
                 class: App\Entity\User
                 property: email
@@ -17,25 +22,35 @@ security:
         
         main:
             pattern: ^/
-            provider: app_user_provider
+            provider: entity_provider
+            
             custom_authenticator:
                 - App\Security\LoginFormAuthenticator
+                
             logout:
                 path: app_logout
                 target: home
+                csrf_token_generator: security.csrf.token_manager
+                csrf_parameter: _csrf_token
+                csrf_token_id: logout
+                
+            # Configuration Remember Me sécurisée
             remember_me:
                 secret: '%kernel.secret%'
-                lifetime: 604800 # 1 semaine
+                lifetime: 1209600  # 14 jours
+                secure: true
+                samesite: 'lax'
 
+    # Règles d'accès par URL
     access_control:
         - { path: ^/login$, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/admin, roles: ROLE_ADMIN }
-        - { path: ^/admin/prise-de-vue, roles: [ROLE_ADMIN, ROLE_PHOTOGRAPHE] }
         - { path: ^/photographe, roles: ROLE_PHOTOGRAPHE }
         - { path: ^/superadmin, roles: ROLE_SUPERADMIN }
         
+    # Hiérarchie des rôles
     role_hierarchy:
-        ROLE_ADMIN: ROLE_USER
-        ROLE_PHOTOGRAPHE: ROLE_USER
-        ROLE_SUPERADMIN: [ROLE_ADMIN, ROLE_PHOTOGRAPHE]
+        ROLE_SUPERADMIN: [ROLE_ADMIN]
+        ROLE_ADMIN: [ROLE_PHOTOGRAPHE]
+        ROLE_PHOTOGRAPHE: [ROLE_USER]

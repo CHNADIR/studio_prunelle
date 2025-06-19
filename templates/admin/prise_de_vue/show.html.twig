@@ -1,37 +1,34 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Détail de la prise de vue - Studio Prunelle{% endblock %}
+{% block title %}Détail de la prise de vue{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Prise de vue {{ prise_de_vue.date|date('d/m/Y') }}</h1>
-        <div>
-            <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-secondary me-2">
+        <h1>Détail de la prise de vue</h1>
+        <div class="btn-group">
+            <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Retour à la liste
             </a>
-            {% if is_granted('ROLE_ADMIN') %}
-                <a href="{{ path('admin_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-warning me-2">
+            {% if can_edit %}
+                <a href="{{ path('admin_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-primary">
                     <i class="bi bi-pencil"></i> Modifier
                 </a>
-                <a href="{{ path('admin_prise_de_vue_clone', {'id': prise_de_vue.id}) }}" class="btn btn-primary">
+            {% endif %}
+            {% if is_admin %}
+                <a href="{{ path('admin_prise_de_vue_clone', {'id': prise_de_vue.id}) }}" class="btn btn-info">
                     <i class="bi bi-files"></i> Cloner
                 </a>
             {% endif %}
-            {% if is_granted('ROLE_PHOTOGRAPHE') and not is_granted('ROLE_ADMIN') %}
-                <a href="{{ path('admin_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-warning">
-                    <i class="bi bi-pencil"></i> Modifier le commentaire
-                </a>
+            {% if can_delete %}
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash"></i> Supprimer
+                </button>
             {% endif %}
         </div>
     </div>
 
-    {% for message in app.flashes('success') %}
-        <div class="alert alert-success">
-            {{ message }}
-        </div>
-    {% endfor %}
-
+    {# Informations générales #}
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">Informations générales</h4>
@@ -39,78 +36,90 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <table class="table table-borderless">
-                        <tr>
-                            <th style="width: 30%">Date :</th>
-                            <td>{{ prise_de_vue.date|date('d/m/Y') }}</td>
-                        </tr>
-                        <tr>
-                            <th>École :</th>
-                            <td>
+                    <dl class="row">
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">{{ prise_de_vue.date ? prise_de_vue.date|date('d/m/Y') : 'Non spécifiée' }}</dd>
+                        
+                        <dt class="col-sm-4">École</dt>
+                        <dd class="col-sm-8">
+                            {% if prise_de_vue.ecole %}
                                 <a href="{{ path('admin_ecole_show', {'id': prise_de_vue.ecole.id}) }}">
-                                    {{ prise_de_vue.ecole.nom }}
+                                    {{ prise_de_vue.ecole.nom }} ({{ prise_de_vue.ecole.ville }})
                                 </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Photographe :</th>
-                            <td>{{ prise_de_vue.photographe.nom }}</td>
-                        </tr>
-                    </table>
+                            {% else %}
+                                Non spécifiée
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-4">Photographe</dt>
+                        <dd class="col-sm-8">{{ prise_de_vue.photographe ? prise_de_vue.photographe.nom : 'Non spécifié' }}</dd>
+                    </dl>
                 </div>
                 <div class="col-md-6">
-                    <table class="table table-borderless">
-                        <tr>
-                            <th style="width: 30%">Nb élèves :</th>
-                            <td>{{ prise_de_vue.nbEleves }}</td>
-                        </tr>
-                        <tr>
-                            <th>Nb classes :</th>
-                            <td>{{ prise_de_vue.nbClasses }}</td>
-                        </tr>
-                        <tr>
-                            <th>Classes :</th>
-                            <td>{{ prise_de_vue.classes }}</td>
-                        </tr>
-                    </table>
+                    <dl class="row">
+                        <dt class="col-sm-4">Type de prise</dt>
+                        <dd class="col-sm-8">{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : 'Non spécifié' }}</dd>
+                        
+                        <dt class="col-sm-4">Type de vente</dt>
+                        <dd class="col-sm-8">{{ prise_de_vue.typeVente ? prise_de_vue.typeVente.nom : 'Non spécifié' }}</dd>
+                        
+                        <dt class="col-sm-4">Thème</dt>
+                        <dd class="col-sm-8">{{ prise_de_vue.theme ? prise_de_vue.theme.nom : 'Non spécifié' }}</dd>
+                    </dl>
                 </div>
             </div>
         </div>
     </div>
 
+    {# Volumes et chiffres #}
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Type de prise et options</h4>
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Volumes et tarification</h4>
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-4">
-                    <p><strong>Type de prise :</strong> {{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : '-' }}</p>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-6">Nombre de classes</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.nbClasses ?: 0 }}</dd>
+                        
+                        <dt class="col-sm-6">Nombre d'élèves</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.nbEleves ?: 0 }}</dd>
+                    </dl>
                 </div>
-                <div class="col-md-4">
-                    <p><strong>Type de vente :</strong> {{ prise_de_vue.typeVente ? prise_de_vue.typeVente.nom : '-' }}</p>
-                </div>
-                <div class="col-md-4">
-                    <p><strong>Thème :</strong> {{ prise_de_vue.theme ? prise_de_vue.theme.nom : '-' }}</p>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-6">Prix école</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.prixEcole ? prise_de_vue.prixEcole|format_currency('EUR') : '0 €' }}</dd>
+                        
+                        <dt class="col-sm-6">Prix parents</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.prixParents ? prise_de_vue.prixParents|format_currency('EUR') : '0 €' }}</dd>
+                        
+                        <dt class="col-sm-6">Prix total</dt>
+                        <dd class="col-sm-6 fw-bold">{{ prix_totaux.prixTotal|format_currency('EUR') }}</dd>
+                    </dl>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Planches sélectionnées</h4>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Planches individuelles</h5>
-                    {% if prise_de_vue.planchesIndividuelles|length > 0 %}
+    {# Planches sélectionnées #}
+    <div class="row">
+        {# Planches individuelles #}
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Planches individuelles</h4>
+                </div>
+                <div class="card-body">
+                    {% if prise_de_vue.planchesIndividuelles.count > 0 %}
                         <ul class="list-group">
                             {% for planche in prise_de_vue.planchesIndividuelles %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ planche.nom }}
-                                    <span class="badge bg-primary rounded-pill">{{ planche.prixParents }} €</span>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ planche.prixParents|format_currency('EUR') }}
+                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -118,14 +127,24 @@
                         <p class="text-muted">Aucune planche individuelle sélectionnée</p>
                     {% endif %}
                 </div>
-                <div class="col-md-6">
-                    <h5>Planches fratries</h5>
-                    {% if prise_de_vue.planchesFratries|length > 0 %}
+            </div>
+        </div>
+        
+        {# Planches fratrie #}
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">Planches fratrie</h4>
+                </div>
+                <div class="card-body">
+                    {% if prise_de_vue.planchesFratries.count > 0 %}
                         <ul class="list-group">
                             {% for planche in prise_de_vue.planchesFratries %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ planche.nom }}
-                                    <span class="badge bg-primary rounded-pill">{{ planche.prixParents }} €</span>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ planche.prixParents|format_currency('EUR') }}
+                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -137,113 +156,61 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Tarification</h4>
+    {# Commentaires #}
+    <div class="card mb-4" {{ stimulus_controller('comment-editor', { updateUrl: path('admin_prise_de_vue_update_comment', {'id': prise_de_vue.id}) }) }}>
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Commentaires</h4>
+            {% if can_comment %}
+                <button class="btn btn-sm btn-light" data-action="comment-editor#showEditor">
+                    <i class="bi bi-pencil"></i> Modifier
+                </button>
+            {% endif %}
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Prix école :</strong> {{ prise_de_vue.prixEcole }} €</p>
-                    <p><strong>Prix total école :</strong> {{ prix_totaux.prixTotalEcole }} €</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Prix parents :</strong> {{ prise_de_vue.prixParents }} €</p>
-                    <p><strong>Prix total parents :</strong> {{ prix_totaux.prixTotalParents }} €</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Commentaires</h4>
-        </div>
-        <div class="card-body" data-controller="comment-editor" id="commentaire-section">
-            {% if can_edit_comment %}
-                <div class="d-flex justify-content-end mb-3">
-                    <button type="button" class="btn btn-outline-primary" data-action="comment-editor#edit">
-                        <i class="bi bi-pencil"></i> Modifier
-                    </button>
-                </div>
-            {% endif %}
-            
-            <div data-comment-editor-target="display">
+            {# Affichage du commentaire #}
+            <div data-comment-editor-target="commentDisplay">
                 {% if prise_de_vue.commentaire %}
-                    <div class="p-3 bg-light rounded">
-                        {{ prise_de_vue.commentaire|nl2br }}
-                    </div>
+                    {{ prise_de_vue.commentaire|nl2br }}
                 {% else %}
-                    <p class="text-muted">Aucun commentaire</p>
+                    <em class="text-muted">Aucun commentaire</em>
                 {% endif %}
             </div>
             
-            {% if can_edit_comment %}
-                <div data-comment-editor-target="form" style="display: none;">
-                    <form action="{{ path('admin_prise_de_vue_update_comment', {'id': prise_de_vue.id}) }}" 
-                          method="post" 
-                          data-action="comment-editor#save">
+            {# Formulaire d'édition du commentaire #}
+            {% if can_comment %}
+                <div data-comment-editor-target="commentEdit" style="display: none;">
+                    <form data-comment-editor-target="commentForm" data-action="comment-editor#saveComment">
                         <div class="mb-3">
-                            <textarea class="form-control" name="commentaire" rows="4" data-comment-editor-target="content">{{ prise_de_vue.commentaire }}</textarea>
+                            <textarea name="commentaire" class="form-control" rows="5">{{ prise_de_vue.commentaire }}</textarea>
                         </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-secondary me-2" data-action="comment-editor#cancel">Annuler</button>
-                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" data-action="comment-editor#hideEditor" data-comment-editor-target="cancelButton">
+                                Annuler
+                            </button>
+                            <button type="submit" class="btn btn-primary" data-comment-editor-target="submitButton">
+                                Enregistrer
+                            </button>
                         </div>
                     </form>
-                </div>
-                
-                <div data-comment-editor-target="loading" style="display: none;">
-                    <div class="d-flex justify-content-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Chargement...</span>
-                        </div>
-                    </div>
                 </div>
             {% endif %}
         </div>
     </div>
 
-    {% if is_granted('ROLE_ADMIN') %}
-        <div class="d-flex justify-content-between mb-4">
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                <i class="bi bi-trash"></i> Supprimer
-            </button>
-        </div>
-
-        <!-- Modal de confirmation de suppression -->
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    {# Modal de confirmation de suppression #}
+    {% if can_delete %}
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Confirmer la suppression</h5>
+                        <h5 class="modal-title" id="deleteModalLabel">Confirmation de suppression</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        Êtes-vous sûr de vouloir supprimer cette prise de vue du {{ prise_de_vue.date|date('d/m/Y') }} à {{ prise_de_vue.ecole.nom }} ?
+                        Êtes-vous sûr de vouloir supprimer cette prise de vue ? Cette action est irréversible.
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                         <form method="post" action="{{ path('admin_prise_de_vue_delete', {'id': prise_de_vue.id}) }}">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ prise_de_vue.id) }}">
-                            <button type="submit" class="btn btn-danger">Supprimer</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-</div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    
-    {% if can_edit_comment %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-                    
-        });
-    </script>
-    {% endif %}
-{% endblock %}
+                            <button type="submit" class="btn btn-danger">Confirmer la suppression</button

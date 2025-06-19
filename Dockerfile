@@ -3,6 +3,7 @@ FROM composer:latest AS composer
 
 WORKDIR /app
 COPY composer.json composer.lock symfony.lock ./
+# Ne pas ajouter de packages ici, utiliser composer.json
 RUN composer install --prefer-dist --no-scripts --no-progress --no-interaction
 
 # Stage 2: Build Node.js assets
@@ -41,6 +42,9 @@ RUN apk add --no-cache \
     intl \
     zip \
     opcache
+
+# Installer Composer dans l'image finale
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configurer OPcache pour de meilleures performances
 COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini

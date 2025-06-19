@@ -29,11 +29,18 @@ class SecurityController extends AbstractController
         ]);
     }
 
-    #[Route('/logout', name: 'app_logout')]
+    #[Route('/logout', name: 'app_logout', methods: ['POST'])]
     public function logout(): void
     {
-        // Cette méthode peut rester vide, Symfony gère la déconnexion
-        // La configuration se trouve dans security.yaml
-        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall');
+        // Méthode interceptée par Symfony Security
+        throw new \LogicException('This method should not be reached');
+    }
+
+    #[Route('/logout', methods: ['GET'])]
+    public function logoutGet(): Response
+    {
+        // Rediriger vers la page d'accueil avec un message
+        $this->addFlash('warning', 'Pour vous déconnecter, veuillez utiliser le bouton de déconnexion.');
+        return $this->redirectToRoute('home');
     }
 }

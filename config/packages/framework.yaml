@@ -17,6 +17,15 @@ framework:
     php_errors:
         log: true
 
+    # Configuration du rate limiter
+    rate_limiter:
+        login_limiter:
+            policy: sliding_window
+            limit: 5
+            interval: '1 minute'
+            # Utiliser le store défini dans lock.yaml
+            lock_factory: 'lock.factory.default'
+
 when@test:
     framework:
         test: true
