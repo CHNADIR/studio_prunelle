@@ -37,5 +37,49 @@
     {% if is_granted(constant('App\\Security\\Voter\\EcoleVoter::DELETE'), ecole) %}
         {{ include('ecole/_delete_form.html.twig') }}
     {% endif %}
+
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Prises de vue associées</h3>
+        </div>
+        <div class="card-body">
+            {% if ecole.prisesDeVue|length > 0 %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Photographe</th>
+                            <th>Nb élèves</th>
+                            <th>Classes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for priseDeVue in ecole.prisesDeVue %}
+                            <tr>
+                                <td>{{ priseDeVue.date|date('d/m/Y') }}</td>
+                                <td>{{ priseDeVue.photographe.nom }}</td>
+                                <td>{{ priseDeVue.nbEleves }}</td>
+                                <td>{{ priseDeVue.classes }}</td>
+                                <td>
+                                    <a href="{{ path('admin_prise_de_vue_show', {'id': priseDeVue.id}) }}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> Voir
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-info">
+                    Aucune prise de vue associée à cette école pour le moment.
+                </div>
+            {% endif %}
+            
+            <a href="{{ path('admin_prise_de_vue_new', {'ecole_id': ecole.id}) }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ajouter une prise de vue
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

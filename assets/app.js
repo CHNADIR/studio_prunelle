@@ -9,3 +9,4 @@
 import './bootstrap.js';
 import './styles/app.scss';
 import 'bootstrap';
+import './js/dynamic-referentials.js';

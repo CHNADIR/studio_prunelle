@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le type de prise - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Modifier le type de prise</h1>
+        <div>
+            <a href="{{ path('admin_type_prise_index') }}" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+            <a href="{{ path('admin_type_prise_show', {'id': type_prise.id}) }}" class="btn btn-info">
+                <i class="bi bi-eye"></i> Voir
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {{ form_start(form) }}
+                <div class="mb-3">
+                    {{ form_label(form.nom) }}
+                    {{ form_widget(form.nom) }}
+                    {{ form_errors(form.nom) }}
+                </div>
+
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.active) }}
+                    {{ form_label(form.active) }}
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Mettre à jour
+                </button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -14,7 +14,7 @@ final class Version20250619052427 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Création initiale des tables User et Ecole';
+        return 'Création initiale des tables User, Ecole et PriseDeVue';
     }
 
     public function up(Schema $schema): void
@@ -45,6 +45,24 @@ final class Version20250619052427 extends AbstractMigration
             PRIMARY KEY(id)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         
+        // Création de la table prise_de_vue
+        $this->addSql('CREATE TABLE prise_de_vue (
+            id INT AUTO_INCREMENT NOT NULL,
+            ecole_id INT NOT NULL,
+            photographe_id INT NOT NULL,
+            date DATE NOT NULL,
+            nb_eleves INT NOT NULL,
+            classes VARCHAR(255) DEFAULT NULL,
+            commentaire LONGTEXT DEFAULT NULL,
+            INDEX IDX_XXXXXXX_ecole_id (ecole_id),
+            INDEX IDX_XXXXXXX_photographe_id (photographe_id),
+            PRIMARY KEY(id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        
+        // Contraintes de clé étrangère
+        $this->addSql('ALTER TABLE prise_de_vue ADD CONSTRAINT FK_XXXXXXX_ecole_id FOREIGN KEY (ecole_id) REFERENCES ecole (id)');
+        $this->addSql('ALTER TABLE prise_de_vue ADD CONSTRAINT FK_XXXXXXX_photographe_id FOREIGN KEY (photographe_id) REFERENCES user (id)');
+        
         // Ajout de la table doctrine_migration_versions si elle n'existe pas déjà
         $this->addSql('CREATE TABLE IF NOT EXISTS doctrine_migration_versions (
             version VARCHAR(191) NOT NULL,
@@ -57,6 +75,7 @@ final class Version20250619052427 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // Suppression des tables dans l'ordre inverse
+        $this->addSql('DROP TABLE prise_de_vue');
         $this->addSql('DROP TABLE ecole');
         $this->addSql('DROP TABLE user');
     }

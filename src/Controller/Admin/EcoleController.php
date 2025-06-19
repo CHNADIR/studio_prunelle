@@ -44,8 +44,8 @@ class EcoleController extends AbstractController
     #[Route('/{id}', name: 'admin_ecole_show', methods: ['GET'])]
     public function show(Ecole $ecole): Response
     {
-        // Exemple : Lien vers la liste des prises de vue de cette école
-        // <a href="{{ path('admin_prise_de_vue_index', { ecoleId: ecole.id }) }}">Voir prises de vue</a>
+        // La méthode findByEcole n'est pas nécessaire ici car Doctrine charge 
+        // automatiquement les prisesDeVue grâce à la relation OneToMany
 
         return $this->render('admin/ecole/show.html.twig', [
             'ecole' => $ecole,

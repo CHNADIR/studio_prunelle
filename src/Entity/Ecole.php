@@ -5,6 +5,9 @@ namespace App\Entity;
 use App\Repository\EcoleRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use App\Entity\PriseDeVue;
 
 /**
  * Entité représentant une école, avec validations.
@@ -52,6 +55,15 @@ class Ecole
 
     #[ORM\Column(type: "boolean")]
     private bool $active = true;
+
+    #[ORM\OneToMany(mappedBy: 'ecole', targetEntity: PriseDeVue::class)]
+    private Collection $prisesDeVue;
+
+    public function __construct()
+    {
+        $this->prisesDeVue = new ArrayCollection();
+        $this->active = true;
+    }
 
     public function getId(): ?int
     {
@@ -154,6 +166,36 @@ class Ecole
     public function setActive(bool $active): self
     {
         $this->active = $active;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PriseDeVue>
+     */
+    public function getPrisesDeVue(): Collection
+    {
+        return $this->prisesDeVue;
+    }
+
+    public function addPriseDeVue(PriseDeVue $priseDeVue): self
+    {
+        if (!$this->prisesDeVue->contains($priseDeVue)) {
+            $this->prisesDeVue->add($priseDeVue);
+            $priseDeVue->setEcole($this);
+        }
+
+        return $this;
+    }
+
+    public function removePriseDeVue(PriseDeVue $priseDeVue): self
+    {
+        if ($this->prisesDeVue->removeElement($priseDeVue)) {
+            // set the owning side to null (unless already changed)
+            if ($priseDeVue->getEcole() === $this) {
+                $priseDeVue->setEcole(null);
+            }
+        }
+
         return $this;
     }
 }

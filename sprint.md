@@ -4,16 +4,16 @@
 
 # Sprint 1 – Initialisation & Authentification
 
--   • Mise en place du projet Symfony 6.4 avec Docker
--   • Configuration de la base de données MySQL
--   • Installation des bundles nécessaires (security, maker, annotations, form, twig, etc.)
--   • Création de l'entité User avec rôles : ADMIN, PHOTOGRAPHE, SUPERADMIN
--   • Implémentation du système d’authentification (login + redirection par rôle)
+-   • Mise en place du projet Symfony 6.4 avec Docker ✅ 
+-   • Configuration de la base de données MySQL ✅ 
+-   • Installation des bundles nécessaires (security, maker, annotations, form, twig, etc.) ✅ 
+-   • Création de l'entité User avec rôles : ADMIN, PHOTOGRAPHE, SUPERADMIN✅ 
+-   • Implémentation du système d’authentification (login + redirection par rôle)✅ 
 
 # Sprint 2 – Gestion des écoles
 
--   • Création de l’entité Ecole (code, nom, adresse, ville, CP, genre, contact, actif)
--   • Création du CRUD complet pour les écoles (liste, fiche, ajouter, modifier, supprimer)
+-   • Création de l’entité Ecole (code, nom, adresse, ville, CP, genre, contact, actif)✅ 
+-   • Création du CRUD complet pour les écoles (liste, fiche, ajouter, modifier, supprimer)✅ 
 -   • Ajout de la relation OneToMany entre Ecole et PriseDeVue (préparation)
 
 # Sprint 3 – Référentiels dynamiques

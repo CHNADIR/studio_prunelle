@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Types de prise - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Types de prise</h1>
+        <a href="{{ path('admin_type_prise_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter un type
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+    
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for type_prise in type_prises %}
+                    <tr>
+                        <td>{{ type_prise.id }}</td>
+                        <td>{{ type_prise.nom }}</td>
+                        <td>
+                            <span class="badge {{ type_prise.active ? 'bg-success' : 'bg-danger' }}">
+                                {{ type_prise.active ? 'Actif' : 'Inactif' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ path('admin_type_prise_show', {'id': type_prise.id}) }}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ path('admin_type_prise_edit', {'id': type_prise.id}) }}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ type_prise.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+
+                            <!-- Modal de confirmation de suppression -->
+                            <div class="modal fade" id="deleteModal{{ type_prise.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ type_prise.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ type_prise.id }}">Confirmer la suppression</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Êtes-vous sûr de vouloir supprimer le type de prise "{{ type_prise.nom }}" ?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                            <form method="post" action="{{ path('admin_type_prise_delete', {'id': type_prise.id}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ type_prise.id) }}">
+                                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center">Aucun type de prise trouvé</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

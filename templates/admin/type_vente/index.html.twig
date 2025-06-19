@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Types de vente - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Types de vente</h1>
+        <a href="{{ path('admin_type_vente_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter un type
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+    
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for type_vente in type_ventes %}
+                    <tr>
+                        <td>{{ type_vente.id }}</td>
+                        <td>{{ type_vente.nom }}</td>
+                        <td>
+                            <span class="badge {{ type_vente.active ? 'bg-success' : 'bg-danger' }}">
+                                {{ type_vente.active ? 'Actif' : 'Inactif' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ path('admin_type_vente_show', {'id': type_vente.id}) }}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ path('admin_type_vente_edit', {'id': type_vente.id}) }}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ type_vente.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+
+                            <!-- Modal de confirmation de suppression -->
+                            <div class="modal fade" id="deleteModal{{ type_vente.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ type_vente.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ type_vente.id }}">Confirmer la suppression</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Êtes-vous sûr de vouloir supprimer le type de vente "{{ type_vente.nom }}" ?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                            <form method="post" action="{{ path('admin_type_vente_delete', {'id': type_vente.id}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ type_vente.id) }}">
+                                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center">Aucun type de vente trouvé</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
