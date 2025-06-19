@@ -68,7 +68,7 @@ class PriseDeVueController extends AbstractController
     }
     
     #[Route('/new', name: 'admin_prise_de_vue_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted(\App\Security\Voter\PriseDeVueVoter::PRISEDEVUE_CREATE)]
     public function new(
         Request $request, 
         Ecole $ecole = null
@@ -120,7 +120,7 @@ class PriseDeVueController extends AbstractController
     public function show(PriseDeVue $priseDeVue): Response
     {
         // Vérifier les droits d'accès avec le Voter
-        $this->denyAccessUnlessGranted('view', $priseDeVue);
+        $this->denyAccessUnlessGranted(\App\Security\Voter\PriseDeVueVoter::PRISEDEVUE_VIEW, $priseDeVue);
         
         // Calculer les prix totaux
         $prixTotaux = $this->priseDeVueManager->calculerPrixTotal($priseDeVue);
@@ -135,7 +135,7 @@ class PriseDeVueController extends AbstractController
     public function edit(Request $request, PriseDeVue $priseDeVue): Response
     {
         // Vérifier les droits d'accès avec le Voter
-        $this->denyAccessUnlessGranted('edit', $priseDeVue);
+        $this->denyAccessUnlessGranted(\App\Security\Voter\PriseDeVueVoter::PRISEDEVUE_EDIT, $priseDeVue);
         
         // Créer le formulaire
         $form = $this->createForm(PriseDeVueType::class, $priseDeVue);
