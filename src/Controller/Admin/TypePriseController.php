@@ -6,14 +6,14 @@ use App\Entity\TypePrise;
 use App\Form\TypePriseType;
 use App\Repository\TypePriseRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/admin/type-prise')]
-class TypePriseController extends AbstractController
+class TypePriseController extends AbstractReferentialController
 {
     #[Route('/', name: 'admin_type_prise_index', methods: ['GET'])]
     public function index(TypePriseRepository $typePriseRepository): Response
@@ -45,32 +45,28 @@ class TypePriseController extends AbstractController
     }
 
     #[Route('/modal-new', name: 'admin_type_prise_modal_new', methods: ['GET', 'POST'])]
-    public function modalNew(Request $request, EntityManagerInterface $entityManager): Response
+    public function modalNew(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
+    ): Response
     {
         $typePrise = new TypePrise();
+        $typePrise->setActive(true);
+        
         $form = $this->createForm(TypePriseType::class, $typePrise);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($typePrise);
-            $entityManager->flush();
-
-            if ($request->isXmlHttpRequest()) {
-                return new JsonResponse([
-                    'success' => true,
-                    'id' => $typePrise->getId(),
-                    'text' => $typePrise->getNom(),
-                ]);
-            }
-
-            $this->addFlash('success', 'Le type de prise a été créé avec succès.');
-            return $this->redirectToRoute('admin_type_prise_index');
-        }
-
-        return $this->render('admin/type_prise/modal_new.html.twig', [
-            'type_prise' => $typePrise,
-            'form' => $form->createView(),
-        ]);
+        return $this->handleModalNew(
+            $request,
+            $entityManager,
+            $validator,
+            $typePrise,
+            $form,
+            'admin/type_prise/modal_new.html.twig',
+            'Le type de prise a été créé avec succès.',
+            'admin_type_prise_index'
+        );
     }
 
     #[Route('/{id}', name: 'admin_type_prise_show', methods: ['GET'])]

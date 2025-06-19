@@ -43,7 +43,7 @@
                                             <i class="bi bi-camera fs-1 text-primary"></i>
                                             <h5 class="mt-3">Prises de vue</h5>
                                             <p>Gérer les prises de vue photographiques</p>
-                                            <a href="#" class="btn btn-primary">Accéder</a>
+                                            <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-primary">Accéder</a>
                                         </div>
                                     </div>
                                 </div>
@@ -63,13 +63,14 @@
                             {% endif %}
                             
                             {% if is_granted('ROLE_PHOTOGRAPHE') %}
+                                {# Pour la partie photographe #}
                                 <div class="col-md-4 mb-3">
                                     <div class="card h-100">
                                         <div class="card-body text-center">
                                             <i class="bi bi-camera fs-1 text-primary"></i>
                                             <h5 class="mt-3">Mes prises de vue</h5>
                                             <p>Gérer vos prises de vue photographiques</p>
-                                            <a href="#" class="btn btn-primary">Accéder</a>
+                                            <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-primary">Accéder</a>
                                         </div>
                                     </div>
                                 </div>

@@ -3,25 +3,32 @@
 namespace App\Repository;
 
 use App\Entity\Theme;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class ThemeRepository extends ServiceEntityRepository
+class ThemeRepository extends AbstractReferentialRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Theme::class);
     }
-
+    
     /**
-     * Trouve tous les thèmes actifs
+     * Retourne l'alias de table pour les requêtes
      */
-    public function findAllActive()
+    protected function getAlias(): string
     {
-        return $this->createQueryBuilder('t')
-            ->where('t.active = :active')
-            ->setParameter('active', true)
-            ->orderBy('t.nom', 'ASC')
+        return 't';
+    }
+    
+    /**
+     * Trouve les thèmes utilisés dans des prises de vue
+     */
+    public function findUsedInPrisesDeVue(): array
+    {
+        return $this->createQueryBuilder($this->getAlias())
+            ->join($this->getAlias() . '.prisesDeVue', 'p')
+            ->orderBy($this->getAlias() . '.nom', 'ASC')
+            ->groupBy($this->getAlias() . '.id')
             ->getQuery()
             ->getResult();
     }

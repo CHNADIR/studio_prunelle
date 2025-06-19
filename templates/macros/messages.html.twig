@@ -1,0 +1,50 @@
+{% macro flash_messages() %}
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% endmacro %}
+
+{% macro form_errors_summary(form) %}
+    {% if not form.vars.valid %}
+        <div class="alert alert-danger">
+            <h5><i class="bi bi-exclamation-triangle-fill me-2"></i>Le formulaire contient des erreurs</h5>
+            <ul class="mb-0">
+                {% for error in form.vars.errors %}
+                    <li>{{ error.message }}</li>
+                {% endfor %}
+                {% for child in form.children %}
+                    {% if not child.vars.valid %}
+                        {% for error in child.vars.errors %}
+                            <li>{{ child.vars.label|default(child.vars.name) }}: {{ error.message }}</li>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro confirmation_modal(id, title, message, confirm_label = 'Confirmer', cancel_label = 'Annuler') %}
+    <div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}-title" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="{{ id }}-title">{{ title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{ message }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ cancel_label }}</button>
+                    <button type="button" class="btn btn-danger" id="{{ id }}-confirm">{{ confirm_label }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

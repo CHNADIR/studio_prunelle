@@ -1,0 +1,205 @@
+{% import 'macros/form.html.twig' as formMacro %}
+
+{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations générales</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                {{ formMacro.formRow(form.date, 'Date de la prise de vue', {
+                    'help_text': 'Format JJ/MM/AAAA'
+                }) }}
+            </div>
+            <div class="col-md-8">
+                {{ formMacro.formRow(form.ecole, 'École', {
+                    'help_text': 'Sélectionnez l\'école concernée'
+                }) }}
+            </div>
+        </div>
+        
+        <div class="row">
+            {% if form.photographe is defined %}
+                <div class="col-md-4">
+                    {{ formMacro.formRow(form.photographe, 'Photographe') }}
+                </div>
+            {% endif %}
+            <div class="col-md-4">
+                {{ formMacro.formRow(form.nbEleves, 'Nombre d\'élèves') }}
+            </div>
+            <div class="col-md-4">
+                {{ formMacro.formRow(form.nbClasses, 'Nombre de classes') }}
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                {{ formMacro.formRow(form.classes, 'Description des classes') }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-camera me-2"></i>Type de prise et options</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                {{ formMacro.formRow(form.typePrise, 'Type de prise') }}
+            </div>
+            <div class="col-md-4">
+                {{ formMacro.formRow(form.typeVente, 'Type de vente') }}
+            </div>
+            <div class="col-md-4">
+                {{ formMacro.formRow(form.theme, 'Thème') }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4" data-controller="planches-selector">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-grid-3x3 me-2"></i>Sélection des planches</h4>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Rechercher une planche..." data-planches-selector-target="searchInput">
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Planches individuelles</div>
+                    <div class="card-body" data-planches-selector-target="individualList">
+                        {{ form_widget(form.planchesIndividuelles) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Planches fratries</div>
+                    <div class="card-body" data-planches-selector-target="fratrieList">
+                        {{ form_widget(form.planchesFratries) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <div class="alert alert-info">
+                <span data-planches-selector-target="selectedCount">Planches sélectionnées: 0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-currency-euro me-2"></i>Tarification</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                {{ formMacro.formRow(form.prixEcole, 'Prix école (€)') }}
+                <div class="mt-2">
+                    <strong>Prix total école: </strong>
+                    <span id="prix-total-ecole">0.00 €</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                {{ formMacro.formRow(form.prixParents, 'Prix parents (€)') }}
+                <div class="mt-2">
+                    <strong>Prix total parents: </strong>
+                    <span id="prix-total-parents">0.00 €</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Commentaires</h4>
+    </div>
+    <div class="card-body">
+        {{ formMacro.formRow(form.commentaire, 'Commentaires', {
+            'help_text': 'Informations complémentaires pour cette prise de vue'
+        }) }}
+    </div>
+</div>
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-primary btn-lg">
+        <i class="bi bi-save"></i> {{ button_label|default('Enregistrer') }}
+    </button>
+</div>
+
+{{ form_end(form) }}
+
+<!-- Modals pour l'ajout dynamique -->
+<div class="modal fade" id="typePriseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter un type de prise</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="type-prise-form-container">
+                    <!-- Le formulaire sera chargé via AJAX -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="typeVenteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter un type de vente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="type-vente-form-container">
+                    <!-- Le formulaire sera chargé via AJAX -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="themeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter un thème</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="theme-form-container">
+                    <!-- Le formulaire sera chargé via AJAX -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

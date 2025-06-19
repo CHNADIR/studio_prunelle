@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/ecole')]
 class EcoleController extends AbstractController
@@ -17,13 +18,13 @@ class EcoleController extends AbstractController
     #[Route('/', name: 'admin_ecole_index', methods: ['GET'])]
     public function index(EcoleRepository $ecoleRepository): Response
     {
-        $ecoles = $ecoleRepository->findAllOrderedByName();
         return $this->render('admin/ecole/index.html.twig', [
-            'ecoles' => $ecoles,
+            'ecoles' => $ecoleRepository->findAllOrderedByName(),
         ]);
     }
 
     #[Route('/new', name: 'admin_ecole_new', methods: ['GET','POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
         $ecole = new Ecole();
@@ -33,6 +34,8 @@ class EcoleController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($ecole);
             $em->flush();
+            
+            $this->addFlash('success', 'L\'école a été créée avec succès.');
             return $this->redirectToRoute('admin_ecole_index');
         }
 
@@ -44,9 +47,6 @@ class EcoleController extends AbstractController
     #[Route('/{id}', name: 'admin_ecole_show', methods: ['GET'])]
     public function show(Ecole $ecole): Response
     {
-        // La méthode findByEcole n'est pas nécessaire ici car Doctrine charge 
-        // automatiquement les prisesDeVue grâce à la relation OneToMany
-
         return $this->render('admin/ecole/show.html.twig', [
             'ecole' => $ecole,
         ]);

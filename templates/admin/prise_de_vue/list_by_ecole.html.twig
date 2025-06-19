@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Prises de vue pour {{ ecole.nom }} - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Prises de vue pour {{ ecole.nom }}</h1>
+        <div>
+            <a href="{{ path('admin_ecole_show', {'id': ecole.id}) }}" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Retour à l'école
+            </a>
+            <a href="{{ path('admin_prise_de_vue_new_with_ecole', {'id': ecole.id}) }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle prise de vue
+            </a>
+        </div>
+    </div>
+    
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Photographe</th>
+                            <th>Type de prise</th>
+                            <th>Thème</th>
+                            <th>Nb élèves</th>
+                            <th>Classes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prise_de_vue in prises_de_vue %}
+                            <tr>
+                                <td>{{ prise_de_vue.date|date('d/m/Y') }}</td>
+                                <td>{{ prise_de_vue.photographe.nom }}</td>
+                                <td>{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : '-' }}</td>
+                                <td>{{ prise_de_vue.theme ? prise_de_vue.theme.nom : '-' }}</td>
+                                <td>{{ prise_de_vue.nbEleves }}</td>
+                                <td>{{ prise_de_vue.nbClasses }} ({{ prise_de_vue.classes }})</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ path('admin_prise_de_vue_show', {'id': prise_de_vue.id}) }}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ path('admin_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">Aucune prise de vue trouvée pour cette école</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if totalItems > 0 %}
+                <div class="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            {% set pages = (totalItems / itemsPerPage)|round(0, 'ceil') %}
+                            {% for i in 1..pages %}
+                                <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                                    <a class="page-link" href="{{ path('admin_prise_de_vue_list_by_ecole', {'id': ecole.id, 'page': i}) }}">{{ i }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des prises de vue - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Liste des prises de vue</h1>
+        <a href="{{ path('admin_prise_de_vue_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvelle prise de vue
+        </a>
+    </div>
+    
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+    
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+    
+    <div class="card">
+        <div class="card-header">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="ecole" class="form-label">École</label>
+                    <select name="ecole" id="ecole" class="form-select">
+                        <option value="">Toutes les écoles</option>
+                        {% for ecole in ecoles %}
+                            <option value="{{ ecole.id }}" {% if app.request.query.get('ecole') == ecole.id %}selected{% endif %}>
+                                {{ ecole.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="dateStart" class="form-label">Date début</label>
+                    <input type="date" name="dateStart" id="dateStart" class="form-control" value="{{ app.request.query.get('dateStart') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="dateEnd" class="form-label">Date fin</label>
+                    <input type="date" name="dateEnd" id="dateEnd" class="form-control" value="{{ app.request.query.get('dateEnd') }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>École</th>
+                            <th>Photographe</th>
+                            <th>Type de prise</th>
+                            <th>Thème</th>
+                            <th>Nb élèves</th>
+                            <th>Classes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prise_de_vue in prises_de_vue %}
+                            <tr>
+                                <td>{{ prise_de_vue.date|date('d/m/Y') }}</td>
+                                <td>{{ prise_de_vue.ecole.nom }}</td>
+                                <td>{{ prise_de_vue.photographe.nom }}</td>
+                                <td>{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : '-' }}</td>
+                                <td>{{ prise_de_vue.theme ? prise_de_vue.theme.nom : '-' }}</td>
+                                <td>{{ prise_de_vue.nbEleves }}</td>
+                                <td>{{ prise_de_vue.nbClasses }} ({{ prise_de_vue.classes }})</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ path('admin_prise_de_vue_show', {'id': prise_de_vue.id}) }}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ path('admin_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ prise_de_vue.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Modal de confirmation de suppression -->
+                                    <div class="modal fade" id="deleteModal{{ prise_de_vue.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmer la suppression</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Êtes-vous sûr de vouloir supprimer cette prise de vue du {{ prise_de_vue.date|date('d/m/Y') }} à {{ prise_de_vue.ecole.nom }} ?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                    <form method="post" action="{{ path('admin_prise_de_vue_delete', {'id': prise_de_vue.id}) }}">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ prise_de_vue.id) }}">
+                                                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">Aucune prise de vue trouvée</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if totalItems > 0 %}
+                <div class="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            {% set pages = (totalItems / itemsPerPage)|round(0, 'ceil') %}
+                            {% for i in 1..pages %}
+                                <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                                    <a class="page-link" href="{{ path('admin_prise_de_vue_index', {'page': i}|merge(app.request.query.all)) }}">{{ i }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

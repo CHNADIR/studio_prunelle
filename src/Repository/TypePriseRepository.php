@@ -3,25 +3,32 @@
 namespace App\Repository;
 
 use App\Entity\TypePrise;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class TypePriseRepository extends ServiceEntityRepository
+class TypePriseRepository extends AbstractReferentialRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, TypePrise::class);
     }
-
+    
     /**
-     * Trouve tous les types de prise actifs
+     * Retourne l'alias de table pour les requêtes
      */
-    public function findAllActive()
+    protected function getAlias(): string
+    {
+        return 'tp';
+    }
+    
+    /**
+     * Trouve les types de prise utilisés dans des prises de vue
+     */
+    public function findUsedInPrisesDeVue(): array
     {
         return $this->createQueryBuilder('tp')
-            ->where('tp.active = :active')
-            ->setParameter('active', true)
+            ->join('tp.prisesDeVue', 'p')
             ->orderBy('tp.nom', 'ASC')
+            ->groupBy('tp.id')
             ->getQuery()
             ->getResult();
     }

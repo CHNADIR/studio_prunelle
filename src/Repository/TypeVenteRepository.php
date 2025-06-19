@@ -3,25 +3,32 @@
 namespace App\Repository;
 
 use App\Entity\TypeVente;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class TypeVenteRepository extends ServiceEntityRepository
+class TypeVenteRepository extends AbstractReferentialRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, TypeVente::class);
     }
-
+    
     /**
-     * Trouve tous les types de vente actifs
+     * Retourne l'alias de table pour les requêtes
      */
-    public function findAllActive()
+    protected function getAlias(): string
     {
-        return $this->createQueryBuilder('tv')
-            ->where('tv.active = :active')
-            ->setParameter('active', true)
-            ->orderBy('tv.nom', 'ASC')
+        return 'tv';
+    }
+    
+    /**
+     * Trouve les types de vente utilisés dans des prises de vue
+     */
+    public function findUsedInPrisesDeVue(): array
+    {
+        return $this->createQueryBuilder($this->getAlias())
+            ->join($this->getAlias() . '.prisesDeVue', 'p')
+            ->orderBy($this->getAlias() . '.nom', 'ASC')
+            ->groupBy($this->getAlias() . '.id')
             ->getQuery()
             ->getResult();
     }

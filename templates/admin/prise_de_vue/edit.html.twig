@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la prise de vue - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Modifier la prise de vue</h1>
+        <div>
+            <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+            <a href="{{ path('admin_prise_de_vue_show', {'id': prise_de_vue.id}) }}" class="btn btn-info">
+                <i class="bi bi-eye"></i> Voir
+            </a>
+        </div>
+    </div>
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% if is_photographe is defined and is_photographe %}
+        {# Photographe ne peut modifier que le commentaire #}
+        {{ form_start(form) }}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Commentaires</h4>
+                </div>
+                <div class="card-body">
+                    {{ form_row(form.commentaire) }}
+                </div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-save"></i> Enregistrer le commentaire
+                </button>
+            </div>
+        {{ form_end(form) }}
+    {% else %}
+        {# Admin peut tout modifier #}
+        {{ include('admin/prise_de_vue/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calcul automatique du prix total
+            const updatePrixTotal = function() {
+                let prixEcole = parseFloat(document.getElementById('prise_de_vue_prixEcole').value) || 0;
+                let prixParents = parseFloat(document.getElementById('prise_de_vue_prixParents').value) || 0;
+                
+                // Ajouter les prix des planches sélectionnées
+                document.querySelectorAll('input[name^="prise_de_vue[planchesIndividuelles]"]:checked, input[name^="prise_de_vue[planchesFratries]"]:checked').forEach(function(checkbox) {
+                    prixEcole += parseFloat(checkbox.dataset.prixEcole || 0);
+                    prixParents += parseFloat(checkbox.dataset.prixParents || 0);
+                });
+                
+                document.getElementById('prix-total-ecole').textContent = prixEcole.toFixed(2) + ' €';
+                document.getElementById('prix-total-parents').textContent = prixParents.toFixed(2) + ' €';
+            };
+            
+            // Initialiser
+            if (document.getElementById('prise_de_vue_prixEcole')) {
+                updatePrixTotal();
+                
+                // Attacher les écouteurs d'événements
+                document.getElementById('prise_de_vue_prixEcole').addEventListener('input', updatePrixTotal);
+                document.getElementById('prise_de_vue_prixParents').addEventListener('input', updatePrixTotal);
+                document.querySelectorAll('input[name^="prise_de_vue[planchesIndividuelles]"], input[name^="prise_de_vue[planchesFratries]"]').forEach(function(checkbox) {
+                    checkbox.addEventListener('change', updatePrixTotal);
+                });
+            }
+        });
+    </script>
+{% endblock %}
