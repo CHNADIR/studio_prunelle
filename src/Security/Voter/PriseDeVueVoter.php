@@ -7,132 +7,87 @@ use App\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\Security;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 class PriseDeVueVoter extends Voter
 {
-    // Actions possibles - Utilisation de constantes standardisées
-    const PRISEDEVUE_VIEW = 'PRISEDEVUE_VIEW';
-    const PRISEDEVUE_EDIT = 'PRISEDEVUE_EDIT';
-    const PRISEDEVUE_DELETE = 'PRISEDEVUE_DELETE';
-    const PRISEDEVUE_CREATE = 'PRISEDEVUE_CREATE';
-    
-    // Pour la rétrocompatibilité
-    const VIEW = self::PRISEDEVUE_VIEW;
-    const EDIT = self::PRISEDEVUE_EDIT; 
-    const DELETE = self::PRISEDEVUE_DELETE;
-    
+    const VIEW = 'view';
+    const EDIT = 'edit';
+    const DELETE = 'delete';
+    const EDIT_COMMENT = 'edit_comment';
+
     private Security $security;
-    
+
     public function __construct(Security $security)
     {
         $this->security = $security;
     }
-    
+
     protected function supports(string $attribute, mixed $subject): bool
     {
-        // Vérifier si l'attribut est supporté (utiliser les nouvelles constantes)
-        if (!in_array($attribute, [
-            self::PRISEDEVUE_VIEW, 
-            self::PRISEDEVUE_EDIT, 
-            self::PRISEDEVUE_DELETE,
-            self::PRISEDEVUE_CREATE,
-            self::VIEW,  // Rétrocompatibilité
-            self::EDIT,  // Rétrocompatibilité
-            self::DELETE // Rétrocompatibilité
-        ])) {
-            return false;
-        }
-        
-        // Pour CREATE, aucun sujet n'est nécessaire
-        if ($attribute === self::PRISEDEVUE_CREATE) {
-            return true;
-        }
-        
-        // Vérifier si le sujet est une instance de PriseDeVue
-        if (!$subject instanceof PriseDeVue) {
-            return false;
-        }
-        
-        return true;
+        return in_array($attribute, [self::VIEW, self::EDIT, self::DELETE, self::EDIT_COMMENT])
+            && $subject instanceof PriseDeVue;
     }
-    
+
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
         
-        // Si l'utilisateur n'est pas connecté, refuser
-        if (!$user instanceof UserInterface) {
+        if (!$user instanceof User) {
             return false;
         }
-        
-        // Les administrateurs peuvent tout faire
+
+        /** @var PriseDeVue $priseDeVue */
+        $priseDeVue = $subject;
+
+        // Les admins peuvent tout faire
         if ($this->security->isGranted('ROLE_ADMIN')) {
             return true;
         }
-        
-        // Normalisation des attributs pour utiliser les nouvelles constantes
-        if ($attribute === self::VIEW) {
-            $attribute = self::PRISEDEVUE_VIEW;
-        } elseif ($attribute === self::EDIT) {
-            $attribute = self::PRISEDEVUE_EDIT;
-        } elseif ($attribute === self::DELETE) {
-            $attribute = self::PRISEDEVUE_DELETE;
-        }
-        
-        // Cas spécial pour CREATE - vérifier seulement les rôles
-        if ($attribute === self::PRISEDEVUE_CREATE) {
-            return $this->security->isGranted('ROLE_ADMIN');
-        }
-        
-        /** @var PriseDeVue $priseDeVue */
-        $priseDeVue = $subject;
-        
-        // Vérifier le droit spécifique
+
+        // Les photographes ne peuvent voir/modifier que leurs prises de vue
         switch ($attribute) {
-            case self::PRISEDEVUE_VIEW:
+            case self::VIEW:
                 return $this->canView($priseDeVue, $user);
-            case self::PRISEDEVUE_EDIT:
+            case self::EDIT:
                 return $this->canEdit($priseDeVue, $user);
-            case self::PRISEDEVUE_DELETE:
+            case self::DELETE:
                 return $this->canDelete($priseDeVue, $user);
+            case self::EDIT_COMMENT:
+                return $this->canEditComment($priseDeVue, $user);
         }
-        
+
         return false;
     }
-    
-    /**
-     * Détermine si l'utilisateur peut voir une prise de vue
-     */
-    private function canView(PriseDeVue $priseDeVue, UserInterface $user): bool
+
+    private function canView(PriseDeVue $priseDeVue, User $user): bool
     {
-        // Un photographe ne peut voir que ses prises de vue
-        if ($this->security->isGranted('ROLE_PHOTOGRAPHE') && !$this->security->isGranted('ROLE_ADMIN')) {
-            return $priseDeVue->getPhotographe() && $priseDeVue->getPhotographe()->getId() === $user->getId();
+        // Un photographe peut voir ses prises de vue
+        if ($this->security->isGranted('ROLE_PHOTOGRAPHE')) {
+            return $priseDeVue->getPhotographe() === $user;
         }
-        
+
         return false;
     }
-    
-    /**
-     * Détermine si l'utilisateur peut modifier une prise de vue
-     */
-    private function canEdit(PriseDeVue $priseDeVue, UserInterface $user): bool
+
+    private function canEdit(PriseDeVue $priseDeVue, User $user): bool
     {
-        // Un photographe ne peut modifier que ses prises de vue et seulement le commentaire
-        if ($this->security->isGranted('ROLE_PHOTOGRAPHE') && !$this->security->isGranted('ROLE_ADMIN')) {
-            return $priseDeVue->getPhotographe() && $priseDeVue->getPhotographe()->getId() === $user->getId();
-        }
-        
-        return false;
+        // Seuls les admins peuvent modifier complètement les prises de vue
+        return $this->security->isGranted('ROLE_ADMIN');
     }
-    
-    /**
-     * Détermine si l'utilisateur peut supprimer une prise de vue
-     */
-    private function canDelete(PriseDeVue $priseDeVue, UserInterface $user): bool
+
+    private function canDelete(PriseDeVue $priseDeVue, User $user): bool
     {
-        // Seuls les administrateurs peuvent supprimer une prise de vue
-        return false;
+        // Seuls les admins peuvent supprimer des prises de vue
+        return $this->security->isGranted('ROLE_ADMIN');
+    }
+
+    private function canEditComment(PriseDeVue $priseDeVue, User $user): bool
+    {
+        // Un photographe peut modifier le commentaire de ses prises de vue
+        if ($this->security->isGranted('ROLE_PHOTOGRAPHE')) {
+            return $priseDeVue->getPhotographe() === $user;
+        }
+
+        return $this->security->isGranted('ROLE_ADMIN');
     }
 }

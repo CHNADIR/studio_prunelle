@@ -144,12 +144,12 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Prix école de base :</strong> {{ prise_de_vue.prixEcole|number_format(2, ',', ' ') }} €</p>
-                    <p><strong>Prix école total :</strong> {{ prix_totaux.prixTotalEcole|number_format(2, ',', ' ') }} €</p>
+                    <p><strong>Prix école :</strong> {{ prise_de_vue.prixEcole }} €</p>
+                    <p><strong>Prix total école :</strong> {{ prix_totaux.prixTotalEcole }} €</p>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>Prix parents de base :</strong> {{ prise_de_vue.prixParents|number_format(2, ',', ' ') }} €</p>
-                    <p><strong>Prix parents total :</strong> {{ prix_totaux.prixTotalParents|number_format(2, ',', ' ') }} €</p>
+                    <p><strong>Prix parents :</strong> {{ prise_de_vue.prixParents }} €</p>
+                    <p><strong>Prix total parents :</strong> {{ prix_totaux.prixTotalParents }} €</p>
                 </div>
             </div>
         </div>
@@ -159,13 +159,47 @@
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">Commentaires</h4>
         </div>
-        <div class="card-body">
-            {% if prise_de_vue.commentaire %}
-                <div class="p-3 bg-light rounded">
-                    {{ prise_de_vue.commentaire|nl2br }}
+        <div class="card-body" data-controller="comment-editor" id="commentaire-section">
+            {% if can_edit_comment %}
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" class="btn btn-outline-primary" data-action="comment-editor#edit">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </button>
                 </div>
-            {% else %}
-                <p class="text-muted">Aucun commentaire</p>
+            {% endif %}
+            
+            <div data-comment-editor-target="display">
+                {% if prise_de_vue.commentaire %}
+                    <div class="p-3 bg-light rounded">
+                        {{ prise_de_vue.commentaire|nl2br }}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Aucun commentaire</p>
+                {% endif %}
+            </div>
+            
+            {% if can_edit_comment %}
+                <div data-comment-editor-target="form" style="display: none;">
+                    <form action="{{ path('admin_prise_de_vue_update_comment', {'id': prise_de_vue.id}) }}" 
+                          method="post" 
+                          data-action="comment-editor#save">
+                        <div class="mb-3">
+                            <textarea class="form-control" name="commentaire" rows="4" data-comment-editor-target="content">{{ prise_de_vue.commentaire }}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary me-2" data-action="comment-editor#cancel">Annuler</button>
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div data-comment-editor-target="loading" style="display: none;">
+                    <div class="d-flex justify-content-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -200,4 +234,16 @@
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    
+    {% if can_edit_comment %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+                    
+        });
+    </script>
+    {% endif %}
 {% endblock %}

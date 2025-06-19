@@ -3,8 +3,10 @@
 namespace App\Service;
 
 use App\Entity\PriseDeVue;
+use App\Entity\User;
+use App\Repository\PriseDeVueRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Service gérant les opérations sur les prises de vue
@@ -12,140 +14,127 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class PriseDeVueManager
 {
     private EntityManagerInterface $entityManager;
-    private ValidatorInterface $validator;
+    private PriseDeVueRepository $priseDeVueRepository;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ValidatorInterface $validator
+        PriseDeVueRepository $priseDeVueRepository
     ) {
         $this->entityManager = $entityManager;
-        $this->validator = $validator;
+        $this->priseDeVueRepository = $priseDeVueRepository;
     }
 
     /**
-     * Sauvegarde une prise de vue
-     * 
-     * @param PriseDeVue $priseDeVue Prise de vue à sauvegarder
-     * @return array Résultat de l'opération
+     * Récupère les prises de vue selon des critères avec pagination
      */
-    public function save(PriseDeVue $priseDeVue): array
+    public function findByCriteriaPaginated(array $criteria, int $page = 1, int $limit = 10): array
     {
-        // Valider l'entité
-        $errors = $this->validator->validate($priseDeVue);
-        
-        if (count($errors) > 0) {
-            return [
-                'success' => false,
-                'errors' => $errors
-            ];
+        return $this->priseDeVueRepository->findByCriteriaPaginated($criteria, $page, $limit);
+    }
+
+    /**
+     * Récupère les prises de vue d'un photographe
+     */
+    public function findByPhotographe(User $photographe, int $page = 1, int $limit = 10): array
+    {
+        return $this->priseDeVueRepository->findByPhotographe($photographe, $page, $limit);
+    }
+
+    /**
+     * Crée une nouvelle prise de vue
+     */
+    public function create(PriseDeVue $priseDeVue, User $createdBy): PriseDeVue
+    {
+        if (!$priseDeVue->getPhotographe()) {
+            $priseDeVue->setPhotographe($createdBy);
         }
         
-        try {
-            $isNew = $priseDeVue->getId() === null;
-            
-            // Persister seulement si l'entité est nouvelle
-            if ($isNew) {
-                $this->entityManager->persist($priseDeVue);
-            }
-            
-            $this->entityManager->flush();
-            
-            return [
-                'success' => true,
-                'entity' => $priseDeVue,
-                'is_new' => $isNew
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'errors' => [$e->getMessage()]
-            ];
-        }
+        $this->entityManager->persist($priseDeVue);
+        $this->entityManager->flush();
+        
+        return $priseDeVue;
+    }
+
+    /**
+     * Met à jour une prise de vue existante
+     */
+    public function update(PriseDeVue $priseDeVue): PriseDeVue
+    {
+        $this->entityManager->flush();
+        
+        return $priseDeVue;
+    }
+
+    /**
+     * Met à jour uniquement le commentaire d'une prise de vue
+     */
+    public function updateComment(PriseDeVue $priseDeVue, string $commentaire): PriseDeVue
+    {
+        $priseDeVue->setCommentaire($commentaire);
+        $this->entityManager->flush();
+        
+        return $priseDeVue;
     }
 
     /**
      * Supprime une prise de vue
-     * 
-     * @param PriseDeVue $priseDeVue Prise de vue à supprimer
-     * @return array Résultat de l'opération
      */
-    public function delete(PriseDeVue $priseDeVue): array
+    public function delete(PriseDeVue $priseDeVue): void
     {
-        try {
-            $this->entityManager->remove($priseDeVue);
-            $this->entityManager->flush();
-            
-            return [
-                'success' => true
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'errors' => [$e->getMessage()]
-            ];
-        }
+        $this->entityManager->remove($priseDeVue);
+        $this->entityManager->flush();
     }
 
     /**
      * Clone une prise de vue existante
-     * 
-     * @param PriseDeVue $original Prise de vue à cloner
-     * @return PriseDeVue Nouveau clone
      */
-    public function cloner(PriseDeVue $original): PriseDeVue
+    public function clonePriseDeVue(PriseDeVue $original): PriseDeVue
     {
         $clone = new PriseDeVue();
-        
-        // Copier les propriétés simples
-        $clone->setDate(new \DateTime());
         $clone->setEcole($original->getEcole());
+        $clone->setDate(new \DateTime());
         $clone->setPhotographe($original->getPhotographe());
-        $clone->setTypePrise($original->getTypePrise());
-        $clone->setTypeVente($original->getTypeVente());
-        $clone->setTheme($original->getTheme());
         $clone->setNbEleves($original->getNbEleves());
         $clone->setNbClasses($original->getNbClasses());
         $clone->setClasses($original->getClasses());
+        $clone->setTypePrise($original->getTypePrise());
+        $clone->setTypeVente($original->getTypeVente());
+        $clone->setTheme($original->getTheme());
         $clone->setPrixEcole($original->getPrixEcole());
         $clone->setPrixParents($original->getPrixParents());
         
-        // Ajouter "(copie)" au commentaire
-        $commentaire = $original->getCommentaire();
-        if ($commentaire) {
-            $clone->setCommentaire($commentaire . ' (copie)');
-        }
-        
-        // Copier les planches individuelles
+        // Cloner les relations many-to-many
         foreach ($original->getPlanchesIndividuelles() as $planche) {
             $clone->addPlanchesIndividuelle($planche);
         }
         
-        // Copier les planches fratries
         foreach ($original->getPlanchesFratries() as $planche) {
             $clone->addPlanchesFratry($planche);
         }
+        
+        $clone->setCommentaire("Clonée depuis la prise de vue du " . $original->getDate()->format('d/m/Y'));
+        
+        $this->entityManager->persist($clone);
+        $this->entityManager->flush();
         
         return $clone;
     }
 
     /**
-     * Calcule le prix total d'une prise de vue
-     * 
-     * @param PriseDeVue $priseDeVue Prise de vue à calculer
-     * @return array Prix total école et parents
+     * Calcule les prix totaux d'une prise de vue
      */
-    public function calculerPrixTotal(PriseDeVue $priseDeVue): array
+    public function calculateTotalPrices(PriseDeVue $priseDeVue): array
     {
-        $prixTotalEcole = $priseDeVue->getPrixEcole() ?? 0;
-        $prixTotalParents = $priseDeVue->getPrixParents() ?? 0;
+        $prixTotalEcole = $priseDeVue->getPrixEcole();
+        $prixTotalParents = $priseDeVue->getPrixParents();
         
-        // Ajouter le prix des planches individuelles
+        // Ajouter les prix des planches individuelles
         foreach ($priseDeVue->getPlanchesIndividuelles() as $planche) {
             $prixTotalEcole += $planche->getPrixEcole();
             $prixTotalParents += $planche->getPrixParents();
         }
         
-        // Ajouter le prix des planches fratries
+        // Ajouter les prix des planches fratries
         foreach ($priseDeVue->getPlanchesFratries() as $planche) {
             $prixTotalEcole += $planche->getPrixEcole();
             $prixTotalParents += $planche->getPrixParents();

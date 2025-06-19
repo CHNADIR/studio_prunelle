@@ -116,19 +116,60 @@ class PriseDeVueController extends AbstractController
         ]);
     }
     
-    #[Route('/{id}', name: 'admin_prise_de_vue_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'admin_prise_de_vue_show', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[IsGranted(PriseDeVueVoter::PRISEDEVUE_VIEW, subject: 'priseDeVue')]
     public function show(PriseDeVue $priseDeVue): Response
     {
-        // Vérifier les droits d'accès avec le Voter
-        $this->denyAccessUnlessGranted(\App\Security\Voter\PriseDeVueVoter::PRISEDEVUE_VIEW, $priseDeVue);
-        
-        // Calculer les prix totaux
+        // Calculer les prix totaux en utilisant le service
         $prixTotaux = $this->priseDeVueManager->calculerPrixTotal($priseDeVue);
         
+        // Passer à la vue les données nécessaires
         return $this->render('admin/prise_de_vue/show.html.twig', [
             'prise_de_vue' => $priseDeVue,
             'prix_totaux' => $prixTotaux,
+            'can_edit_comment' => $this->isGranted(PriseDeVueVoter::PRISEDEVUE_COMMENT, $priseDeVue)
         ]);
+    }
+    
+    // Ajouter une nouvelle méthode pour la mise à jour du commentaire
+    #[Route('/{id}/comment', name: 'admin_prise_de_vue_update_comment', methods: ['POST'])]
+    #[IsGranted(PriseDeVueVoter::PRISEDEVUE_COMMENT, subject: 'priseDeVue')]
+    public function updateComment(Request $request, PriseDeVue $priseDeVue): Response
+    {
+        // Récupérer le commentaire depuis la requête
+        $commentaire = $request->request->get('commentaire');
+        
+        // Mettre à jour le commentaire
+        $priseDeVue->setCommentaire($commentaire);
+        
+        // Sauvegarder les modifications
+        $result = $this->priseDeVueManager->save($priseDeVue);
+        
+        // Si la requête est AJAX
+        if ($request->isXmlHttpRequest()) {
+            if ($result['success']) {
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Commentaire mis à jour avec succès',
+                    'commentaire' => $priseDeVue->getCommentaire()
+                ]);
+            }
+            
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour du commentaire',
+                'errors' => $result['errors']
+            ], 400);
+        }
+        
+        // Si ce n'est pas une requête AJAX
+        if ($result['success']) {
+            $this->addFlash('success', 'Commentaire mis à jour avec succès');
+        } else {
+            $this->addFlash('error', 'Erreur lors de la mise à jour du commentaire');
+        }
+        
+        return $this->redirectToRoute('admin_prise_de_vue_show', ['id' => $priseDeVue->getId()]);
     }
     
     #[Route('/{id}/edit', name: 'admin_prise_de_vue_edit', methods: ['GET', 'POST'])]

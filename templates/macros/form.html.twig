@@ -195,13 +195,73 @@
     </div>
 {% endmacro %}
 
-{% macro card_section(title, bg_class = 'bg-primary') %}
+{% macro form_group(form_field, label_text = null, help_text = null, required = false, col_class = 'col-md-12') %}
+    <div class="{{ col_class }}">
+        <div class="mb-3">
+            {% if label_text is not null %}
+                <label for="{{ form_field.vars.id }}" class="form-label">
+                    {{ label_text }}
+                    {% if required %}<span class="text-danger">*</span>{% endif %}
+                </label>
+            {% else %}
+                {{ form_label(form_field) }}
+            {% endif %}
+            
+            {{ form_widget(form_field, {'attr': {'class': 'form-control' ~ (form_field.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+            
+            {% if form_field.vars.errors|length > 0 %}
+                <div class="invalid-feedback">
+                    {{ form_errors(form_field) }}
+                </div>
+            {% endif %}
+            
+            {% if help_text %}
+                <div class="form-text">{{ help_text }}</div>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro checkbox_group(form_field, label_text = null, help_text = null, col_class = 'col-md-12') %}
+    <div class="{{ col_class }}">
+        <div class="mb-3 form-check">
+            {{ form_widget(form_field, {'attr': {'class': 'form-check-input' ~ (form_field.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+            
+            {% if label_text is not null %}
+                <label for="{{ form_field.vars.id }}" class="form-check-label">
+                    {{ label_text }}
+                </label>
+            {% else %}
+                {{ form_label(form_field, null, {'label_attr': {'class': 'form-check-label'}}) }}
+            {% endif %}
+            
+            {% if form_field.vars.errors|length > 0 %}
+                <div class="invalid-feedback">
+                    {{ form_errors(form_field) }}
+                </div>
+            {% endif %}
+            
+            {% if help_text %}
+                <div class="form-text">{{ help_text }}</div>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro card_section(title, icon = null) %}
     <div class="card mb-4">
-        <div class="card-header {{ bg_class }} text-white">
-            <h4 class="mb-0">{{ title }}</h4>
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                {% if icon %}<i class="bi bi-{{ icon }} me-2"></i>{% endif %}
+                {{ title }}
+            </h4>
         </div>
         <div class="card-body">
             {{ block('card_content') }}
         </div>
     </div>
+{% endmacro %}
+
+{% macro notification_area() %}
+    <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3"></div>
 {% endmacro %}

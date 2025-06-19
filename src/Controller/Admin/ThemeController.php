@@ -13,11 +13,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/admin/theme')]
 #[IsGranted('ROLE_ADMIN')]
-class ThemeController extends AbstractReferentialController
+class ThemeController extends AbstractController
 {
     private ReferentialManager $referentialManager;
 
@@ -65,8 +64,7 @@ class ThemeController extends AbstractReferentialController
     #[Route('/modal-new', name: 'admin_theme_modal_new', methods: ['GET', 'POST'])]
     public function modalNew(
         Request $request, 
-        EntityManagerInterface $entityManager,
-        ValidatorInterface $validator
+        ReferentialManager $referentialManager
     ): Response
     {
         $theme = new Theme();
@@ -75,16 +73,34 @@ class ThemeController extends AbstractReferentialController
         $form = $this->createForm(ThemeType::class, $theme);
         $form->handleRequest($request);
 
-        return $this->handleModalNew(
-            $request,
-            $entityManager,
-            $validator,
-            $theme,
-            $form,
-            'admin/theme/modal_new.html.twig',
-            'Le thème a été créé avec succès.',
-            'admin_theme_index'
-        );
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                $result = $referentialManager->createReferential($theme);
+                
+                if ($request->isXmlHttpRequest()) {
+                    return new JsonResponse($result);
+                }
+
+                $this->addFlash('success', 'Le thème a été créé avec succès.');
+                return $this->redirectToRoute('admin_theme_index');
+            } elseif ($request->isXmlHttpRequest()) {
+                // Erreurs de validation pour AJAX
+                $errors = [];
+                foreach ($form->getErrors(true) as $error) {
+                    $errors[] = $error->getMessage();
+                }
+                
+                return new JsonResponse([
+                    'success' => false,
+                    'errors' => $errors
+                ], Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        return $this->render('admin/theme/modal_new.html.twig', [
+            'theme' => $theme,
+            'form' => $form->createView(),
+        ]);
     }
 
     #[Route('/{id}', name: 'admin_theme_show', methods: ['GET'])]

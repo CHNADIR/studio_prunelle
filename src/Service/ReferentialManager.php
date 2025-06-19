@@ -111,4 +111,36 @@ class ReferentialManager
         // Si c'est un objet ou null
         return $relation === null;
     }
+
+    /**
+     * Gère la création d'un nouvel élément de référentiel
+     */
+    public function createReferential(object $entity): array
+    {
+        // Valider l'entité
+        $errors = $this->validator->validate($entity);
+        
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+            
+            return [
+                'success' => false,
+                'errors' => $errorMessages
+            ];
+        }
+        
+        // Persister l'entité
+        $this->entityManager->persist($entity);
+        $this->entityManager->flush();
+        
+        return [
+            'success' => true,
+            'id' => $entity->getId(),
+            'text' => method_exists($entity, 'getNom') ? $entity->getNom() : (string) $entity,
+            'message' => 'L\'élément a été créé avec succès.'
+        ];
+    }
 }
