@@ -1,0 +1,24 @@
+{% block form_theme form with ['bootstrap_5_horizontal_layout.html.twig'] %}
+{{ form_start(form, {attr:{class:'needs-validation'}, novalidate:true}) }}
+    <div class="row mb-3">
+        <div class="col-md-6">{{ form_row(form.nom) }}</div>
+        <div class="col-md-3">{{ form_row(form.type) }}</div>
+        <div class="col-md-3">{{ form_row(form.usage) }}</div>
+    </div>
+
+    {{ form_row(form.formats, {
+        help: 'Saisir un JSON valide ex : ["10x15","portrait"] ou une liste séparée par virgules.',
+        attr: {rows:3, placeholder:'["10x15", "portrait"]'}
+    }) }}
+
+    <div class="row">
+        <div class="col-md-6">{{ form_row(form.prixEcole) }}</div>
+        <div class="col-md-6">{{ form_row(form.prixParents) }}</div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-4">
+        <button class="btn btn-success">
+            <i class="bi bi-check-circle me-1"></i>{{ button_label|default('Enregistrer') }}
+        </button>
+    </div>
+{{ form_end(form) }}

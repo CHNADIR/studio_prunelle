@@ -10,16 +10,26 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use BabDev\Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
+use App\Security\Voter\PlancheVoter;
 
 #[Route('/admin/planche', name: 'admin_planche_')]
 #[IsGranted('ROLE_ADMIN')]
 final class PlancheController extends AbstractController
 {
-    #[Route(name: 'app_planche_index', methods: ['GET'])]
-    public function index(PlancheRepository $plancheRepository): Response
+    #[Route('', name: 'index', methods: ['GET'])]
+    public function index(Request $request, PlancheRepository $repo): Response
     {
-        return $this->render('planche/index.html.twig', [
-            'planches' => $plancheRepository->findAll(),
+        $qb = $repo->createQueryBuilder('p')->orderBy('p.updatedAt', 'DESC');
+
+        $pager = new Pagerfanta(new QueryAdapter($qb));
+        $pager->setMaxPerPage(10)
+              ->setCurrentPage($request->query->getInt('page', 1));
+
+        return $this->render('admin/planche/index.html.twig', [
+            'pager' => $pager,
         ]);
     }
 
@@ -33,6 +43,8 @@ final class PlancheController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($planche);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Planche créée avec succès !');
 
             return $this->redirectToRoute('app_planche_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -72,6 +84,8 @@ final class PlancheController extends AbstractController
     #[Route('/{id}', name: 'app_planche_delete', methods: ['POST'])]
     public function delete(Request $request, Planche $planche, EntityManagerInterface $entityManager): Response
     {
+        $this->denyAccessUnlessGranted(PlancheVoter::DELETE, $planche);
+
         if ($this->isCsrfTokenValid('delete'.$planche->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($planche);
             $entityManager->flush();

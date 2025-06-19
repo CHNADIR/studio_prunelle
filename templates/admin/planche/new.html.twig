@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+{% block title planche is defined ? 'Modifier planche' : 'Nouvelle planche' %}
+
+{% block body %}
+<h1 class="h3 mb-4">{{ block('title') }}</h1>
+{% include 'admin/planche/_form.html.twig' with {button_label: planche is defined ? 'Mettre à jour' : 'Créer'} %}
+<a href="{{ path('admin_planche_index') }}" class="btn btn-link mt-3">
+  <i class="bi bi-arrow-left"></i> Retour à la liste
+</a>
+{% if planche is defined %}
+  {% include 'admin/planche/_delete_form.html.twig' %}
+{% endif %}
+{% endblock %}
