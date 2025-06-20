@@ -2,26 +2,30 @@
 
 namespace App\Security\Voter;
 
-use App\Entity\Ecole;
+use App\Entity\TypePrise;
+use App\Entity\TypeVente;
+use App\Entity\Theme;
 use App\Security\Attribute\EntityAction;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 /**
  * ADMIN & SUPERADMIN : CRUD
- * PHOTOGRAPHE        : aucun accès
+ * Autres rôles        : aucun accès
  */
-final class EcoleVoter extends AbstractEntityVoter
+final class ReferentielVoter extends AbstractEntityVoter
 {
     protected function supports(string $attribute, mixed $subject): bool
     {
         return \in_array($attribute, self::actions(), true)
-            && $subject instanceof Ecole;
+            && ($subject instanceof TypePrise
+                || $subject instanceof TypeVente
+                || $subject instanceof Theme);
     }
 
-    protected function voteOnAttribute(string $attribute, mixed $ecole, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
         if (($pre = $this->preChecks($token)) !== null) {
-            return $pre;                          // SUPERADMIN autorisé
+            return $pre;
         }
 
         return $this->security->isGranted('ROLE_ADMIN');

@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Admin\Controller;
+namespace App\Controller\Admin;
 
 use App\Entity\Planche;
 use App\Form\PlancheType;
 use App\Repository\PlancheRepository;
+use App\Security\Attribute\EntityAction;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +14,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use BabDev\Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
-use App\Security\Voter\PlancheVoter;
 
 #[Route('/admin/planche', name: 'admin_planche_')]
 #[IsGranted('ROLE_ADMIN')]
@@ -84,7 +84,7 @@ final class PlancheController extends AbstractController
     #[Route('/{id}', name: 'app_planche_delete', methods: ['POST'])]
     public function delete(Request $request, Planche $planche, EntityManagerInterface $entityManager): Response
     {
-        $this->denyAccessUnlessGranted(PlancheVoter::DELETE, $planche);
+        $this->denyAccessUnlessGranted(EntityAction::DELETE->value, $planche);
 
         if ($this->isCsrfTokenValid('delete'.$planche->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($planche);
