@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectsWithAdd = document.querySelectorAll('select.select-with-add');
     
     selectsWithAdd.forEach(select => {
-        const addUrl = select.getAttribute('data-add-url');
+        const addUrl = select.dataset.addUrl;
         if (!addUrl) return;
         
         // Créer le bouton + à côté du select

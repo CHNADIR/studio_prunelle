@@ -26,6 +26,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Security;
 use App\Enum\PlancheUsage;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class PriseDeVueType extends AbstractType
 {
@@ -36,6 +37,7 @@ class PriseDeVueType extends AbstractType
     private ThemeRepository $themeRepository;
     private EcoleRepository $ecoleRepository;
     private UserRepository $userRepository;
+    private UrlGeneratorInterface $urlGenerator;
     
     public function __construct(
         Security $security,
@@ -44,15 +46,17 @@ class PriseDeVueType extends AbstractType
         TypeVenteRepository $typeVenteRepository,
         ThemeRepository $themeRepository,
         EcoleRepository $ecoleRepository,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        UrlGeneratorInterface $urlGenerator
     ) {
-        $this->security = $security;
-        $this->plancheRepository = $plancheRepository;
+        $this->security            = $security;
+        $this->plancheRepository   = $plancheRepository;
         $this->typePriseRepository = $typePriseRepository;
         $this->typeVenteRepository = $typeVenteRepository;
-        $this->themeRepository = $themeRepository;
-        $this->ecoleRepository = $ecoleRepository;
-        $this->userRepository = $userRepository;
+        $this->themeRepository     = $themeRepository;
+        $this->ecoleRepository     = $ecoleRepository;
+        $this->userRepository      = $userRepository;
+        $this->urlGenerator        = $urlGenerator;
     }
     
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -188,27 +192,33 @@ class PriseDeVueType extends AbstractType
         // Planches
         $builder
             ->add('planchesIndividuelles', EntityType::class, [
-                'class' => Planche::class,
-                'choice_label' => 'nom',
+                'class'         => Planche::class,
+                'choice_label'  => 'nom',
                 'query_builder' => fn (PlancheRepository $r) =>
                     $r->createActivesByTypeQueryBuilder(PlancheUsage::INDIVIDUELLE),
-                'label' => 'Planches individuelles',
-                'required' => false,
-                'multiple' => true,
-                'expanded' => true,
-                'attr' => ['class' => 'planches-list'],
+                'multiple'      => true,          // ManyToMany
+                'expanded'      => true,          // checkboxes (false pour <select multiple>)
+                'by_reference'  => false,         // appelle add/remove (Doctrine)
+                'label'         => 'Planches individuelles',
+                'attr' => [
+                    'class'        => 'planches-list select-with-add',
+                    'data-add-url' => $this->urlGenerator->generate('admin_planche_modal_new'),
+                ],
                 'row_attr' => ['class' => 'form-group planches-group'],
             ])
             ->add('planchesFratries', EntityType::class, [
-                'class' => Planche::class,
-                'choice_label' => 'nom',
+                'class'         => Planche::class,
+                'choice_label'  => 'nom',
                 'query_builder' => fn (PlancheRepository $r) =>
                     $r->createActivesByTypeQueryBuilder(PlancheUsage::FRATRIE),
-                'label' => 'Planches fratries',
-                'required' => false,
-                'multiple' => true,
-                'expanded' => true,
-                'attr' => ['class' => 'planches-list'],
+                'multiple'      => true,          // ManyToMany
+                'expanded'      => true,          // checkboxes (false pour <select multiple>)
+                'by_reference'  => false,         // appelle add/remove (Doctrine)
+                'label'         => 'Planches fratries',
+                'attr' => [
+                    'class'        => 'planches-list select-with-add',
+                    'data-add-url' => $this->urlGenerator->generate('admin_planche_modal_new'),
+                ],
                 'row_attr' => ['class' => 'form-group planches-group'],
             ]);
             

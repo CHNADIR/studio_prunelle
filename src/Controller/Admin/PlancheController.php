@@ -93,4 +93,44 @@ final class PlancheController extends AbstractController
 
         return $this->redirectToRoute('admin_planche_index', [], Response::HTTP_SEE_OTHER);
     }
+
+    #[Route('/modal/new', name: 'modal_new', methods: ['GET', 'POST'])]
+    public function modalNew(Request $request, EntityManagerInterface $em): Response
+    {
+        $planche = new Planche();
+        $form = $this->createForm(PlancheType::class, $planche);
+        $form->handleRequest($request);
+
+        if ($request->isMethod('POST')) {
+            if ($form->isSubmitted() && $form->isValid()) {
+                $em->persist($planche);
+                $em->flush();
+
+                return $this->json([
+                    'success' => true,
+                    'id'      => $planche->getId(),
+                    'text'    => $planche->getNom(),
+                    'message' => 'Planche créée avec succès',
+                ]);
+            }
+
+            // Form non valide → on renvoie le HTML avec les erreurs
+            $html = $this->renderView('admin/planche/_form.html.twig', [
+                'form'         => $form->createView(),
+                'button_label' => 'Créer',
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'html'    => $html,
+                'errors'  => $form->getErrors(true, false),
+            ], 422);
+        }
+
+        // Premier affichage (GET) → on rend juste le formulaire
+        return $this->render('admin/planche/_form.html.twig', [
+            'form'         => $form->createView(),
+            'button_label' => 'Créer',
+        ]);
+    }
 }

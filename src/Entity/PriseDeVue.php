@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[ORM\Entity(repositoryClass: PriseDeVueRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -81,8 +82,11 @@ class PriseDeVue
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    private UrlGeneratorInterface $urlGenerator;
+
     public function __construct()
     {
+        // Initialisation des collections, dates, etc.
         $this->planchesIndividuelles = new ArrayCollection();
         $this->planchesFratries = new ArrayCollection();
         $this->createdAt = new \DateTime();
