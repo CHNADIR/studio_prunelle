@@ -86,7 +86,7 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 
         // Redirection basée sur le rôle - Utilisation du service Security injecté
         if ($this->security->isGranted('ROLE_SUPERADMIN')) {
-            return new RedirectResponse($this->urlGenerator->generate('admin_dashboard'));
+            return new RedirectResponse($this->urlGenerator->generate('admin_user_index'));
         } elseif ($this->security->isGranted('ROLE_ADMIN')) {
             return new RedirectResponse($this->urlGenerator->generate('admin_prise_de_vue_index'));
         } elseif ($this->security->isGranted('ROLE_PHOTOGRAPHE')) {

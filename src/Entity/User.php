@@ -21,8 +21,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email]
     private ?string $email = null;
 
-    #[ORM\Column]
-    private array $roles = [];
+    #[ORM\Column(type: 'json')]
+    private array $roles = ['ROLE_PHOTOGRAPHE'];
 
     /**
      * Le mot de passe est updatable:false pour invalider toutes les sessions
@@ -65,9 +65,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // Garantir que chaque utilisateur a au moins ROLE_USER
         $roles[] = 'ROLE_USER';
-
         return array_unique($roles);
     }
 
@@ -122,5 +120,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->lastLogin = new \DateTime();
         return $this;
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->getRoles(), true);
+    }
+
+    public function canRemoveRole(string $role): bool
+    {
+        return !($this->hasRole('ROLE_SUPERADMIN') && $role === 'ROLE_SUPERADMIN' && $this->isLastSuperAdmin());
     }
 }

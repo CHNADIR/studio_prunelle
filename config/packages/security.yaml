@@ -49,6 +49,7 @@ security:
         - { path: ^/photographe, roles: ROLE_PHOTOGRAPHE }
         - { path: ^/superadmin, roles: ROLE_SUPERADMIN }
         - { path: ^/admin/planche, roles: ROLE_ADMIN }
+        - { path: ^/admin/users, roles: ROLE_SUPERADMIN }
         
     # Hiérarchie des rôles
     role_hierarchy:
