@@ -90,7 +90,7 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         } elseif ($this->security->isGranted('ROLE_ADMIN')) {
             return new RedirectResponse($this->urlGenerator->generate('admin_prise_de_vue_index'));
         } elseif ($this->security->isGranted('ROLE_PHOTOGRAPHE')) {
-            return new RedirectResponse($this->urlGenerator->generate('photographe_home'));
+            return new RedirectResponse($this->urlGenerator->generate('home'));
         }
 
         // Fallback vers la page d'accueil
