@@ -62,6 +62,9 @@ class Planche
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $actif = true;
+
     #[Assert\Callback]
     public function validatePrix(ExecutionContextInterface $context): void
     {
@@ -144,14 +147,14 @@ class Planche
         return $this;
     }
     
-    public function isActive(): bool
+    public function isActif(): bool
     {
-        return $this->active;
+        return $this->actif;
     }
 
-    public function setActive(bool $active): self
+    public function setActif(bool $actif): self
     {
-        $this->active = $active;
+        $this->actif = $actif;
         return $this;
     }
     

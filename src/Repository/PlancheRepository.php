@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Planche;
+use App\Enum\PlancheUsage;
+use BackedEnum;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -48,5 +50,17 @@ class PlancheRepository extends AbstractReferentialRepository
         }
         
         return $qb;
+    }
+
+    public function createActivesByTypeQueryBuilder(
+        PlancheUsage|string $type   // accepte Enum *ou* string
+    ): QueryBuilder {
+        $value = $type instanceof BackedEnum ? $type->value : $type;
+
+        return $this->createQueryBuilder('p')
+            ->where('p.actif = true')
+            ->andWhere('p.type = :type')
+            ->setParameter('type', $value)
+            ->orderBy('p.nom', 'ASC');
     }
 }

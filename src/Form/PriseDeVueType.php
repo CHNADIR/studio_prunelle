@@ -190,14 +190,8 @@ class PriseDeVueType extends AbstractType
             ->add('planchesIndividuelles', EntityType::class, [
                 'class' => Planche::class,
                 'choice_label' => 'nom',
-                'query_builder' => function () {
-                    return $this->plancheRepository->createQueryBuilder('p')
-                        ->where('p.active = :active')
-                        ->andWhere('p.type = :type')
-                        ->setParameter('active', true)
-                        ->setParameter('type', PlancheUsage::INDIVIDUELLE)
-                        ->orderBy('p.nom', 'ASC');
-                },
+                'query_builder' => fn (PlancheRepository $r) =>
+                    $r->createActivesByTypeQueryBuilder(PlancheUsage::INDIVIDUELLE),
                 'label' => 'Planches individuelles',
                 'required' => false,
                 'multiple' => true,
@@ -208,14 +202,8 @@ class PriseDeVueType extends AbstractType
             ->add('planchesFratries', EntityType::class, [
                 'class' => Planche::class,
                 'choice_label' => 'nom',
-                'query_builder' => function () {
-                    return $this->plancheRepository->createQueryBuilder('p')
-                        ->where('p.active = :active')
-                        ->andWhere('p.type = :type')
-                        ->setParameter('active', true)
-                        ->setParameter('type', Planche::TYPE_FRATRIE)
-                        ->orderBy('p.nom', 'ASC');
-                },
+                'query_builder' => fn (PlancheRepository $r) =>
+                    $r->createActivesByTypeQueryBuilder(PlancheUsage::FRATRIE),
                 'label' => 'Planches fratries',
                 'required' => false,
                 'multiple' => true,
