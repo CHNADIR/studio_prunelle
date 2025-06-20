@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+{% block title %}Détail de la prise de vue{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <a href="{{ path('photographe_prise_de_vue_index') }}" class="btn btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+
+    {% include 'partials/_flash_messages.html.twig' %}
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Informations générales</h4>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Date</dt>
+                <dd class="col-sm-8">{{ prise_de_vue.date|date('d/m/Y') }}</dd>
+                <dt class="col-sm-4">École</dt>
+                <dd class="col-sm-8">{{ prise_de_vue.ecole.nom }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Volumes et tarification</h4>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-6">Nombre de classes</dt>
+                <dd class="col-sm-6">{{ prise_de_vue.nbClasses ?: 0 }}</dd>
+                <dt class="col-sm-6">Nombre d'élèves</dt>
+                <dd class="col-sm-6">{{ prise_de_vue.nbEleves ?: 0 }}</dd>
+                <dt class="col-sm-6">Prix école</dt>
+                <dd class="col-sm-6">{{ prise_de_vue.prixEcole ? prise_de_vue.prixEcole|format_currency('EUR') : '0 €' }}</dd>
+                <dt class="col-sm-6">Prix parents</dt>
+                <dd class="col-sm-6">{{ prise_de_vue.prixParents ? prise_de_vue.prixParents|format_currency('EUR') : '0 €' }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Planches individuelles</h4>
+                </div>
+                <div class="card-body">
+                    {% if prise_de_vue.planchesIndividuelles.count > 0 %}
+                        <ul class="list-group">
+                            {% for planche in prise_de_vue.planchesIndividuelles %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ planche.nom }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Aucune planche individuelle sélectionnée</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">Planches fratrie</h4>
+                </div>
+                <div class="card-body">
+                    {% if prise_de_vue.planchesFratries.count > 0 %}
+                        <ul class="list-group">
+                            {% for planche in prise_de_vue.planchesFratries %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ planche.nom }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Aucune planche fratrie sélectionnée</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h4 class="mb-0">Commentaires</h4>
+        </div>
+        <div class="card-body">
+            {% if prise_de_vue.commentaire %}
+                <p>{{ prise_de_vue.commentaire|nl2br }}</p>
+            {% else %}
+                <em class="text-muted">Aucun commentaire</em>
+            {% endif %}
+
+            {% if is_granted(constant('App\\\\Security\\\\Attribute\\\\EntityAction::EDIT').value, prise_de_vue) %}
+                <hr>
+                <h5>Modifier le commentaire</h5>
+                {% include 'photographe/prise_de_vue/_comment_form.html.twig' with {form: comment_form} %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

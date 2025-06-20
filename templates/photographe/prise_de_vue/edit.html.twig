@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+{% block title 'Prise #' ~ prise.id %}
+
+{% block body %}
+<a href="{{ path('photographe_prise_de_vue_index') }}" class="btn btn-link mb-3">
+  <i class="bi bi-arrow-left"></i> Retour
+</a>
+
+{% include 'partials/_flash_messages.html.twig' %}
+
+<div class="card shadow-sm">
+  <div class="card-header">
+    <h2 class="h5 mb-0">Prise #{{ prise.id }} – {{ prise.ecole.nom }}</h2>
+  </div>
+  <div class="card-body">
+    <dl class="row">
+      <dt class="col-sm-3">Date</dt>
+      <dd class="col-sm-9">{{ prise.date|date('d/m/Y') }}</dd>
+
+      <dt class="col-sm-3">École</dt>
+      <dd class="col-sm-9">{{ prise.ecole.nom }}</dd>
+
+      <dt class="col-sm-3">Formats commandés</dt>
+      <dd class="col-sm-9">
+        {% for p in prise.planches %}
+          <span class="badge text-bg-secondary me-1">{{ p.nom }}</span>
+        {% endfor %}
+      </dd>
+
+      <dt class="col-sm-3">Commentaire</dt>
+      <dd class="col-sm-9">
+        {{ prise.commentaire ?: '<em>Aucun</em>'|raw }}
+      </dd>
+    </dl>
+  </div>
+</div>
+
+{% if is_granted(constant('App\\\\Security\\\\Attribute\\\\EntityAction::EDIT').value, prise) %}
+  <div class="card mt-4">
+    <div class="card-header">
+      <h3 class="h6 mb-0">Modifier le commentaire</h3>
+    </div>
+    <div class="card-body">
+      {% include 'photographe/prise_de_vue/_comment_form.html.twig' %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

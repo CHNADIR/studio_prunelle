@@ -196,4 +196,15 @@ class PriseDeVueRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+    
+    /**
+     * QueryBuilder personnalisé pour les prises de vue d'un photographe
+     */
+    public function qbMesPrises(User $photographe)
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.photographe = :photographe')
+            ->setParameter('photographe', $photographe)
+            ->orderBy('p.date', 'DESC');
+    }
 }

@@ -55,7 +55,7 @@
                         
                         {% if is_granted('ROLE_PHOTOGRAPHE') and not is_granted('ROLE_ADMIN') %}
                             <li class="nav-item">
-                                <a class="nav-link {% if app.request.get('_route') starts with 'photographe_prise_de_vue' %}active{% endif %}" href="{{ path('admin_prise_de_vue_index') }}">Mes prises de vue</a>
+                                <a class="nav-link {% if app.request.get('_route') starts with 'photographe_prise_de_vue' %}active{% endif %}" href="{{ path('photographe_prise_de_vue_index') }}">Mes prises de vue</a>
                             </li>
                         {% endif %}
                     </ul>

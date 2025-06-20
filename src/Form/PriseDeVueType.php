@@ -17,7 +17,6 @@ use App\Repository\TypeVenteRepository;
 use App\Repository\UserRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
@@ -57,7 +56,7 @@ class PriseDeVueType extends AbstractType
     
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        // Groupe : Informations générales
+        // Informations générales
         $builder
             ->add('date', DateType::class, [
                 'widget' => 'single_text',
@@ -82,7 +81,7 @@ class PriseDeVueType extends AbstractType
                 'row_attr' => ['class' => 'form-group'],
             ]);
             
-        // Si l'utilisateur est admin, il peut choisir le photographe
+        // Afficher le champ photographe uniquement pour les admins
         if ($this->security->isGranted('ROLE_ADMIN')) {
             $builder->add('photographe', EntityType::class, [
                 'class' => User::class,
@@ -128,7 +127,7 @@ class PriseDeVueType extends AbstractType
                 'row_attr' => ['class' => 'form-group'],
             ]);
             
-        // Groupe : Type de prise et options
+        // Type de prise et options
         $builder
             ->add('typePrise', EntityType::class, [
                 'class' => TypePrise::class,
@@ -185,7 +184,7 @@ class PriseDeVueType extends AbstractType
                 'row_attr' => ['class' => 'form-group'],
             ]);
             
-        // Groupe : Planches
+        // Planches
         $builder
             ->add('planchesIndividuelles', EntityType::class, [
                 'class' => Planche::class,
@@ -224,7 +223,7 @@ class PriseDeVueType extends AbstractType
                 'row_attr' => ['class' => 'form-group planches-group'],
             ]);
             
-        // Groupe : Tarification
+        // Tarification
         $builder
             ->add('prixEcole', MoneyType::class, [
                 'label' => 'Prix école (€)',
@@ -241,7 +240,7 @@ class PriseDeVueType extends AbstractType
                 'row_attr' => ['class' => 'form-group'],
             ]);
             
-        // Groupe : Commentaires
+        // Commentaires
         $builder
             ->add('commentaire', TextareaType::class, [
                 'label' => 'Commentaires',

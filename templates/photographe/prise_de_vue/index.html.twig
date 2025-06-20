@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mes prises de vue{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mes prises de vue</h1>
+    </div>
+
+    {% include 'partials/_flash_messages.html.twig' %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>École</th>
+                            <th>Date</th>
+                            <th>État</th>
+                            <th class="text-end"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% if pager is defined %}
+                        {% for prise in pager.currentPageResults %}
+                            <tr>
+                                <td>{{ prise.id }}</td>
+                                <td>{{ prise.ecole.nom }}</td>
+                                <td>{{ prise.date|date('d/m/Y') }}</td>
+                                <td>
+                                    {% if prise.commentaire %}
+                                        <span class="badge bg-success">Commenté</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">En attente</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="{{ path('photographe_prise_de_vue_show', {id: prise.id}) }}">
+                                        <i class="bi bi-eye"></i> Ouvrir
+                                    </a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="5" class="text-center fst-italic">Aucune prise trouvée.</td></tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="5" class="text-center fst-italic">Aucune prise trouvée.</td></tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% if pager is defined %}
+                <div class="d-flex justify-content-center mt-4">
+                    {{ pagerfanta(pager, 'default') }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
