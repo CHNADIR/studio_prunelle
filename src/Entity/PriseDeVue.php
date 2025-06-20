@@ -68,11 +68,11 @@ class PriseDeVue
     private ?Theme $theme = null;
     
     #[ORM\ManyToMany(targetEntity: Planche::class, inversedBy: 'prisesDeVue')]
-    #[ORM\JoinTable(name: 'prise_de_vue_planche')]
+    #[ORM\JoinTable(name: 'prise_de_vue_planches_individuelles')]
     private Collection $planchesIndividuelles;
     
     #[ORM\ManyToMany(targetEntity: Planche::class)]
-    #[ORM\JoinTable(name: 'prise_de_vue_planche_fratrie')]
+    #[ORM\JoinTable(name: 'prise_de_vue_planches_fratries')]
     private Collection $planchesFratries;
     
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

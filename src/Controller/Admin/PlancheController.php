@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
-use BabDev\Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 
 #[Route('/admin/planche', name: 'admin_planche_')]
@@ -33,7 +33,7 @@ final class PlancheController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'app_planche_new', methods: ['GET', 'POST'])]
+    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $planche = new Planche();
@@ -46,24 +46,24 @@ final class PlancheController extends AbstractController
 
             $this->addFlash('success', 'Planche créée avec succès !');
 
-            return $this->redirectToRoute('app_planche_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('admin_planche_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('planche/new.html.twig', [
+        return $this->render('admin/planche/new.html.twig', [
             'planche' => $planche,
             'form' => $form,
         ]);
     }
 
-    #[Route('/{id}', name: 'app_planche_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(Planche $planche): Response
     {
-        return $this->render('planche/show.html.twig', [
+        return $this->render('admin/planche/show.html.twig', [
             'planche' => $planche,
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_planche_edit', methods: ['GET', 'POST'])]
+    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Planche $planche, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(PlancheType::class, $planche);
@@ -72,16 +72,16 @@ final class PlancheController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_planche_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('admin_planche_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('planche/edit.html.twig', [
+        return $this->render('admin/planche/edit.html.twig', [
             'planche' => $planche,
             'form' => $form,
         ]);
     }
 
-    #[Route('/{id}', name: 'app_planche_delete', methods: ['POST'])]
+    #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Planche $planche, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted(EntityAction::DELETE->value, $planche);
@@ -91,6 +91,6 @@ final class PlancheController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_planche_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('admin_planche_index', [], Response::HTTP_SEE_OTHER);
     }
 }

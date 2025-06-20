@@ -65,6 +65,9 @@ class Planche
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $actif = true;
 
+    #[ORM\ManyToMany(targetEntity: PriseDeVue::class, mappedBy: 'planchesIndividuelles')]
+    private Collection $prisesDeVue;
+
     #[Assert\Callback]
     public function validatePrix(ExecutionContextInterface $context): void
     {
@@ -85,6 +88,11 @@ class Planche
     public function onUpdate(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function __construct()
+    {
+        $this->prisesDeVue = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -164,6 +172,23 @@ class Planche
     public function getPrisesDeVue(): Collection
     {
         return $this->prisesDeVue;
+    }
+
+    public function addPriseDeVue(PriseDeVue $pdv): self
+    {
+        if (!$this->prisesDeVue->contains($pdv)) {
+            $this->prisesDeVue->add($pdv);
+            $pdv->addPlancheIndividuelle($this); // synchro côté owning
+        }
+        return $this;
+    }
+
+    public function removePriseDeVue(PriseDeVue $pdv): self
+    {
+        if ($this->prisesDeVue->removeElement($pdv)) {
+            $pdv->removePlancheIndividuelle($this);
+        }
+        return $this;
     }
 
     public function __toString(): string
