@@ -4,8 +4,8 @@
 {% block body %}
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3">Planches</h1>
-    <a href="{{ path('admin_planche_new') }}" class="btn btn-primary">
+    <h1 class="h3">Liste des planches</h1>
+    <a href="{{ path('admin_planche_new') }}" class="btn btn-primary mb-3">
         <i class="bi bi-plus-circle me-1"></i> Nouvelle planche
     </a>
   </div>
@@ -18,35 +18,22 @@
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th>Nom</th><th>Type</th><th>Usage</th><th>Formats</th>
-              <th class="text-end">€ École</th><th class="text-end">€ Parents</th>
-              <th></th>
+              <th>Nom</th><th>Usage</th><th>Actif</th><th></th>
             </tr>
           </thead>
           <tbody>
-            {% for planche in pager.currentPageResults %}
+            {% for p in planches %}
               <tr>
-                <td>{{ planche.nom }}</td>
-                <td>{{ planche.type.name|title }}</td>
-                <td>{{ planche.usage }}</td>
+                <td>{{ p.nom }}</td>
+                <td>{{ p.usage }}</td>
+                <td>{{ p.actif ? 'Oui' : 'Non' }}</td>
                 <td>
-                  {% for f in planche.formats %}
-                    <span class="badge text-bg-secondary me-1">{{ f }}</span>
-                  {% endfor %}
-                </td>
-                <td class="text-end">{{ planche.prixEcole|number_format(2, ',', ' ') }}</td>
-                <td class="text-end">{{ planche.prixParents|number_format(2, ',', ' ') }}</td>
-                <td class="text-end">
-                  <a class="btn btn-sm btn-outline-secondary" href="{{ path('admin_planche_show', {'id': planche.id}) }}">
-                    <i class="bi bi-eye"></i>
-                  </a>
-                  <a class="btn btn-sm btn-outline-primary" href="{{ path('admin_planche_edit', {'id': planche.id}) }}">
-                    <i class="bi bi-pencil"></i>
-                  </a>
+                  <a href="{{ path('admin_planche_edit', {id:p.id}) }}" class="btn btn-sm btn-secondary">✏</a>
+                  {{ include('admin/planche/_delete_form.html.twig', {p:p}) }}
                 </td>
               </tr>
             {% else %}
-              <tr><td colspan="7" class="text-center fst-italic">Aucune planche trouvée</td></tr>
+              <tr><td colspan="4" class="text-center fst-italic">Aucune planche trouvée</td></tr>
             {% endfor %}
           </tbody>
         </table>

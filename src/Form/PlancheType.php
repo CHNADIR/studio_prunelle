@@ -38,7 +38,7 @@ class PlancheType extends AbstractType
             ->add('prixEcole', MoneyType::class, ['currency' => 'EUR', 'label' => 'Prix école'])
             ->add('prixParents', MoneyType::class, ['currency' => 'EUR', 'label' => 'Prix parents'])
             ->add('actif', CheckboxType::class, [
-                'label' => 'Planche active',
+                'label'    => 'Planche active',
                 'required' => false,
             ])
         ;
