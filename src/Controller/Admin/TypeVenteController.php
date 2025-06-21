@@ -30,7 +30,7 @@ class TypeVenteController extends AbstractReferentialController
     public function index(TypeVenteRepository $typeVenteRepository): Response
     {
         return $this->render('admin/type_vente/index.html.twig', [
-            'type_ventes' => $typeVenteRepository->findAll(),
+            'type_ventes' => $typeVenteRepository->findAllActive(),
         ]);
     }
 

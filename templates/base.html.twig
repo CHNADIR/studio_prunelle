@@ -42,7 +42,7 @@
                                     <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_type_prise' %}active{% endif %}" href="{{ path('admin_type_prise_index') }}">Types de prise</a></li>
                                     <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_type_vente' %}active{% endif %}" href="{{ path('admin_type_vente_index') }}">Types de vente</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="#">Planches</a></li>
+                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_planche' %}active{% endif %}" href="{{ path('admin_planche_index') }}">Planches</a></li>
                                 </ul>
                             </li>
                         {% endif %}

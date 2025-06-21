@@ -5,20 +5,27 @@ namespace App\Controller\Admin;
 use App\Entity\Planche;
 use App\Form\PlancheType;
 use App\Repository\PlancheRepository;
-use App\Security\Attribute\EntityAction;
+use App\Service\ReferentialManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 
 #[Route('/admin/planche', name: 'admin_planche_')]
 #[IsGranted('ROLE_ADMIN')]
-final class PlancheController extends AbstractController
+final class PlancheController extends AbstractReferentialController
 {
+    private ReferentialManager $referentialManager;
+
+    public function __construct(ReferentialManager $referentialManager)
+    {
+        $this->referentialManager = $referentialManager;
+    }
+
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request, PlancheRepository $repo): Response
     {
@@ -30,23 +37,30 @@ final class PlancheController extends AbstractController
 
         return $this->render('admin/planche/index.html.twig', [
             'pager' => $pager,
+            'planches' => $pager->getCurrentPageResults(),
         ]);
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request): Response
     {
         $planche = new Planche();
+        $planche->setActif(true);
+        
         $form = $this->createForm(PlancheType::class, $planche);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($planche);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Planche créée avec succès !');
-
-            return $this->redirectToRoute('admin_planche_index', [], Response::HTTP_SEE_OTHER);
+            $result = $this->referentialManager->save($planche);
+            
+            if ($result['success']) {
+                $this->addFlash('success', 'La planche a été créée avec succès.');
+                return $this->redirectToRoute('admin_planche_index');
+            } else {
+                foreach ($result['errors'] as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+            }
         }
 
         return $this->render('admin/planche/new.html.twig', [
@@ -64,15 +78,22 @@ final class PlancheController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Planche $planche, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Planche $planche): Response
     {
         $form = $this->createForm(PlancheType::class, $planche);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            return $this->redirectToRoute('admin_planche_index', [], Response::HTTP_SEE_OTHER);
+            $result = $this->referentialManager->save($planche);
+            
+            if ($result['success']) {
+                $this->addFlash('success', 'La planche a été modifiée avec succès.');
+                return $this->redirectToRoute('admin_planche_index');
+            } else {
+                foreach ($result['errors'] as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+            }
         }
 
         return $this->render('admin/planche/edit.html.twig', [
@@ -82,55 +103,48 @@ final class PlancheController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Planche $planche, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, Planche $planche): Response
     {
-        $this->denyAccessUnlessGranted(EntityAction::DELETE->value, $planche);
-
-        if ($this->isCsrfTokenValid('delete'.$planche->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($planche);
-            $entityManager->flush();
+        if ($this->isCsrfTokenValid('delete'.$planche->getId(), $request->request->get('_token'))) {
+            if (!$this->referentialManager->canDelete($planche, 'prisesDeVue')) {
+                $this->addFlash('error', 'Cette planche ne peut pas être supprimée car elle est utilisée par des prises de vue.');
+                return $this->redirectToRoute('admin_planche_index');
+            }
+            
+            $result = $this->referentialManager->delete($planche);
+            
+            if ($result['success']) {
+                $this->addFlash('success', 'La planche a été supprimée avec succès.');
+            } else {
+                $this->addFlash('error', 'Une erreur est survenue lors de la suppression.');
+            }
         }
 
-        return $this->redirectToRoute('admin_planche_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('admin_planche_index');
     }
 
-    #[Route('/modal/new', name: 'modal_new', methods: ['GET', 'POST'])]
-    public function modalNew(Request $request, EntityManagerInterface $em): Response
+    #[Route('/modal-new', name: 'modal_new', methods: ['GET', 'POST'])]
+    public function modalNew(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
+    ): Response
     {
         $planche = new Planche();
+        $planche->setActif(true);
+        
         $form = $this->createForm(PlancheType::class, $planche);
         $form->handleRequest($request);
 
-        if ($request->isMethod('POST')) {
-            if ($form->isSubmitted() && $form->isValid()) {
-                $em->persist($planche);
-                $em->flush();
-
-                return $this->json([
-                    'success' => true,
-                    'id'      => $planche->getId(),
-                    'text'    => $planche->getNom(),
-                    'message' => 'Planche créée avec succès',
-                ]);
-            }
-
-            // Form non valide → on renvoie le HTML avec les erreurs
-            $html = $this->renderView('admin/planche/_form.html.twig', [
-                'form'         => $form->createView(),
-                'button_label' => 'Créer',
-            ]);
-
-            return $this->json([
-                'success' => false,
-                'html'    => $html,
-                'errors'  => $form->getErrors(true, false),
-            ], 422);
-        }
-
-        // Premier affichage (GET) → on rend juste le formulaire
-        return $this->render('admin/planche/_form.html.twig', [
-            'form'         => $form->createView(),
-            'button_label' => 'Créer',
-        ]);
+        return $this->handleModalNew(
+            $request,
+            $entityManager,
+            $validator,
+            $planche,
+            $form,
+            'admin/planche/modal_new.html.twig',
+            'La planche a été créée avec succès.',
+            'admin_planche_index'
+        );
     }
 }

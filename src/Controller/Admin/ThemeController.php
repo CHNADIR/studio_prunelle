@@ -7,16 +7,15 @@ use App\Form\ThemeType;
 use App\Repository\ThemeRepository;
 use App\Service\ReferentialManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/admin/theme')]
 #[IsGranted('ROLE_ADMIN')]
-class ThemeController extends AbstractController
+class ThemeController extends AbstractReferentialController
 {
     private ReferentialManager $referentialManager;
 
@@ -29,7 +28,7 @@ class ThemeController extends AbstractController
     public function index(ThemeRepository $themeRepository): Response
     {
         return $this->render('admin/theme/index.html.twig', [
-            'themes' => $themeRepository->findAll(),
+            'themes' => $themeRepository->findAllActive(),
         ]);
     }
 
@@ -64,7 +63,8 @@ class ThemeController extends AbstractController
     #[Route('/modal-new', name: 'admin_theme_modal_new', methods: ['GET', 'POST'])]
     public function modalNew(
         Request $request, 
-        ReferentialManager $referentialManager
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
     ): Response
     {
         $theme = new Theme();
@@ -73,34 +73,16 @@ class ThemeController extends AbstractController
         $form = $this->createForm(ThemeType::class, $theme);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted()) {
-            if ($form->isValid()) {
-                $result = $referentialManager->createReferential($theme);
-                
-                if ($request->isXmlHttpRequest()) {
-                    return new JsonResponse($result);
-                }
-
-                $this->addFlash('success', 'Le thème a été créé avec succès.');
-                return $this->redirectToRoute('admin_theme_index');
-            } elseif ($request->isXmlHttpRequest()) {
-                // Erreurs de validation pour AJAX
-                $errors = [];
-                foreach ($form->getErrors(true) as $error) {
-                    $errors[] = $error->getMessage();
-                }
-                
-                return new JsonResponse([
-                    'success' => false,
-                    'errors' => $errors
-                ], Response::HTTP_BAD_REQUEST);
-            }
-        }
-
-        return $this->render('admin/theme/modal_new.html.twig', [
-            'theme' => $theme,
-            'form' => $form->createView(),
-        ]);
+        return $this->handleModalNew(
+            $request,
+            $entityManager,
+            $validator,
+            $theme,
+            $form,
+            'admin/theme/modal_new.html.twig',
+            'Le thème a été créé avec succès.',
+            'admin_theme_index'
+        );
     }
 
     #[Route('/{id}', name: 'admin_theme_show', methods: ['GET'])]

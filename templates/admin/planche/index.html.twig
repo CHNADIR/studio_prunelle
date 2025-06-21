@@ -18,28 +18,97 @@
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th>Nom</th><th>Usage</th><th>Actif</th><th></th>
+              <th>Nom</th>
+              <th>Type</th>
+              <th>Usage</th>
+              <th>Formats</th>
+              <th>Prix École</th>
+              <th>Prix Parents</th>
+              <th>Statut</th>
+              <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {% for p in planches %}
+            {% for planche in planches %}
               <tr>
-                <td>{{ p.nom }}</td>
-                <td>{{ p.usage }}</td>
-                <td>{{ p.actif ? 'Oui' : 'Non' }}</td>
                 <td>
-                  <a href="{{ path('admin_planche_edit', {id:p.id}) }}" class="btn btn-sm btn-secondary">✏</a>
-                  {{ include('admin/planche/_delete_form.html.twig', {p:p}) }}
+                  <strong>{{ planche.nom }}</strong>
+                </td>
+                <td>
+                  <span class="badge 
+                    {% if planche.type.value == 'individuelle' %}bg-primary
+                    {% elseif planche.type.value == 'fratrie' %}bg-warning
+                    {% else %}bg-info{% endif %}">
+                    {{ planche.type.value|title }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge {% if planche.usage == 'SEULE' %}bg-secondary{% else %}bg-success{% endif %}">
+                    {{ planche.usage == 'SEULE' ? 'À l\'unité' : 'Dans pack' }}
+                  </span>
+                </td>
+                <td>
+                  {% if planche.formats|length > 0 %}
+                    {% for format in planche.formats|slice(0, 2) %}
+                      <small class="badge bg-light text-dark me-1">{{ format }}</small>
+                    {% endfor %}
+                    {% if planche.formats|length > 2 %}
+                      <small class="text-muted">+{{ planche.formats|length - 2 }}</small>
+                    {% endif %}
+                  {% else %}
+                    <small class="text-muted">Aucun format</small>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="fw-bold text-success">{{ planche.prixEcole|number_format(2, ',', ' ') }} €</span>
+                </td>
+                <td>
+                  <span class="fw-bold text-primary">{{ planche.prixParents|number_format(2, ',', ' ') }} €</span>
+                </td>
+                <td>
+                  {% if planche.actif %}
+                    <span class="badge bg-success">Actif</span>
+                  {% else %}
+                    <span class="badge bg-danger">Inactif</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <div class="btn-group" role="group">
+                    <a href="{{ path('admin_planche_show', {id: planche.id}) }}" 
+                       class="btn btn-sm btn-outline-primary" title="Voir">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ path('admin_planche_edit', {id: planche.id}) }}" 
+                       class="btn btn-sm btn-outline-secondary" title="Modifier">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    {{ include('admin/planche/_delete_form.html.twig', {p: planche}) }}
+                  </div>
                 </td>
               </tr>
             {% else %}
-              <tr><td colspan="4" class="text-center fst-italic">Aucune planche trouvée</td></tr>
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                  <i class="bi bi-images fs-1 d-block mb-2"></i>
+                  Aucune planche trouvée<br>
+                  <a href="{{ path('admin_planche_new') }}" class="btn btn-primary btn-sm mt-2">
+                    Créer la première planche
+                  </a>
+                </td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="d-flex justify-content-center mt-4">
-        {{ pagerfanta(pager, 'default') }}
+      
+      {% if pager.haveToPaginate %}
+        <div class="d-flex justify-content-center mt-4">
+          {{ pagerfanta(pager, 'default') }}
+        </div>
+      {% endif %}
+      
+      <div class="mt-3 text-muted">
+        <small>Total : {{ pager.nbResults }} planche(s)</small>
       </div>
     </div>
   </div>
