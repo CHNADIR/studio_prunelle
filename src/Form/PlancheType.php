@@ -34,7 +34,7 @@ class PlancheType extends AbstractType
                     'Fratrie' => PlancheUsage::FRATRIE,
                     'Seule' => PlancheUsage::SEULE,
                 ],
-                'choice_value' => 'value',
+                'choice_value' => fn($choice) => $choice?->value,
                 'attr' => ['class' => 'form-select']
             ])
             ->add('usage', ChoiceType::class, [
@@ -48,6 +48,7 @@ class PlancheType extends AbstractType
             ->add('formats', TextareaType::class, [
                 'label' => 'Formats disponibles',
                 'help' => 'Saisir un JSON valide ex : ["10x15","portrait"] ou une liste séparée par virgules',
+                'mapped' => false, // Ne pas mapper directement pour éviter l'erreur de conversion
                 'attr' => [
                     'rows' => 3,
                     'placeholder' => '["10x15", "portrait", "13x18"]',
@@ -79,11 +80,24 @@ class PlancheType extends AbstractType
                 'label_attr' => ['class' => 'form-check-label']
             ]);
 
-        // Ajouter un event listener pour traiter les formats
+        // Gestion des formats : POST_SET_DATA pour charger
+        $builder->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event) {
+            $planche = $event->getData();
+            $form = $event->getForm();
+            
+            if ($planche && !empty($planche->getFormats())) {
+                // Convertir le tableau en JSON lisible pour l'affichage
+                $formatsJson = json_encode($planche->getFormats(), JSON_UNESCAPED_UNICODE);
+                $form->get('formats')->setData($formatsJson);
+            }
+        });
+
+        // Gestion des formats : PRE_SUBMIT pour sauvegarder
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
             $data = $event->getData();
+            $form = $event->getForm();
             
-            if (isset($data['formats']) && is_string($data['formats'])) {
+            if (isset($data['formats']) && is_string($data['formats']) && !empty($data['formats'])) {
                 // Tenter de décoder le JSON
                 $formats = json_decode($data['formats'], true);
                 
@@ -93,19 +107,11 @@ class PlancheType extends AbstractType
                     $formats = array_filter($formats); // Supprimer les éléments vides
                 }
                 
-                $data['formats'] = $formats;
-                $event->setData($data);
-            }
-        });
-
-        $builder->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event) {
-            $planche = $event->getData();
-            $form = $event->getForm();
-            
-            if ($planche && $planche->getFormats()) {
-                // Convertir le tableau en JSON pour l'affichage
-                $formatsJson = json_encode($planche->getFormats(), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                $form->get('formats')->setData($formatsJson);
+                // Mettre à jour l'entité directement
+                $planche = $form->getData();
+                if ($planche) {
+                    $planche->setFormats($formats);
+                }
             }
         });
     }

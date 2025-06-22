@@ -36,7 +36,7 @@ class Planche
     private PlancheUsage $type;
 
     /**
-     * SEULE  = planche à l’unité  
+     * SEULE  = planche à l'unité  
      * INCLUSE = vendue dans un pack
      */
     #[ORM\Column(length: 7)]
@@ -111,12 +111,12 @@ class Planche
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): ?PlancheUsage
     {
         return $this->type;
     }
 
-    public function setType(?string $type): self
+    public function setType(?PlancheUsage $type): self
     {
         $this->type = $type;
         return $this;
@@ -163,6 +163,17 @@ class Planche
     public function setActif(bool $actif): self
     {
         $this->actif = $actif;
+        return $this;
+    }
+
+    public function getUsage(): string
+    {
+        return $this->usage;
+    }
+
+    public function setUsage(string $usage): self
+    {
+        $this->usage = $usage;
         return $this;
     }
     

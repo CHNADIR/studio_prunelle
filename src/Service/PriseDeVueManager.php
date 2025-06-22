@@ -164,21 +164,21 @@ class PriseDeVueManager
     /**
      * Calcule les prix totaux d'une prise de vue
      */
-    public function calculateTotalPrices(PriseDeVue $priseDeVue): array
+    public function calculerPrixTotal(PriseDeVue $priseDeVue): array
     {
-        $prixTotalEcole = $priseDeVue->getPrixEcole() ?? 0;
-        $prixTotalParents = $priseDeVue->getPrixParents() ?? 0;
+        $prixTotalEcole = (float)($priseDeVue->getPrixEcole() ?? 0);
+        $prixTotalParents = (float)($priseDeVue->getPrixParents() ?? 0);
         
         // Ajouter les prix des planches individuelles
         foreach ($priseDeVue->getPlanchesIndividuelles() as $planche) {
-            $prixTotalEcole += $planche->getPrixEcole();
-            $prixTotalParents += $planche->getPrixParents();
+            $prixTotalEcole += (float)$planche->getPrixEcole();
+            $prixTotalParents += (float)$planche->getPrixParents();
         }
         
         // Ajouter les prix des planches fratries
         foreach ($priseDeVue->getPlanchesFratries() as $planche) {
-            $prixTotalEcole += $planche->getPrixEcole();
-            $prixTotalParents += $planche->getPrixParents();
+            $prixTotalEcole += (float)$planche->getPrixEcole();
+            $prixTotalParents += (float)$planche->getPrixParents();
         }
         
         return [
@@ -186,5 +186,13 @@ class PriseDeVueManager
             'prixTotalParents' => $prixTotalParents,
             'prixTotal' => $prixTotalEcole + $prixTotalParents
         ];
+    }
+
+    /**
+     * Alias pour la méthode calculerPrixTotal (compatibilité)
+     */
+    public function calculateTotalPrices(PriseDeVue $priseDeVue): array
+    {
+        return $this->calculerPrixTotal($priseDeVue);
     }
 }

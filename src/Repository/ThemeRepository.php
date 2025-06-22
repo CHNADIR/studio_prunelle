@@ -19,17 +19,4 @@ class ThemeRepository extends AbstractReferentialRepository
     {
         return 't';
     }
-    
-    /**
-     * Trouve les thèmes utilisés dans des prises de vue
-     */
-    public function findUsedInPrisesDeVue(): array
-    {
-        return $this->createQueryBuilder($this->getAlias())
-            ->join($this->getAlias() . '.prisesDeVue', 'p')
-            ->orderBy($this->getAlias() . '.nom', 'ASC')
-            ->groupBy($this->getAlias() . '.id')
-            ->getQuery()
-            ->getResult();
-    }
-}
+} 

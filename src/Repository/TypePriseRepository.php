@@ -19,17 +19,4 @@ class TypePriseRepository extends AbstractReferentialRepository
     {
         return 'tp';
     }
-    
-    /**
-     * Trouve les types de prise utilisés dans des prises de vue
-     */
-    public function findUsedInPrisesDeVue(): array
-    {
-        return $this->createQueryBuilder('tp')
-            ->join('tp.prisesDeVue', 'p')
-            ->orderBy('tp.nom', 'ASC')
-            ->groupBy('tp.id')
-            ->getQuery()
-            ->getResult();
-    }
-}
+} 

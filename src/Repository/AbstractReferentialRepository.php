@@ -104,4 +104,20 @@ abstract class AbstractReferentialRepository extends ServiceEntityRepository
         
         return $qb->orderBy($this->getAlias() . '.nom', 'ASC');
     }
+
+    /**
+     * Trouve les entités utilisées dans des prises de vue
+     * Méthode commune pour éviter la duplication
+     * 
+     * @return array
+     */
+    public function findUsedInPrisesDeVue(): array
+    {
+        return $this->createQueryBuilder($this->getAlias())
+            ->join($this->getAlias() . '.prisesDeVue', 'pdv')
+            ->orderBy($this->getAlias() . '.nom', 'ASC')
+            ->groupBy($this->getAlias() . '.id')
+            ->getQuery()
+            ->getResult();
+    }
 }

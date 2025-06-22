@@ -19,17 +19,4 @@ class TypeVenteRepository extends AbstractReferentialRepository
     {
         return 'tv';
     }
-    
-    /**
-     * Trouve les types de vente utilisés dans des prises de vue
-     */
-    public function findUsedInPrisesDeVue(): array
-    {
-        return $this->createQueryBuilder($this->getAlias())
-            ->join($this->getAlias() . '.prisesDeVue', 'p')
-            ->orderBy($this->getAlias() . '.nom', 'ASC')
-            ->groupBy($this->getAlias() . '.id')
-            ->getQuery()
-            ->getResult();
-    }
-}
+} 
