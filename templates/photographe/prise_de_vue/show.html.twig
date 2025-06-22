@@ -1,105 +1,201 @@
 {% extends 'base.html.twig' %}
-{% block title %}Détail de la prise de vue{% endblock %}
+{% block title %}Détail de la prise de vue - {{ prise_de_vue.ecole.nom }}{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <a href="{{ path('photographe_prise_de_vue_index') }}" class="btn btn-outline-secondary mb-3">
-        <i class="bi bi-arrow-left"></i> Retour à la liste
-    </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">📋 Fiche de prise de vue</h1>
+        <a href="{{ path('photographe_prise_de_vue_index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à mes prises de vue
+        </a>
+    </div>
 
     {% include 'partials/_flash_messages.html.twig' %}
 
+    {# === SECTION: Informations générales === #}
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Informations générales</h4>
+            <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations générales</h4>
         </div>
         <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-4">Date</dt>
-                <dd class="col-sm-8">{{ prise_de_vue.date|date('d/m/Y') }}</dd>
-                <dt class="col-sm-4">École</dt>
-                <dd class="col-sm-8">{{ prise_de_vue.ecole.nom }}</dd>
-            </dl>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">{{ prise_de_vue.date ? prise_de_vue.date|date('d/m/Y') : 'Non spécifiée' }}</dd>
+                        
+                        <dt class="col-sm-4">École</dt>
+                        <dd class="col-sm-8">
+                            <strong>{{ prise_de_vue.ecole.nom }}</strong><br>
+                            <small class="text-muted">{{ prise_de_vue.ecole.ville }} • {{ prise_de_vue.ecole.codePostal }}</small>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Photographe</dt>
+                        <dd class="col-sm-8">{{ prise_de_vue.photographe ? prise_de_vue.photographe.nom : 'Non spécifié' }}</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-5">Type de prise</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-info">{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : 'Non spécifié' }}</span>
+                        </dd>
+                        
+                        <dt class="col-sm-5">Type de vente</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-success">{{ prise_de_vue.typeVente ? prise_de_vue.typeVente.nom : 'Non spécifié' }}</span>
+                        </dd>
+                        
+                        <dt class="col-sm-5">Thème</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-warning text-dark">{{ prise_de_vue.theme ? prise_de_vue.theme.nom : 'Non spécifié' }}</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
         </div>
     </div>
 
+    {# === SECTION: Volumes et tarification === #}
     <div class="card mb-4">
         <div class="card-header bg-info text-white">
-            <h4 class="mb-0">Volumes et tarification</h4>
+            <h4 class="mb-0"><i class="bi bi-calculator me-2"></i>Volumes et tarification</h4>
         </div>
         <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-6">Nombre de classes</dt>
-                <dd class="col-sm-6">{{ prise_de_vue.nbClasses ?: 0 }}</dd>
-                <dt class="col-sm-6">Nombre d'élèves</dt>
-                <dd class="col-sm-6">{{ prise_de_vue.nbEleves ?: 0 }}</dd>
-                <dt class="col-sm-6">Prix école</dt>
-                <dd class="col-sm-6">{{ prise_de_vue.prixEcole ? prise_de_vue.prixEcole|format_currency('EUR') : '0 €' }}</dd>
-                <dt class="col-sm-6">Prix parents</dt>
-                <dd class="col-sm-6">{{ prise_de_vue.prixParents ? prise_de_vue.prixParents|format_currency('EUR') : '0 €' }}</dd>
-            </dl>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-6">Nombre de classes</dt>
+                        <dd class="col-sm-6"><span class="badge bg-primary fs-6">{{ prise_de_vue.nbClasses ?: 0 }}</span></dd>
+                        
+                        <dt class="col-sm-6">Nombre d'élèves</dt>
+                        <dd class="col-sm-6"><span class="badge bg-primary fs-6">{{ prise_de_vue.nbEleves ?: 0 }}</span></dd>
+                        
+                        {% if prise_de_vue.classes %}
+                        <dt class="col-sm-6">Détail classes</dt>
+                        <dd class="col-sm-6"><em>{{ prise_de_vue.classes }}</em></dd>
+                        {% endif %}
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-6">Prix école</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.prixEcole ? prise_de_vue.prixEcole|format_currency('EUR') : '0 €' }}</dd>
+                        
+                        <dt class="col-sm-6">Prix parents</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.prixParents ? prise_de_vue.prixParents|format_currency('EUR') : '0 €' }}</dd>
+                        
+                        <dt class="col-sm-6"><strong>Prix total</strong></dt>
+                        <dd class="col-sm-6"><strong class="text-success">{{ prix_totaux.prixTotal|format_currency('EUR') }}</strong></dd>
+                    </dl>
+                </div>
+            </div>
         </div>
     </div>
 
+    {# === SECTION: Planches sélectionnées === #}
     <div class="row">
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Planches individuelles</h4>
+                    <h4 class="mb-0"><i class="bi bi-person me-2"></i>Planches individuelles</h4>
                 </div>
                 <div class="card-body">
                     {% if prise_de_vue.planchesIndividuelles.count > 0 %}
-                        <ul class="list-group">
+                        <ul class="list-group list-group-flush">
                             {% for planche in prise_de_vue.planchesIndividuelles %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ planche.nom }}
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <strong>{{ planche.nom }}</strong><br>
+                                        <small class="text-muted">{{ planche.formats ? planche.formats|join(', ') : 'Formats non spécifiés' }}</small>
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">
+                                        {{ planche.prixParents|format_currency('EUR') }}
+                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-muted">Aucune planche individuelle sélectionnée</p>
+                        <div class="alert alert-light mb-0">
+                            <i class="bi bi-info-circle me-2"></i>Aucune planche individuelle sélectionnée
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
+        
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0">Planches fratrie</h4>
+                    <h4 class="mb-0"><i class="bi bi-people me-2"></i>Planches fratrie</h4>
                 </div>
                 <div class="card-body">
                     {% if prise_de_vue.planchesFratries.count > 0 %}
-                        <ul class="list-group">
+                        <ul class="list-group list-group-flush">
                             {% for planche in prise_de_vue.planchesFratries %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ planche.nom }}
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <strong>{{ planche.nom }}</strong><br>
+                                        <small class="text-muted">{{ planche.formats ? planche.formats|join(', ') : 'Formats non spécifiés' }}</small>
+                                    </div>
+                                    <span class="badge bg-warning text-dark rounded-pill">
+                                        {{ planche.prixParents|format_currency('EUR') }}
+                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-muted">Aucune planche fratrie sélectionnée</p>
+                        <div class="alert alert-light mb-0">
+                            <i class="bi bi-info-circle me-2"></i>Aucune planche fratrie sélectionnée
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
+    {# === SECTION: Commentaires (SEULE PARTIE MODIFIABLE) === #}
     <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h4 class="mb-0">Commentaires</h4>
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-chat-text me-2"></i>Commentaires du photographe</h4>
+            {% if comment_form %}
+                <small><i class="bi bi-pencil me-1"></i>Section modifiable</small>
+            {% endif %}
         </div>
         <div class="card-body">
             {% if prise_de_vue.commentaire %}
-                <p>{{ prise_de_vue.commentaire|nl2br }}</p>
+                <div class="alert alert-info">
+                    <strong>Commentaire actuel :</strong><br>
+                    {{ prise_de_vue.commentaire|nl2br }}
+                </div>
             {% else %}
-                <em class="text-muted">Aucun commentaire</em>
+                <div class="alert alert-light">
+                    <i class="bi bi-info-circle me-2"></i><em>Aucun commentaire ajouté pour cette prise de vue</em>
+                </div>
             {% endif %}
 
-            {% if is_granted(constant('App\\\\Security\\\\Attribute\\\\EntityAction::EDIT').value, prise_de_vue) %}
+            {% if comment_form %}
                 <hr>
-                <h5>Modifier le commentaire</h5>
+                <h5 class="text-primary"><i class="bi bi-pencil-square me-2"></i>Modifier le commentaire</h5>
+                <p class="text-muted small">En tant que photographe, vous pouvez uniquement modifier vos commentaires sur cette prise de vue.</p>
                 {% include 'photographe/prise_de_vue/_comment_form.html.twig' with {form: comment_form} %}
             {% endif %}
+        </div>
+    </div>
+
+    {# === SECTION: Informations métadonnées === #}
+    <div class="card bg-light">
+        <div class="card-body">
+            <div class="row text-muted small">
+                <div class="col-md-6">
+                    <i class="bi bi-calendar-plus me-1"></i>
+                    <strong>Créé le:</strong> {{ prise_de_vue.createdAt ? prise_de_vue.createdAt|date('d/m/Y à H:i') : 'N/A' }}
+                </div>
+                <div class="col-md-6">
+                    <i class="bi bi-calendar-check me-1"></i>
+                    <strong>Modifié le:</strong> {{ prise_de_vue.updatedAt ? prise_de_vue.updatedAt|date('d/m/Y à H:i') : 'Jamais' }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
