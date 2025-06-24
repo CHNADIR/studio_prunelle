@@ -40,12 +40,12 @@
                     <tbody>
                         {% for prise_de_vue in prises_de_vue %}
                             <tr>
-                                <td>{{ prise_de_vue.date|date('d/m/Y') }}</td>
+                                <td>{{ prise_de_vue.datepdv|date('d/m/Y') }}</td>
                                 <td>{{ prise_de_vue.photographe.nom }}</td>
                                 <td>{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : '-' }}</td>
                                 <td>{{ prise_de_vue.theme ? prise_de_vue.theme.nom : '-' }}</td>
                                 <td>{{ prise_de_vue.nbEleves }}</td>
-                                <td>{{ prise_de_vue.nbClasses }} ({{ prise_de_vue.classes }})</td>
+                                <td>{{ prise_de_vue.nbClasses }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ path('admin_prise_de_vue_show', {'id': prise_de_vue.id}) }}" class="btn btn-sm btn-info">

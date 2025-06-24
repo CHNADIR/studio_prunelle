@@ -16,6 +16,12 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
  */
 final class EcoleVoter extends AbstractEntityVoter
 {
+    // === CONSTANTES PUBLIQUES POUR COMPATIBILITÉ ===
+    public const ECOLE_VIEW = 'ECOLE_VIEW';
+    public const ECOLE_CREATE = 'ECOLE_CREATE';
+    public const ECOLE_EDIT = 'ECOLE_EDIT';
+    public const ECOLE_DELETE = 'ECOLE_DELETE';
+
     // === CONFIGURATION DU VOTER ===
 
     protected function getSupportedEntities(): array

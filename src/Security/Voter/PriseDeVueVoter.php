@@ -17,6 +17,12 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
  */
 final class PriseDeVueVoter extends AbstractEntityVoter
 {
+    // === CONSTANTES PUBLIQUES POUR COMPATIBILITÉ ===
+    public const PRISEDEVUE_VIEW = 'PRISEDEVUE_VIEW';
+    public const PRISEDEVUE_EDIT = 'PRISEDEVUE_EDIT';
+    public const PRISEDEVUE_DELETE = 'PRISEDEVUE_DELETE';
+    public const PRISEDEVUE_COMMENT = 'PRISEDEVUE_COMMENT';
+
     // === CONFIGURATION DU VOTER ===
 
     protected function getSupportedEntities(): array

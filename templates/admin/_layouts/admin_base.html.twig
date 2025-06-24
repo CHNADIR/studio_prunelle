@@ -9,87 +9,8 @@
 {% block body %}
 <div class="container-fluid">
     <div class="row">
-        {# Sidebar Navigation #}
-        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
-            <div class="position-sticky pt-3">
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>Administration</span>
-                </h6>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_prise_de_vue' %}active{% endif %}" 
-                           href="{{ path('admin_prise_de_vue_index') }}">
-                            <i class="bi bi-camera me-2"></i>Prises de vue
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_ecole' %}active{% endif %}" 
-                           href="{{ path('admin_ecole_index') }}">
-                            <i class="bi bi-building me-2"></i>Écoles
-                        </a>
-                    </li>
-                </ul>
-
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>Référentiels</span>
-                </h6>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_theme' %}active{% endif %}" 
-                           href="{{ path('admin_theme_index') }}">
-                            <i class="bi bi-palette me-2"></i>Thèmes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_type_prise' %}active{% endif %}" 
-                           href="{{ path('admin_type_prise_index') }}">
-                            <i class="bi bi-camera-reels me-2"></i>Types de prise
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_type_vente' %}active{% endif %}" 
-                           href="{{ path('admin_type_vente_index') }}">
-                            <i class="bi bi-shop me-2"></i>Types de vente
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_planche' %}active{% endif %}" 
-                           href="{{ path('admin_planche_index') }}">
-                            <i class="bi bi-grid-3x3 me-2"></i>Planches
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_pochette_indiv' %}active{% endif %}" 
-                           href="{{ path('admin_pochette_indiv_index') }}">
-                            <i class="bi bi-person-square me-2"></i>Pochettes individuelles
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.get('_route') starts with 'admin_pochette_fratrie' %}active{% endif %}" 
-                           href="{{ path('admin_pochette_fratrie_index') }}">
-                            <i class="bi bi-people me-2"></i>Pochettes fratries
-                        </a>
-                    </li>
-                </ul>
-
-                {% if is_granted('ROLE_SUPERADMIN') %}
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                        <span>Système</span>
-                    </h6>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link {% if app.request.get('_route') starts with 'admin_user' %}active{% endif %}" 
-                               href="{{ path('admin_user_index') }}">
-                                <i class="bi bi-people me-2"></i>Utilisateurs
-                            </a>
-                        </li>
-                    </ul>
-                {% endif %}
-            </div>
-        </nav>
-
-        {# Main content #}
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        {# Main content (pleine largeur) #}
+        <main class="col-12 px-md-4">
             {% block admin_header %}
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">
@@ -115,47 +36,8 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        .sidebar {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 100;
-            padding: 48px 0 0;
-            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-        }
-        
-        .sidebar-heading {
-            font-size: .75rem;
-            text-transform: uppercase;
-        }
-        
-        .sidebar .nav-link {
-            font-weight: 500;
-            color: #333;
-            border-radius: 0.25rem;
-            margin: 0 0.5rem;
-        }
-        
-        .sidebar .nav-link:hover {
-            color: #2470dc;
-            background-color: rgba(36, 112, 220, 0.1);
-        }
-        
-        .sidebar .nav-link.active {
-            color: #2470dc;
-            background-color: rgba(36, 112, 220, 0.15);
-            font-weight: 600;
-        }
-        
         main {
-            margin-left: 0;
-        }
-        
-        @media (min-width: 768px) {
-            main {
-                margin-left: 240px;
-            }
+            margin-left: 0 !important;
         }
     </style>
 {% endblock %} 

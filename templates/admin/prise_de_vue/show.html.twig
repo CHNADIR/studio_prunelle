@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Prise de vue - {{ priseDeVue.ecole.nom }}{% endblock %}
+{% block title %}Prise de vue - {{ prise_de_vue.ecole.nom }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -43,15 +43,15 @@
                         <div>
                             <h1 class="h3 mb-0">
                                 <i class="bi bi-camera2 me-2"></i>
-                                Prise de vue - {{ priseDeVue.ecole.nom }}
+                                Prise de vue - {{ prise_de_vue.ecole.nom }}
                             </h1>
                             <small class="opacity-75">
-                                {{ priseDeVue.datePdv|date('d/m/Y') }} | 
-                                Photographe: {{ priseDeVue.photographe.nom }}
+                                {{ prise_de_vue.datePdv|date('d/m/Y') }} | 
+                                Photographe: {{ prise_de_vue.photographe.nom }}
                             </small>
                         </div>
                         <div class="text-end">
-                            {% if priseDeVue.isComplete %}
+                            {% if prise_de_vue.isComplete %}
                                 <span class="badge bg-success badge-custom">
                                     <i class="bi bi-check-circle me-1"></i>Complète
                                 </span>
@@ -87,9 +87,9 @@
                                 <div>
                                     <h6 class="mb-1">École</h6>
                                     <p class="mb-0 text-muted">
-                                        <strong>{{ priseDeVue.ecole.nom }}</strong><br>
-                                        <small>{{ priseDeVue.ecole.adresseComplete }}</small><br>
-                                        <span class="badge bg-light text-dark">{{ priseDeVue.ecole.code }}</span>
+                                        <strong>{{ prise_de_vue.ecole.nom }}</strong><br>
+                                        <small>{{ prise_de_vue.ecole.adresseComplete }}</small><br>
+                                        <span class="badge bg-light text-dark">{{ prise_de_vue.ecole.code }}</span>
                                     </p>
                                 </div>
                             </div>
@@ -102,8 +102,8 @@
                                 <div>
                                     <h6 class="mb-1">Photographe</h6>
                                     <p class="mb-0 text-muted">
-                                        <strong>{{ priseDeVue.photographe.nom }}</strong><br>
-                                        <small>{{ priseDeVue.photographe.email }}</small>
+                                        <strong>{{ prise_de_vue.photographe.nom }}</strong><br>
+                                        <small>{{ prise_de_vue.photographe.email }}</small>
                                     </p>
                                 </div>
                             </div>
@@ -116,8 +116,8 @@
                                 <div>
                                     <h6 class="mb-1">Date de prise</h6>
                                     <p class="mb-0">
-                                        <strong>{{ priseDeVue.datePdv|date('d/m/Y') }}</strong><br>
-                                        <small class="text-muted">{{ priseDeVue.datePdv|date('l') }}</small>
+                                        <strong>{{ prise_de_vue.datePdv|date('d/m/Y') }}</strong><br>
+                                        <small class="text-muted">{{ prise_de_vue.datePdv|date('l') }}</small>
                                     </p>
                                 </div>
                             </div>
@@ -130,8 +130,8 @@
                                 <div>
                                     <h6 class="mb-1">Créée le</h6>
                                     <p class="mb-0">
-                                        <strong>{{ priseDeVue.createdAt|date('d/m/Y') }}</strong><br>
-                                        <small class="text-muted">{{ priseDeVue.createdAt|date('H:i') }}</small>
+                                        <strong>{{ prise_de_vue.createdAt|date('d/m/Y') }}</strong><br>
+                                        <small class="text-muted">{{ prise_de_vue.createdAt|date('H:i') }}</small>
                                     </p>
                                 </div>
                             </div>
@@ -153,15 +153,15 @@
                 <div class="card-body text-center">
                     <div class="row g-3">
                         <div class="col-6">
-                            <div class="stats-value text-primary">{{ priseDeVue.nbEleves }}</div>
+                            <div class="stats-value text-primary">{{ prise_de_vue.nbEleves }}</div>
                             <small class="text-muted">Élèves</small>
                         </div>
                         <div class="col-6">
-                            <div class="stats-value text-info">{{ priseDeVue.nbClasses ?? 0 }}</div>
+                            <div class="stats-value text-info">{{ prise_de_vue.nbClasses ?? 0 }}</div>
                             <small class="text-muted">Classes</small>
                         </div>
                         <div class="col-12 mt-3">
-                            <div class="stats-value text-success">{{ priseDeVue.prixTotal|number_format(2, ',', ' ') }} €</div>
+                            <div class="stats-value text-success">{{ prise_de_vue.prixTotal|number_format(2, ',', ' ') }} €</div>
                             <small class="text-muted">Prix total</small>
                         </div>
                     </div>
@@ -188,10 +188,10 @@
                                 <h6 class="text-primary">
                                     <i class="bi bi-camera me-1"></i>Type de prise
                                 </h6>
-                                {% if priseDeVue.typePrise %}
-                                    <span class="badge bg-primary">{{ priseDeVue.typePrise.libelle }}</span>
-                                    {% if priseDeVue.typePrise.description %}
-                                        <p class="small text-muted mt-2 mb-0">{{ priseDeVue.typePrise.description }}</p>
+                                {% if prise_de_vue.typePrise %}
+                                    <span class="badge bg-primary">{{ prise_de_vue.typePrise.libelle }}</span>
+                                    {% if prise_de_vue.typePrise.description %}
+                                        <p class="small text-muted mt-2 mb-0">{{ prise_de_vue.typePrise.description }}</p>
                                     {% endif %}
                                 {% else %}
                                     <span class="text-muted">Non défini</span>
@@ -205,10 +205,10 @@
                                 <h6 class="text-success">
                                     <i class="bi bi-cart me-1"></i>Type de vente
                                 </h6>
-                                {% if priseDeVue.typeVente %}
-                                    <span class="badge bg-success">{{ priseDeVue.typeVente.libelle }}</span>
-                                    {% if priseDeVue.typeVente.description %}
-                                        <p class="small text-muted mt-2 mb-0">{{ priseDeVue.typeVente.description }}</p>
+                                {% if prise_de_vue.typeVente %}
+                                    <span class="badge bg-success">{{ prise_de_vue.typeVente.libelle }}</span>
+                                    {% if prise_de_vue.typeVente.description %}
+                                        <p class="small text-muted mt-2 mb-0">{{ prise_de_vue.typeVente.description }}</p>
                                     {% endif %}
                                 {% else %}
                                     <span class="text-muted">Non défini</span>
@@ -222,10 +222,10 @@
                                 <h6 class="text-info">
                                     <i class="bi bi-palette me-1"></i>Thème
                                 </h6>
-                                {% if priseDeVue.theme %}
-                                    <span class="badge bg-info">{{ priseDeVue.theme.libelle }}</span>
-                                    {% if priseDeVue.theme.description %}
-                                        <p class="small text-muted mt-2 mb-0">{{ priseDeVue.theme.description }}</p>
+                                {% if prise_de_vue.theme %}
+                                    <span class="badge bg-info">{{ prise_de_vue.theme.libelle }}</span>
+                                    {% if prise_de_vue.theme.description %}
+                                        <p class="small text-muted mt-2 mb-0">{{ prise_de_vue.theme.description }}</p>
                                     {% endif %}
                                 {% else %}
                                     <span class="text-muted">Non défini</span>
@@ -259,10 +259,10 @@
                                     </h6>
                                 </div>
                                 <div class="card-body">
-                                    {% if priseDeVue.pochetteIndiv %}
-                                        <h6 class="text-success">{{ priseDeVue.pochetteIndiv.libelle }}</h6>
-                                        {% if priseDeVue.pochetteIndiv.description %}
-                                            <p class="small text-muted mb-0">{{ priseDeVue.pochetteIndiv.description }}</p>
+                                    {% if prise_de_vue.pochetteIndiv %}
+                                        <h6 class="text-success">{{ prise_de_vue.pochetteIndiv.libelle }}</h6>
+                                        {% if prise_de_vue.pochetteIndiv.description %}
+                                            <p class="small text-muted mb-0">{{ prise_de_vue.pochetteIndiv.description }}</p>
                                         {% endif %}
                                     {% else %}
                                         <p class="text-muted mb-0">Aucune pochette individuelle sélectionnée</p>
@@ -280,10 +280,10 @@
                                     </h6>
                                 </div>
                                 <div class="card-body">
-                                    {% if priseDeVue.pochetteFratrie %}
-                                        <h6 class="text-warning">{{ priseDeVue.pochetteFratrie.libelle }}</h6>
-                                        {% if priseDeVue.pochetteFratrie.description %}
-                                            <p class="small text-muted mb-0">{{ priseDeVue.pochetteFratrie.description }}</p>
+                                    {% if prise_de_vue.pochetteFratrie %}
+                                        <h6 class="text-warning">{{ prise_de_vue.pochetteFratrie.libelle }}</h6>
+                                        {% if prise_de_vue.pochetteFratrie.description %}
+                                            <p class="small text-muted mb-0">{{ prise_de_vue.pochetteFratrie.description }}</p>
                                         {% endif %}
                                     {% else %}
                                         <p class="text-muted mb-0">Aucune pochette fratrie sélectionnée</p>
@@ -301,10 +301,10 @@
                                     </h6>
                                 </div>
                                 <div class="card-body">
-                                    {% if priseDeVue.planche %}
-                                        <h6 class="text-primary">{{ priseDeVue.planche.libelle }}</h6>
-                                        {% if priseDeVue.planche.description %}
-                                            <p class="small text-muted mb-0">{{ priseDeVue.planche.description }}</p>
+                                    {% if prise_de_vue.planche %}
+                                        <h6 class="text-primary">{{ prise_de_vue.planche.libelle }}</h6>
+                                        {% if prise_de_vue.planche.description %}
+                                            <p class="small text-muted mb-0">{{ prise_de_vue.planche.description }}</p>
                                         {% endif %}
                                     {% else %}
                                         <p class="text-muted mb-0">Aucune planche sélectionnée</p>
@@ -334,7 +334,7 @@
                             <div class="bg-light rounded p-3 text-center">
                                 <h5 class="text-primary mb-2">Prix École</h5>
                                 <div class="h4 text-primary">
-                                    {{ priseDeVue.prixEcole|default(0)|number_format(2, ',', ' ') }} €
+                                    {{ prise_de_vue.prixEcole|default(0)|number_format(2, ',', ' ') }} €
                                 </div>
                                 <small class="text-muted">Facturé à l'établissement</small>
                             </div>
@@ -343,7 +343,7 @@
                             <div class="bg-light rounded p-3 text-center">
                                 <h5 class="text-info mb-2">Prix Parents</h5>
                                 <div class="h4 text-info">
-                                    {{ priseDeVue.prixParent|default(0)|number_format(2, ',', ' ') }} €
+                                    {{ prise_de_vue.prixParent|default(0)|number_format(2, ',', ' ') }} €
                                 </div>
                                 <small class="text-muted">À la charge des familles</small>
                             </div>
@@ -352,7 +352,7 @@
                             <div class="bg-success text-white rounded p-3 text-center">
                                 <h5 class="mb-2">Total</h5>
                                 <div class="h4">
-                                    {{ priseDeVue.prixTotal|number_format(2, ',', ' ') }} €
+                                    {{ prise_de_vue.prixTotal|number_format(2, ',', ' ') }} €
                                 </div>
                                 <small class="opacity-75">Chiffre d'affaires total</small>
                             </div>
@@ -364,7 +364,7 @@
     </div>
 
     {# === COMMENTAIRES === #}
-    {% if priseDeVue.commentaire %}
+    {% if prise_de_vue.commentaire %}
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -376,7 +376,7 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-light border-start border-5 border-info">
-                        <p class="mb-0">{{ priseDeVue.commentaire|nl2br }}</p>
+                        <p class="mb-0">{{ prise_de_vue.commentaire|nl2br }}</p>
                     </div>
                 </div>
             </div>
@@ -395,14 +395,14 @@
                         </a>
                     </div>
                     <div class="btn-group" role="group">
-                        {% if is_granted('EDIT', priseDeVue) %}
-                            <a href="{{ path('admin_prise_de_vue_edit', {id: priseDeVue.id}) }}" 
+                        {% if is_granted('EDIT', prise_de_vue) %}
+                            <a href="{{ path('admin_prise_de_vue_edit', {id: prise_de_vue.id}) }}" 
                                class="btn btn-primary btn-lg">
                                 <i class="bi bi-pencil me-1"></i> Modifier
                             </a>
                         {% endif %}
                         
-                        {% if is_granted('DELETE', priseDeVue) %}
+                        {% if is_granted('DELETE', prise_de_vue) %}
                             <button type="button" class="btn btn-outline-danger btn-lg" 
                                     data-bs-toggle="modal" data-bs-target="#deleteModal">
                                 <i class="bi bi-trash me-1"></i> Supprimer
@@ -416,7 +416,7 @@
 </div>
 
 {# === MODAL DE SUPPRESSION === #}
-{% if is_granted('DELETE', priseDeVue) %}
+{% if is_granted('DELETE', prise_de_vue) %}
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -432,9 +432,9 @@
                     Êtes-vous sûr de vouloir supprimer cette prise de vue ?
                 </p>
                 <div class="alert alert-warning">
-                    <strong>École :</strong> {{ priseDeVue.ecole.nom }}<br>
-                    <strong>Date :</strong> {{ priseDeVue.datePdv|date('d/m/Y') }}<br>
-                    <strong>Élèves :</strong> {{ priseDeVue.nbEleves }}
+                    <strong>École :</strong> {{ prise_de_vue.ecole.nom }}<br>
+                    <strong>Date :</strong> {{ prise_de_vue.datePdv|date('d/m/Y') }}<br>
+                    <strong>Élèves :</strong> {{ prise_de_vue.nbEleves }}
                 </div>
                 <p class="text-danger small mb-0">
                     <i class="bi bi-exclamation-triangle me-1"></i>
@@ -443,7 +443,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <a href="{{ path('admin_prise_de_vue_delete', {id: priseDeVue.id}) }}" 
+                <a href="{{ path('admin_prise_de_vue_delete', {id: prise_de_vue.id}) }}" 
                    class="btn btn-danger">
                     <i class="bi bi-trash me-1"></i> Supprimer définitivement
                 </a>
