@@ -1,205 +1,482 @@
-{% import 'macros/form.html.twig' as formMacro %}
+{% import 'macros/forms.html.twig' as forms %}
 
-{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+{{ form_start(form) }}
 
-<div class="card mb-4">
+{# === INFORMATIONS GÉNÉRALES === #}
+<div class="card mb-4 shadow-sm">
     <div class="card-header bg-primary text-white">
-        <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations générales</h4>
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-info-circle me-2"></i>Informations générales
+        </h4>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4">
-                {{ formMacro.formRow(form.date, 'Date de la prise de vue', {
-                    'help_text': 'Format JJ/MM/AAAA'
-                }) }}
-            </div>
-            <div class="col-md-8">
-                {{ formMacro.formRow(form.ecole, 'École', {
-                    'help_text': 'Sélectionnez l\'école concernée'
-                }) }}
-            </div>
-        </div>
-        
-        <div class="row">
-            {% if form.photographe is defined %}
-                <div class="col-md-4">
-                    {{ formMacro.formRow(form.photographe, 'Photographe') }}
-                </div>
-            {% endif %}
-            <div class="col-md-4">
-                {{ formMacro.formRow(form.nbEleves, 'Nombre d\'élèves') }}
-            </div>
-            <div class="col-md-4">
-                {{ formMacro.formRow(form.nbClasses, 'Nombre de classes') }}
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-12">
-                {{ formMacro.formRow(form.classes, 'Description des classes') }}
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0"><i class="bi bi-camera me-2"></i>Type de prise et options</h4>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4">
-                {{ formMacro.formRow(form.typePrise, 'Type de prise') }}
-            </div>
-            <div class="col-md-4">
-                {{ formMacro.formRow(form.typeVente, 'Type de vente') }}
-            </div>
-            <div class="col-md-4">
-                {{ formMacro.formRow(form.theme, 'Thème') }}
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-4" data-controller="planches-selector">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0"><i class="bi bi-grid-3x3 me-2"></i>Sélection des planches</h4>
-    </div>
-    <div class="card-body">
-        <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Rechercher une planche..." data-planches-selector-target="searchInput">
-        </div>
-        
+    <div class="card-body bg-light">
         <div class="row">
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Planches individuelles</div>
-                    <div class="card-body" data-planches-selector-target="individualList">
-                        {{ form_widget(form.planchesIndividuelles) }}
+                {{ forms.formRow(form.datePdv, 'Date de la prise de vue', 'Date de réalisation de la séance photo') }}
+            </div>
+            <div class="col-md-6">
+                {{ forms.formRow(form.ecole, 'École', 'École où a lieu la prise de vue') }}
+            </div>
+        </div>
+        {% if form.photographe is defined %}
+        <div class="row">
+            <div class="col-md-12">
+                {{ forms.formRow(form.photographe, 'Photographe', 'Photographe responsable de cette prise de vue') }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# === ÉLÈVES ET CLASSES === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-info text-white">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-people me-2"></i>Effectifs
+        </h4>
+    </div>
+    <div class="card-body bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                {{ forms.formRow(form.nbEleves, 'Nombre d\'élèves', 'Nombre total d\'élèves photographiés') }}
+            </div>
+            <div class="col-md-6">
+                {{ forms.formRow(form.nbClasses, 'Nombre de classes', 'Nombre de classes concernées (optionnel)') }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# === TARIFICATION === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-currency-euro me-2"></i>Tarification
+        </h4>
+    </div>
+    <div class="card-body bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                {{ forms.formRow(form.prixEcole, 'Prix école', 'Montant facturé à l\'école') }}
+            </div>
+            <div class="col-md-6">
+                {{ forms.formRow(form.prixParent, 'Prix parents', 'Montant facturé aux parents') }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# === TYPES ET OPTIONS === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-camera me-2"></i>Types et options
+        </h4>
+    </div>
+    <div class="card-body bg-light">
+        <div class="row g-3">
+            {# Type de prise #}
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-info">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-camera me-1"></i>Type de prise
+                        </h6>
+                        <a href="{{ path('admin_type_prise_quick_new') }}" 
+                           class="btn btn-sm btn-outline-light"
+                           target="_blank"
+                           title="Ajouter un nouveau type de prise">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                    </div>
+                    <div class="card-body" 
+                         data-controller="tile-selector"
+                         data-tile-selector-field-name-value="typePrise"
+                         data-tile-selector-multiple-value="false"
+                         data-tile-selector-color-value="info">
+                        
+                        {# Select original caché #}
+                        {{ form_widget(form.typePrise, {
+                            'attr': {
+                                'class': 'form-select d-none',
+                                'data-tile-selector-target': 'hiddenSelect'
+                            }
+                        }) }}
+                        {{ form_errors(form.typePrise) }}
+                        
+                        {# Conteneur des carreaux #}
+                        <div class="tile-container" data-tile-selector-target="tilesContainer">
+                            <div class="d-flex justify-content-center align-items-center p-3">
+                                <div class="spinner-border text-info" role="status">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Sélection unique - Cliquez pour choisir
+                        </small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Planches fratries</div>
-                    <div class="card-body" data-planches-selector-target="fratrieList">
-                        {{ form_widget(form.planchesFratries) }}
+
+            {# Type de vente #}
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-warning">
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-cart me-1"></i>Type de vente
+                        </h6>
+                        <a href="{{ path('admin_type_vente_quick_new') }}" 
+                           class="btn btn-sm btn-outline-dark"
+                           target="_blank"
+                           title="Ajouter un nouveau type de vente">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                    </div>
+                    <div class="card-body" 
+                         data-controller="tile-selector"
+                         data-tile-selector-field-name-value="typeVente"
+                         data-tile-selector-multiple-value="false"
+                         data-tile-selector-color-value="warning">
+                        
+                        {# Select original caché #}
+                        {{ form_widget(form.typeVente, {
+                            'attr': {
+                                'class': 'form-select d-none',
+                                'data-tile-selector-target': 'hiddenSelect'
+                            }
+                        }) }}
+                        {{ form_errors(form.typeVente) }}
+                        
+                        {# Conteneur des carreaux #}
+                        <div class="tile-container" data-tile-selector-target="tilesContainer">
+                            <div class="d-flex justify-content-center align-items-center p-3">
+                                <div class="spinner-border text-warning" role="status">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Sélection unique - Cliquez pour choisir
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            {# Thème #}
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-dark">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-palette me-1"></i>Thème
+                        </h6>
+                        <a href="{{ path('admin_theme_quick_new') }}" 
+                           class="btn btn-sm btn-outline-light"
+                           target="_blank"
+                           title="Ajouter un nouveau thème">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                    </div>
+                    <div class="card-body" 
+                         data-controller="tile-selector"
+                         data-tile-selector-field-name-value="theme"
+                         data-tile-selector-multiple-value="false"
+                         data-tile-selector-color-value="dark">
+                        
+                        {# Select original caché #}
+                        {{ form_widget(form.theme, {
+                            'attr': {
+                                'class': 'form-select d-none',
+                                'data-tile-selector-target': 'hiddenSelect'
+                            }
+                        }) }}
+                        {{ form_errors(form.theme) }}
+                        
+                        {# Conteneur des carreaux #}
+                        <div class="tile-container" data-tile-selector-target="tilesContainer">
+                            <div class="d-flex justify-content-center align-items-center p-3">
+                                <div class="spinner-border text-secondary" role="status">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Sélection unique - Cliquez pour choisir
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="mt-3">
-            <div class="alert alert-info">
-                <span data-planches-selector-target="selectedCount">Planches sélectionnées: 0</span>
+    </div>
+</div>
+
+{# === PLANCHES ET POCHETTES (SÉLECTIONS MULTIPLES AVEC CARREAUX COLORÉS) === #}
+<div class="card mb-4">
+    <div class="card-header bg-gradient-secondary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-stack me-2"></i>Planches et Pochettes (Sélections multiples)
+        </h5>
+        <small class="opacity-75">Cliquez sur les carreaux pour sélectionner plusieurs options</small>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {# Planches #}
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-primary">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-card-image me-1"></i>Planches
+                        </h6>
+                        <a href="{{ path('admin_planche_quick_new') }}" 
+                           target="_blank"
+                           class="btn btn-sm btn-outline-light" 
+                           title="Créer une nouvelle planche">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                    </div>
+                    <div class="card-body" 
+                         data-controller="tile-selector"
+                         data-tile-selector-field-name-value="planches"
+                         data-tile-selector-multiple-value="true"
+                         data-tile-selector-color-value="primary">
+                        
+                        {# Select original caché (pour la soumission du formulaire) #}
+                        {{ form_widget(form.planches, {
+                            'attr': {
+                                'class': 'form-select d-none',
+                                'data-tile-selector-target': 'hiddenSelect'
+                            }
+                        }) }}
+                        {{ form_errors(form.planches) }}
+                        
+                        {# Conteneur des carreaux #}
+                        <div class="tile-container" data-tile-selector-target="tilesContainer">
+                            <div class="d-flex justify-content-center align-items-center p-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Cliquez sur les carreaux pour sélectionner
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            {# Pochettes individuelles #}
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-success">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-person me-1"></i>Pochettes individuelles
+                        </h6>
+                        <a href="{{ path('admin_pochette_indiv_quick_new') }}" 
+                           target="_blank"
+                           class="btn btn-sm btn-outline-light"
+                           title="Créer une nouvelle pochette individuelle">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                    </div>
+                    <div class="card-body" 
+                         data-controller="tile-selector"
+                         data-tile-selector-field-name-value="pochettesIndiv"
+                         data-tile-selector-multiple-value="true"
+                         data-tile-selector-color-value="success">
+                        
+                        {# Select original caché #}
+                        {{ form_widget(form.pochettesIndiv, {
+                            'attr': {
+                                'class': 'form-select d-none',
+                                'data-tile-selector-target': 'hiddenSelect'
+                            }
+                        }) }}
+                        {{ form_errors(form.pochettesIndiv) }}
+                        
+                        {# Conteneur des carreaux #}
+                        <div class="tile-container" data-tile-selector-target="tilesContainer">
+                            <div class="d-flex justify-content-center align-items-center p-3">
+                                <div class="spinner-border text-success" role="status">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Cliquez sur les carreaux pour sélectionner
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            {# Pochettes fratries #}
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-warning">
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-people me-1"></i>Pochettes fratries
+                        </h6>
+                        <a href="{{ path('admin_pochette_fratrie_quick_new') }}" 
+                           target="_blank"
+                           class="btn btn-sm btn-outline-dark"
+                           title="Créer une nouvelle pochette fratrie">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                    </div>
+                    <div class="card-body" 
+                         data-controller="tile-selector"
+                         data-tile-selector-field-name-value="pochettesFratrie"
+                         data-tile-selector-multiple-value="true"
+                         data-tile-selector-color-value="warning">
+                        
+                        {# Select original caché #}
+                        {{ form_widget(form.pochettesFratrie, {
+                            'attr': {
+                                'class': 'form-select d-none',
+                                'data-tile-selector-target': 'hiddenSelect'
+                            }
+                        }) }}
+                        {{ form_errors(form.pochettesFratrie) }}
+                        
+                        {# Conteneur des carreaux #}
+                        <div class="tile-container" data-tile-selector-target="tilesContainer">
+                            <div class="d-flex justify-content-center align-items-center p-3">
+                                <div class="spinner-border text-warning" role="status">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Cliquez sur les carreaux pour sélectionner
+                        </small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0"><i class="bi bi-currency-euro me-2"></i>Tarification</h4>
+{# === COMMENTAIRES === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light text-dark">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-chat-text me-2"></i>Commentaires
+        </h4>
     </div>
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                {{ formMacro.formRow(form.prixEcole, 'Prix école (€)') }}
-                <div class="mt-2">
-                    <strong>Prix total école: </strong>
-                    <span id="prix-total-ecole">0.00 €</span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                {{ formMacro.formRow(form.prixParents, 'Prix parents (€)') }}
-                <div class="mt-2">
-                    <strong>Prix total parents: </strong>
-                    <span id="prix-total-parents">0.00 €</span>
-                </div>
-            </div>
+        {{ forms.formRow(form.commentaire, 'Commentaires', 'Remarques, observations ou informations complémentaires') }}
+    </div>
+</div>
+
+{# === ACTIONS === #}
+<div class="card shadow-sm">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+            <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-lg"></i> Enregistrer la prise de vue
+            </button>
         </div>
     </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Commentaires</h4>
-    </div>
-    <div class="card-body">
-        {{ formMacro.formRow(form.commentaire, 'Commentaires', {
-            'help_text': 'Informations complémentaires pour cette prise de vue'
-        }) }}
-    </div>
-</div>
-
-<div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
-    <button type="submit" class="btn btn-primary btn-lg">
-        <i class="bi bi-save"></i> {{ button_label|default('Enregistrer') }}
-    </button>
 </div>
 
 {{ form_end(form) }}
 
-<!-- Modals pour l'ajout dynamique -->
-<div class="modal fade" id="typePriseModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Ajouter un type de prise</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="type-prise-form-container">
-                    <!-- Le formulaire sera chargé via AJAX -->
-                    <div class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Chargement...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="typeVenteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Ajouter un type de vente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="type-vente-form-container">
-                    <!-- Le formulaire sera chargé via AJAX -->
-                    <div class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Chargement...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="themeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Ajouter un thème</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="theme-form-container">
-                    <!-- Le formulaire sera chargé via AJAX -->
-                    <div class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Chargement...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{# Script pour améliorer l'UX #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 FORM DEBUG: Page chargée');
+    
+    // Debug Stimulus
+    if (window.Stimulus) {
+        console.log('✅ Stimulus chargé:', window.Stimulus);
+        console.log('📊 Controllers disponibles:', Object.keys(window.Stimulus.controllers || {}));
+    } else {
+        console.log('❌ Stimulus non trouvé');
+    }
+    
+    // Debug tous les contrôleurs tile-selector
+    const tileControllers = document.querySelectorAll('[data-controller*="tile-selector"]');
+    console.log(`🎯 ${tileControllers.length} contrôleurs tile-selector trouvés`);
+    
+    tileControllers.forEach((controller, index) => {
+        console.log(`📋 Tile Controller ${index + 1}:`, {
+            fieldName: controller.dataset.tileSelectorFieldNameValue,
+            multiple: controller.dataset.tileSelectorMultipleValue,
+            color: controller.dataset.tileSelectorColorValue,
+            element: controller
+        });
+        
+        // Vérifier le select original
+        const select = controller.querySelector('[data-tile-selector-target="hiddenSelect"]');
+        if (select) {
+            console.log(`✅ Select original trouvé pour ${controller.dataset.tileSelectorFieldNameValue}:`, {
+                options: select.options.length,
+                value: select.value,
+                options_data: Array.from(select.options).map(opt => ({
+                    value: opt.value,
+                    text: opt.textContent.trim()
+                }))
+            });
+        } else {
+            console.log(`❌ Select original non trouvé pour ${controller.dataset.tileSelectorFieldNameValue}`);
+        }
+    });
+    
+    // Debug tous les contrôleurs modal
+    const modalControllers = document.querySelectorAll('[data-controller*="referential-modal"]');
+    console.log(`🎭 ${modalControllers.length} contrôleurs referential-modal trouvés`);
+    
+    modalControllers.forEach((controller, index) => {
+        console.log(`📋 Modal Controller ${index + 1}:`, {
+            type: controller.dataset.referentialModalTypeValue,
+            url: controller.dataset.referentialModalUrlValue,
+            element: controller
+        });
+    });
+    
+    // Auto-calcul du prix total en temps réel
+    const prixEcoleInput = document.querySelector('#prise_de_vue_prixEcole');
+    const prixParentInput = document.querySelector('#prise_de_vue_prixParent');
+    
+    function updatePrixTotal() {
+        const prixEcole = parseFloat(prixEcoleInput?.value || 0);
+        const prixParent = parseFloat(prixParentInput?.value || 0);
+        const total = prixEcole + prixParent;
+        
+        // Afficher le total quelque part si nécessaire
+        console.log('Prix total:', total.toFixed(2) + ' €');
+    }
+    
+    if (prixEcoleInput) prixEcoleInput.addEventListener('input', updatePrixTotal);
+    if (prixParentInput) prixParentInput.addEventListener('input', updatePrixTotal);
+    
+    // Validation côté client pour le nombre d'élèves
+    const nbElevesInput = document.querySelector('#prise_de_vue_nbEleves');
+    if (nbElevesInput) {
+        nbElevesInput.addEventListener('blur', function() {
+            const value = parseInt(this.value);
+            if (value <= 0) {
+                this.setCustomValidity('Le nombre d\'élèves doit être supérieur à 0');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+});
+</script>

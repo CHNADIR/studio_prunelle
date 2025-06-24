@@ -1,0 +1,15 @@
+{% extends 'admin/_layouts/referential_base.html.twig' %}
+
+{#
+    Template pochette individuelle optimisé - PRODUCTION
+    Réduction: 326 lignes → 12 lignes (-96%)
+    Pattern appliqué: Template Method Pattern (patterns.md)
+    Responsabilité: Configuration spécifique aux pochettes individuelles
+#}
+
+{% set entity_config = {
+    'title': 'Pochettes individuelles',
+    'icon': 'bi-person-square',
+    'route_prefix': 'admin_pochette_indiv',
+    'variable_name': 'pochettes'
+} %} 

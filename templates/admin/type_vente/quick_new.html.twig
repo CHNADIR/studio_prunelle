@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau Type de Vente - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-plus-circle text-warning"></i> Créer un Type de Vente</h1>
+        <div class="btn-group">
+            <a href="{{ path('admin_type_vente_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-list"></i> Liste des types
+            </a>
+            <a href="{{ path('admin_type_vente_new') }}" class="btn btn-outline-warning">
+                <i class="bi bi-cart"></i> Création avancée
+            </a>
+        </div>
+    </div>
+
+    {# Messages flash unifiés #}
+    {% include 'admin/_components/flash_messages.html.twig' %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cart"></i> Nouveau Type de Vente
+                    </h5>
+                    <small class="opacity-75">Création rapide d'un type de vente personnalisé</small>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Création rapide :</strong> 
+                        Créez un nouveau type de vente personnalisé en quelques clics. 
+                        Pour utiliser les types standards, utilisez la 
+                        <a href="{{ path('admin_type_vente_new') }}" class="alert-link">création avancée</a>.
+                    </div>
+                    
+                    {{ form_start(form, {attr: {class: 'needs-validation', novalidate: true}}) }}
+                    
+                    <div class="mb-3">
+                        {{ form_row(form.libelle) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_row(form.description) }}
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form_widget(form.active) }}
+                            {{ form_label(form.active) }}
+                        </div>
+                        <div class="form-text">{{ form_help(form.active) }}</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="bi bi-check-circle"></i> Créer le Type de Vente
+                        </button>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                    </div>
+                    
+                    {{ form_end(form) }}
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        <i class="bi bi-lightbulb"></i>
+                        <strong>Astuce :</strong> 
+                        Définissez clairement le processus de vente pour une meilleure organisation.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation Bootstrap
+    const form = document.querySelector('.needs-validation');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    }
+    
+    // Focus automatique sur le champ libellé
+    const libelleInput = document.querySelector('#simple_type_vente_libelle');
+    if (libelleInput) {
+        libelleInput.focus();
+    }
+});
+</script>
+{% endblock %} 

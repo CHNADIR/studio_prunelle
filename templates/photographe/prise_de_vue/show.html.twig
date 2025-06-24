@@ -10,7 +10,7 @@
         </a>
     </div>
 
-    {% include 'partials/_flash_messages.html.twig' %}
+    {% include 'admin/_components/flash_messages.html.twig' %}
 
     {# === SECTION: Informations générales === #}
     <div class="card mb-4">
@@ -22,7 +22,7 @@
                 <div class="col-md-6">
                     <dl class="row">
                         <dt class="col-sm-4">Date</dt>
-                        <dd class="col-sm-8">{{ prise_de_vue.date ? prise_de_vue.date|date('d/m/Y') : 'Non spécifiée' }}</dd>
+                        <dd class="col-sm-8">{{ prise_de_vue.datePdv ? prise_de_vue.datePdv|date('d/m/Y') : 'Non spécifiée' }}</dd>
                         
                         <dt class="col-sm-4">École</dt>
                         <dd class="col-sm-8">
@@ -38,17 +38,17 @@
                     <dl class="row">
                         <dt class="col-sm-5">Type de prise</dt>
                         <dd class="col-sm-7">
-                            <span class="badge bg-info">{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : 'Non spécifié' }}</span>
+                            <span class="badge bg-info">{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.libelle : 'Non spécifié' }}</span>
                         </dd>
                         
                         <dt class="col-sm-5">Type de vente</dt>
                         <dd class="col-sm-7">
-                            <span class="badge bg-success">{{ prise_de_vue.typeVente ? prise_de_vue.typeVente.nom : 'Non spécifié' }}</span>
+                            <span class="badge bg-success">{{ prise_de_vue.typeVente ? prise_de_vue.typeVente.libelle : 'Non spécifié' }}</span>
                         </dd>
                         
                         <dt class="col-sm-5">Thème</dt>
                         <dd class="col-sm-7">
-                            <span class="badge bg-warning text-dark">{{ prise_de_vue.theme ? prise_de_vue.theme.nom : 'Non spécifié' }}</span>
+                            <span class="badge bg-warning text-dark">{{ prise_de_vue.theme ? prise_de_vue.theme.libelle : 'Non spécifié' }}</span>
                         </dd>
                     </dl>
                 </div>
@@ -70,23 +70,18 @@
                         
                         <dt class="col-sm-6">Nombre d'élèves</dt>
                         <dd class="col-sm-6"><span class="badge bg-primary fs-6">{{ prise_de_vue.nbEleves ?: 0 }}</span></dd>
-                        
-                        {% if prise_de_vue.classes %}
-                        <dt class="col-sm-6">Détail classes</dt>
-                        <dd class="col-sm-6"><em>{{ prise_de_vue.classes }}</em></dd>
-                        {% endif %}
                     </dl>
                 </div>
                 <div class="col-md-6">
                     <dl class="row">
-                        <dt class="col-sm-6">Prix école</dt>
-                        <dd class="col-sm-6">{{ prise_de_vue.prixEcole ? prise_de_vue.prixEcole|format_currency('EUR') : '0 €' }}</dd>
+                        <dt class="col-sm-6">Prix école :</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.prixEcole ? (prise_de_vue.prixEcole|number_format(2, ',', ' ') ~ ' €') : '0 €' }}</dd>
                         
-                        <dt class="col-sm-6">Prix parents</dt>
-                        <dd class="col-sm-6">{{ prise_de_vue.prixParents ? prise_de_vue.prixParents|format_currency('EUR') : '0 €' }}</dd>
+                        <dt class="col-sm-6">Prix parents :</dt>
+                        <dd class="col-sm-6">{{ prise_de_vue.prixParent ? (prise_de_vue.prixParent|number_format(2, ',', ' ') ~ ' €') : '0 €' }}</dd>
                         
-                        <dt class="col-sm-6"><strong>Prix total</strong></dt>
-                        <dd class="col-sm-6"><strong class="text-success">{{ prix_totaux.prixTotal|format_currency('EUR') }}</strong></dd>
+                        <dt class="col-sm-6">Prix total :</dt>
+                        <dd class="col-sm-6"><strong class="text-success">{{ prix_totaux.total|number_format(2, ',', ' ') }} €</strong></dd>
                     </dl>
                 </div>
             </div>
@@ -98,26 +93,23 @@
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
-                    <h4 class="mb-0"><i class="bi bi-person me-2"></i>Planches individuelles</h4>
+                    <h4 class="mb-0"><i class="bi bi-person me-2"></i>Pochettes individuelles</h4>
                 </div>
                 <div class="card-body">
-                    {% if prise_de_vue.planchesIndividuelles.count > 0 %}
+                    {% if prise_de_vue.pochettesIndiv.count > 0 %}
                         <ul class="list-group list-group-flush">
-                            {% for planche in prise_de_vue.planchesIndividuelles %}
+                            {% for pochette in prise_de_vue.pochettesIndiv %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <div>
-                                        <strong>{{ planche.nom }}</strong><br>
-                                        <small class="text-muted">{{ planche.formats ? planche.formats|join(', ') : 'Formats non spécifiés' }}</small>
+                                        <strong>{{ pochette.libelle }}</strong><br>
+                                        <small class="text-muted">{{ pochette.description ?: 'Description non disponible' }}</small>
                                     </div>
-                                    <span class="badge bg-success rounded-pill">
-                                        {{ planche.prixParents|format_currency('EUR') }}
-                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
                         <div class="alert alert-light mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Aucune planche individuelle sélectionnée
+                            <i class="bi bi-info-circle me-2"></i>Aucune pochette individuelle sélectionnée
                         </div>
                     {% endif %}
                 </div>
@@ -127,30 +119,54 @@
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0"><i class="bi bi-people me-2"></i>Planches fratrie</h4>
+                    <h4 class="mb-0"><i class="bi bi-people me-2"></i>Pochettes fratrie</h4>
                 </div>
                 <div class="card-body">
-                    {% if prise_de_vue.planchesFratries.count > 0 %}
+                    {% if prise_de_vue.pochettesFratrie.count > 0 %}
                         <ul class="list-group list-group-flush">
-                            {% for planche in prise_de_vue.planchesFratries %}
+                            {% for pochette in prise_de_vue.pochettesFratrie %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <div>
-                                        <strong>{{ planche.nom }}</strong><br>
-                                        <small class="text-muted">{{ planche.formats ? planche.formats|join(', ') : 'Formats non spécifiés' }}</small>
+                                        <strong>{{ pochette.libelle }}</strong><br>
+                                        <small class="text-muted">{{ pochette.description ?: 'Description non disponible' }}</small>
                                     </div>
-                                    <span class="badge bg-warning text-dark rounded-pill">
-                                        {{ planche.prixParents|format_currency('EUR') }}
-                                    </span>
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
                         <div class="alert alert-light mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Aucune planche fratrie sélectionnée
+                            <i class="bi bi-info-circle me-2"></i>Aucune pochette fratrie sélectionnée
                         </div>
                     {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
+
+    {# === SECTION: Planches === #}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-image me-2"></i>Planches sélectionnées</h4>
+        </div>
+        <div class="card-body">
+            {% if prise_de_vue.planches.count > 0 %}
+                <div class="row">
+                    {% for planche in prise_de_vue.planches %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ planche.libelle }}</h6>
+                                    <p class="card-text text-muted small">{{ planche.description ?: 'Description non disponible' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-light mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Aucune planche sélectionnée
+                </div>
+            {% endif %}
         </div>
     </div>
 

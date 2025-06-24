@@ -7,7 +7,7 @@
         <h1>Mes prises de vue</h1>
     </div>
 
-    {% include 'partials/_flash_messages.html.twig' %}
+    {% include 'admin/_components/flash_messages.html.twig' %}
 
     <div class="card">
         <div class="card-body">
@@ -28,7 +28,7 @@
                             <tr>
                                 <td>{{ prise.id }}</td>
                                 <td>{{ prise.ecole.nom }}</td>
-                                <td>{{ prise.date|date('d/m/Y') }}</td>
+                                <td>{{ prise.datePdv|date('d/m/Y') }}</td>
                                 <td>
                                     {% if prise.commentaire %}
                                         <span class="badge bg-success">Commenté</span>

@@ -10,7 +10,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TypePriseRepository::class)]
-#[UniqueEntity(fields: ['nom'], message: 'Ce type de prise existe déjà')]
+#[UniqueEntity(fields: ['libelle'], message: 'Ce type de prise existe déjà')]
+#[ORM\HasLifecycleCallbacks]
 class TypePrise
 {
     #[ORM\Id]
@@ -18,17 +19,33 @@ class TypePrise
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
+    /**
+     * Libellé du type de prise selon cahier des charges
+     * Exemples : individuel, individuel + groupe, groupe seul
+     */
     #[ORM\Column(type: 'string', length: 100, unique: true)]
-    #[Assert\NotBlank(message: 'Le nom est obligatoire')]
+    #[Assert\NotBlank(message: 'Le libellé est obligatoire')]
     #[Assert\Length(
         max: 100,
-        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères'
+        maxMessage: 'Le libellé ne peut pas dépasser {{ limit }} caractères'
     )]
-    private ?string $nom = null;
+    private ?string $libelle = null;
 
-    #[ORM\Column(type: 'boolean')]
+    /**
+     * Description détaillée du type de prise
+     */
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Assert\Type(type: 'bool')]
     private bool $active = true;
+
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $createdAt = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     #[ORM\OneToMany(mappedBy: 'typePrise', targetEntity: PriseDeVue::class)]
     private Collection $prisesDeVue;
@@ -37,6 +54,13 @@ class TypePrise
     {
         $this->prisesDeVue = new ArrayCollection();
         $this->active = true;
+        $this->createdAt = new \DateTime();
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 
     public function getId(): ?int
@@ -44,14 +68,25 @@ class TypePrise
         return $this->id;
     }
 
-    public function getNom(): ?string
+    public function getLibelle(): ?string
     {
-        return $this->nom;
+        return $this->libelle;
     }
 
-    public function setNom(?string $nom): self
+    public function setLibelle(?string $libelle): self
     {
-        $this->nom = $nom;
+        $this->libelle = $libelle;
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
         return $this;
     }
 
@@ -64,6 +99,16 @@ class TypePrise
     {
         $this->active = $active;
         return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
     }
 
     /**
@@ -98,6 +143,6 @@ class TypePrise
 
     public function __toString(): string
     {
-        return $this->nom ?? '';
+        return $this->libelle ?? 'Type de prise';
     }
 }

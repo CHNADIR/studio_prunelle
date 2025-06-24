@@ -1,0 +1,234 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\TypePrise;
+use App\Enum\TypePriseEnum;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * Repository pour TypePrise avec intégration énums
+ * Pattern appliqué: Repository Pattern (patterns.md)
+ * @extends AbstractReferentialRepository<TypePrise>
+ */
+class TypePriseRepository extends AbstractReferentialRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, TypePrise::class);
+    }
+
+    /**
+     * Retourne la classe d'enum associée
+     */
+    protected function getEnumClass(): string
+    {
+        return TypePriseEnum::class;
+    }
+
+    /**
+     * Crée une entité TypePrise depuis un enum
+     */
+    protected function createEntityFromEnum(object $enum): TypePrise
+    {
+        $typePrise = new TypePrise();
+        $typePrise->setLibelle($enum->getLibelle());
+        $typePrise->setDescription($enum->getDescription());
+        $typePrise->setActive(true);
+        
+        return $typePrise;
+    }
+
+    /**
+     * Retourne l'alias de requête pour ce repository
+     */
+    protected function getQueryAlias(): string
+    {
+        return 'tp';
+    }
+
+    /**
+     * Trouve tous les types de prise actifs triés par libellé
+     * Pattern: Repository - requête optimisée
+     */
+    public function findAllActive(): array
+    {
+        return $this->createQueryBuilder('tp')
+            ->andWhere('tp.active = :active')
+            ->setParameter('active', true)
+            ->orderBy('tp.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve tous les types de prise avec comptage des prises de vue
+     * Pattern: Repository - jointure optimisée
+     */
+    public function findAllWithPriseDeVueCount(): array
+    {
+        return $this->createQueryBuilder('tp')
+            ->select('tp', 'COUNT(pdv.id) as priseDeVueCount')
+            ->leftJoin('tp.prisesDeVue', 'pdv')
+            ->groupBy('tp.id')
+            ->orderBy('tp.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les types de prise basés sur les énums
+     * Pattern: Repository avec intégration énums
+     */
+    public function findEnumBasedTypes(): array
+    {
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            TypePriseEnum::getDefaultValues()
+        );
+
+        return $this->createQueryBuilder('tp')
+            ->andWhere('tp.libelle IN (:enumLibelles)')
+            ->setParameter('enumLibelles', $enumLibelles)
+            ->orderBy('tp.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les types de prise personnalisés (non-énums)
+     * Pattern: Repository avec logique métier
+     */
+    public function findCustomTypes(): array
+    {
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            TypePriseEnum::getDefaultValues()
+        );
+
+        $qb = $this->createQueryBuilder('tp')
+            ->orderBy('tp.libelle', 'ASC');
+
+        if (!empty($enumLibelles)) {
+            $qb->andWhere('tp.libelle NOT IN (:enumLibelles)')
+               ->setParameter('enumLibelles', $enumLibelles);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Vérifie si un libellé correspond à un enum
+     */
+    public function isEnumLibelle(string $libelle): bool
+    {
+        foreach (TypePriseEnum::getDefaultValues() as $enum) {
+            if ($enum->getLibelle() === $libelle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Trouve ou crée un type de prise depuis un enum
+     * Pattern: Repository - factory method
+     */
+    public function findOrCreateFromEnum(TypePriseEnum $enum): TypePrise
+    {
+        $typePrise = $this->findOneBy(['libelle' => $enum->getLibelle()]);
+        
+        if (!$typePrise) {
+            $typePrise = new TypePrise();
+            $typePrise->setLibelle($enum->getLibelle());
+            $typePrise->setDescription($enum->getDescription());
+            $typePrise->setActive(true);
+            
+            $this->getEntityManager()->persist($typePrise);
+            $this->getEntityManager()->flush();
+        }
+        
+        return $typePrise;
+    }
+
+    /**
+     * Recherche avec filtres et pagination
+     * Pattern: Repository - requête complexe optimisée
+     */
+    public function findByCriteria(
+        ?string $search = null,
+        ?bool $active = null,
+        string $sort = 'libelle',
+        string $order = 'ASC',
+        int $page = 1,
+        int $limit = 20
+    ): array {
+        $qb = $this->createQueryBuilder('tp')
+            ->select('tp', 'COUNT(pdv.id) as priseDeVueCount')
+            ->leftJoin('tp.prisesDeVue', 'pdv')
+            ->groupBy('tp.id');
+
+        // Filtres de recherche
+        if ($search) {
+            $qb->andWhere('(tp.libelle LIKE :search OR tp.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere('tp.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        // Tri
+        $allowedSorts = ['libelle', 'description', 'active', 'priseDeVueCount'];
+        if (in_array($sort, $allowedSorts)) {
+            $qb->orderBy('tp.' . $sort, $order);
+        }
+
+        // Pagination
+        $offset = ($page - 1) * $limit;
+        $qb->setFirstResult($offset)
+           ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Compte le total pour la pagination
+     */
+    public function countByCriteria(?string $search = null, ?bool $active = null): int
+    {
+        $qb = $this->createQueryBuilder('tp')
+            ->select('COUNT(tp.id)');
+
+        if ($search) {
+            $qb->andWhere('(tp.libelle LIKE :search OR tp.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere('tp.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function save(TypePrise $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function remove(TypePrise $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+}

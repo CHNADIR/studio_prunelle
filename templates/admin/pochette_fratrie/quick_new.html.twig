@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une nouvelle pochette fratrie{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Créer une nouvelle pochette fratrie
+                    </h4>
+                    <p class="mb-0 mt-2 text-light">
+                        Ajoutez rapidement une nouvelle pochette fratrie pour vos prises de vue
+                    </p>
+                </div>
+                
+                <div class="card-body">
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+
+                    {{ form_start(form, {
+                        'attr': {
+                            'class': 'needs-validation',
+                            'novalidate': 'novalidate'
+                        }
+                    }) }}
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                {{ form_label(form.libelle, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                {{ form_widget(form.libelle) }}
+                                {{ form_help(form.libelle) }}
+                                <div class="invalid-feedback">
+                                    {{ form_errors(form.libelle) }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="mb-3">
+                                {{ form_label(form.description, null, {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.description) }}
+                                {{ form_help(form.description) }}
+                                <div class="invalid-feedback">
+                                    {{ form_errors(form.description) }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    {{ form_widget(form.active) }}
+                                    {{ form_label(form.active, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                                </div>
+                                {{ form_help(form.active) }}
+                                <div class="invalid-feedback">
+                                    {{ form_errors(form.active) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ path('admin_pochette_fratrie_index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Retour à la liste
+                        </a>
+                        
+                        {{ form_widget(form.submit) }}
+                    </div>
+                    
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus automatique sur le premier champ
+    const firstInput = document.querySelector('input[autofocus]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Validation Bootstrap
+    const form = document.querySelector('.needs-validation');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    }
+});
+</script>
+{% endblock %} 

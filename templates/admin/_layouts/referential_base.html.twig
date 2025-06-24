@@ -1,0 +1,151 @@
+{% extends "admin/_layouts/admin_base.html.twig" %}
+{% import 'macros/admin_macros.html.twig' as admin %}
+
+{#
+    Template de base pour tous les référentiels
+    Pattern appliqué: Template Method Pattern (patterns.md)
+    Responsabilité: Structure commune des pages index référentiels
+#}
+
+{% set entity_config = entity_config|default({}) %}
+{% set entity_title = entity_config.title|default('Référentiel') %}
+{% set entity_icon = entity_config.icon|default('bi-list') %}
+{% set route_prefix = entity_config.route_prefix|default('admin_referential') %}
+{% set variable_name = entity_config.variable_name|default('entities') %}
+
+{# Configuration du layout admin #}
+{% set admin_title = entity_title %}
+{% set admin_icon = entity_icon %}
+
+{% block admin_actions %}
+    <a href="{{ path(route_prefix ~ '_new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Ajouter {{ entity_title|lower|slice(0, -1) }}
+    </a>
+{% endblock %}
+
+{% block admin_content %}
+    {# Statistiques #}
+    {% block entity_stats %}
+        {{ admin.entity_stats_cards(total, enum_info|length, entity_title, page, total_pages) }}
+    {% endblock %}
+
+    {# Filtres et recherche #}
+    {% block entity_filters %}
+        {{ admin.entity_filters_form(route_prefix ~ '_index', search, active, show_type, sort, order) }}
+    {% endblock %}
+
+    {# Contenu principal #}
+    <div class="card">
+        <div class="card-body">
+            {% block entity_content %}
+                {% if attribute(_context, variable_name) is empty %}
+                    <div class="text-center py-5">
+                        <i class="bi {{ entity_icon }} display-1 text-muted"></i>
+                        <h3 class="text-muted">Aucun {{ entity_title|lower|slice(0, -1) }} trouvé</h3>
+                        <p class="text-muted">Aucun résultat ne correspond à vos critères de recherche.</p>
+                        <a href="{{ path(route_prefix ~ '_new') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Créer le premier {{ entity_title|lower|slice(0, -1) }}
+                        </a>
+                    </div>
+                {% else %}
+                    {% block entity_table %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        {% block entity_table_headers %}
+                                            <th>
+                                                <a href="{{ path(route_prefix ~ '_index', {sort: 'libelle', order: (sort == 'libelle' and order == 'ASC') ? 'DESC' : 'ASC', search: search, active: active, type: show_type}) }}" 
+                                                   class="text-white text-decoration-none">
+                                                    Libellé 
+                                                    {% if sort == 'libelle' %}
+                                                        <i class="bi bi-{{ order == 'ASC' ? 'sort-up' : 'sort-down' }}"></i>
+                                                    {% endif %}
+                                                </a>
+                                            </th>
+                                            <th>Description</th>
+                                            <th>Type</th>
+                                            <th>
+                                                <a href="{{ path(route_prefix ~ '_index', {sort: 'active', order: (sort == 'active' and order == 'ASC') ? 'DESC' : 'ASC', search: search, active: active, type: show_type}) }}" 
+                                                   class="text-white text-decoration-none">
+                                                    Statut
+                                                    {% if sort == 'active' %}
+                                                        <i class="bi bi-{{ order == 'ASC' ? 'sort-up' : 'sort-down' }}"></i>
+                                                    {% endif %}
+                                                </a>
+                                            </th>
+                                            <th>Utilisation</th>
+                                            <th width="200">Actions</th>
+                                        {% endblock %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% block entity_table_body %}
+                                        {% for entity_data in attribute(_context, variable_name) %}
+                                            {% set entity = entity_data[0] ?? entity_data %}
+                                            {% set usage_count = entity_data.priseDeVueCount ?? entity_data[1] ?? 0 %}
+                                            {% set is_enum = false %}
+                                            {% set entity_icon_specific = entity_icon %}
+                                            
+                                            {# Vérifier si c'est une valeur enum - CORRECTION: utiliser icône par défaut #}
+                                            {% for enum in enum_info %}
+                                                {% if enum.libelle == entity.libelle %}
+                                                    {% set is_enum = true %}
+                                                    {# Garder l'icône par défaut de l'entité car enum.icon n'existe pas #}
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            <tr>
+                                                {% block entity_table_row %}
+                                                    <td>
+                                                        <i class="{{ entity_icon_specific }} me-2"></i>
+                                                        <strong>{{ entity.libelle }}</strong>
+                                                        {{ admin.type_badge(is_enum) }}
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-muted">
+                                                            {{ entity.description|slice(0, 80) }}
+                                                            {% if entity.description|length > 80 %}...{% endif %}
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        {{ admin.type_badge(is_enum) }}
+                                                    </td>
+                                                    <td>
+                                                        {{ admin.status_badge(entity.active) }}
+                                                    </td>
+                                                    <td>
+                                                        {{ admin.usage_badge(usage_count) }}
+                                                    </td>
+                                                    <td>
+                                                        {{ admin.entity_action_buttons(entity, route_prefix, usage_count, is_enum) }}
+                                                        
+                                                        {# Modal de suppression #}
+                                                        {% if usage_count == 0 %}
+                                                            {{ admin.delete_modal(entity, route_prefix, entity_title|slice(0, -1), is_enum, entity_icon_specific) }}
+                                                        {% endif %}
+                                                    </td>
+                                                {% endblock %}
+                                            </tr>
+                                        {% endfor %}
+                                    {% endblock %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {# Pagination #}
+                        {% block entity_pagination %}
+                            {{ admin.entity_pagination(page, total_pages, route_prefix ~ '_index', {
+                                search: search,
+                                active: active,
+                                sort: sort,
+                                order: order,
+                                type: show_type
+                            }) }}
+                        {% endblock %}
+                    {% endblock %}
+                {% endif %}
+            {% endblock %}
+        </div>
+    </div>
+{% endblock %} 

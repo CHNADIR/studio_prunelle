@@ -1,216 +1,456 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Détail de la prise de vue{% endblock %}
+{% block title %}Prise de vue - {{ priseDeVue.ecole.nom }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .info-card {
+            border-left: 4px solid #007bff;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .badge-custom {
+            font-size: 0.9em;
+            padding: 0.5rem 0.8rem;
+        }
+        .stats-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #495057;
+        }
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Détail de la prise de vue</h1>
-        <div class="btn-group">
-            <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Retour à la liste
-            </a>
-            {% if can_edit %}
-                <a href="{{ path('admin_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" class="btn btn-primary">
-                    <i class="bi bi-pencil"></i> Modifier
-                </a>
-            {% endif %}
-            {% if is_admin %}
-                <a href="{{ path('admin_prise_de_vue_clone', {'id': prise_de_vue.id}) }}" class="btn btn-info">
-                    <i class="bi bi-files"></i> Cloner
-                </a>
-            {% endif %}
-            {% if can_delete %}
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                    <i class="bi bi-trash"></i> Supprimer
-                </button>
-            {% endif %}
-        </div>
-    </div>
-
-    {# Informations générales #}
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Informations générales</h4>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-4">Date</dt>
-                        <dd class="col-sm-8">{{ prise_de_vue.date ? prise_de_vue.date|date('d/m/Y') : 'Non spécifiée' }}</dd>
-                        
-                        <dt class="col-sm-4">École</dt>
-                        <dd class="col-sm-8">
-                            {% if prise_de_vue.ecole %}
-                                <a href="{{ path('admin_ecole_show', {'id': prise_de_vue.ecole.id}) }}">
-                                    {{ prise_de_vue.ecole.nom }} ({{ prise_de_vue.ecole.ville }})
-                                </a>
+<div class="container-fluid py-4">
+    
+    {# === EN-TÊTE === #}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0">
+                                <i class="bi bi-camera2 me-2"></i>
+                                Prise de vue - {{ priseDeVue.ecole.nom }}
+                            </h1>
+                            <small class="opacity-75">
+                                {{ priseDeVue.datePdv|date('d/m/Y') }} | 
+                                Photographe: {{ priseDeVue.photographe.nom }}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            {% if priseDeVue.isComplete %}
+                                <span class="badge bg-success badge-custom">
+                                    <i class="bi bi-check-circle me-1"></i>Complète
+                                </span>
                             {% else %}
-                                Non spécifiée
+                                <span class="badge bg-warning badge-custom">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Incomplète
+                                </span>
                             {% endif %}
-                        </dd>
-                        
-                        <dt class="col-sm-4">Photographe</dt>
-                        <dd class="col-sm-8">{{ prise_de_vue.photographe ? prise_de_vue.photographe.nom : 'Non spécifié' }}</dd>
-                    </dl>
-                </div>
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-4">Type de prise</dt>
-                        <dd class="col-sm-8">{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : 'Non spécifié' }}</dd>
-                        
-                        <dt class="col-sm-4">Type de vente</dt>
-                        <dd class="col-sm-8">{{ prise_de_vue.typeVente ? prise_de_vue.typeVente.nom : 'Non spécifié' }}</dd>
-                        
-                        <dt class="col-sm-4">Thème</dt>
-                        <dd class="col-sm-8">{{ prise_de_vue.theme ? prise_de_vue.theme.nom : 'Non spécifié' }}</dd>
-                    </dl>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {# Volumes et chiffres #}
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0">Volumes et tarification</h4>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-6">Nombre de classes</dt>
-                        <dd class="col-sm-6">{{ prise_de_vue.nbClasses ?: 0 }}</dd>
-                        
-                        <dt class="col-sm-6">Nombre d'élèves</dt>
-                        <dd class="col-sm-6">{{ prise_de_vue.nbEleves ?: 0 }}</dd>
-                    </dl>
-                </div>
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-6">Prix école</dt>
-                        <dd class="col-sm-6">{{ prise_de_vue.prixEcole ? prise_de_vue.prixEcole|format_currency('EUR') : '0 €' }}</dd>
-                        
-                        <dt class="col-sm-6">Prix parents</dt>
-                        <dd class="col-sm-6">{{ prise_de_vue.prixParents ? prise_de_vue.prixParents|format_currency('EUR') : '0 €' }}</dd>
-                        
-                        <dt class="col-sm-6">Prix total</dt>
-                        <dd class="col-sm-6 fw-bold">{{ prix_totaux.prixTotal|format_currency('EUR') }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# Planches sélectionnées #}
-    <div class="row">
-        {# Planches individuelles #}
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Planches individuelles</h4>
+    {# === INFORMATIONS GÉNÉRALES === #}
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card info-card shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Informations générales
+                    </h4>
                 </div>
                 <div class="card-body">
-                    {% if prise_de_vue.planchesIndividuelles.count > 0 %}
-                        <ul class="list-group">
-                            {% for planche in prise_de_vue.planchesIndividuelles %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ planche.nom }}
-                                    <span class="badge bg-primary rounded-pill">
-                                        {{ planche.prixParents|format_currency('EUR') }}
-                                    </span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">Aucune planche individuelle sélectionnée</p>
-                    {% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box bg-primary me-3">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">École</h6>
+                                    <p class="mb-0 text-muted">
+                                        <strong>{{ priseDeVue.ecole.nom }}</strong><br>
+                                        <small>{{ priseDeVue.ecole.adresseComplete }}</small><br>
+                                        <span class="badge bg-light text-dark">{{ priseDeVue.ecole.code }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box bg-success me-3">
+                                    <i class="bi bi-person-badge"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Photographe</h6>
+                                    <p class="mb-0 text-muted">
+                                        <strong>{{ priseDeVue.photographe.nom }}</strong><br>
+                                        <small>{{ priseDeVue.photographe.email }}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box bg-info me-3">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Date de prise</h6>
+                                    <p class="mb-0">
+                                        <strong>{{ priseDeVue.datePdv|date('d/m/Y') }}</strong><br>
+                                        <small class="text-muted">{{ priseDeVue.datePdv|date('l') }}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box bg-warning me-3">
+                                    <i class="bi bi-clock"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Créée le</h6>
+                                    <p class="mb-0">
+                                        <strong>{{ priseDeVue.createdAt|date('d/m/Y') }}</strong><br>
+                                        <small class="text-muted">{{ priseDeVue.createdAt|date('H:i') }}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         
-        {# Planches fratrie #}
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0">Planches fratrie</h4>
+        {# === STATISTIQUES === #}
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-bar-chart text-success me-2"></i>
+                        Statistiques
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="stats-value text-primary">{{ priseDeVue.nbEleves }}</div>
+                            <small class="text-muted">Élèves</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="stats-value text-info">{{ priseDeVue.nbClasses ?? 0 }}</div>
+                            <small class="text-muted">Classes</small>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <div class="stats-value text-success">{{ priseDeVue.prixTotal|number_format(2, ',', ' ') }} €</div>
+                            <small class="text-muted">Prix total</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# === CONFIGURATION DE PRISE DE VUE === #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-gear text-warning me-2"></i>
+                        Configuration de la prise de vue
+                    </h4>
                 </div>
                 <div class="card-body">
-                    {% if prise_de_vue.planchesFratries.count > 0 %}
-                        <ul class="list-group">
-                            {% for planche in prise_de_vue.planchesFratries %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ planche.nom }}
-                                    <span class="badge bg-primary rounded-pill">
-                                        {{ planche.prixParents|format_currency('EUR') }}
-                                    </span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">Aucune planche fratrie sélectionnée</p>
-                    {% endif %}
+                    <div class="row g-4">
+                        {# Type de prise #}
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100 bg-light">
+                                <h6 class="text-primary">
+                                    <i class="bi bi-camera me-1"></i>Type de prise
+                                </h6>
+                                {% if priseDeVue.typePrise %}
+                                    <span class="badge bg-primary">{{ priseDeVue.typePrise.libelle }}</span>
+                                    {% if priseDeVue.typePrise.description %}
+                                        <p class="small text-muted mt-2 mb-0">{{ priseDeVue.typePrise.description }}</p>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Non défini</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# Type de vente #}
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100 bg-light">
+                                <h6 class="text-success">
+                                    <i class="bi bi-cart me-1"></i>Type de vente
+                                </h6>
+                                {% if priseDeVue.typeVente %}
+                                    <span class="badge bg-success">{{ priseDeVue.typeVente.libelle }}</span>
+                                    {% if priseDeVue.typeVente.description %}
+                                        <p class="small text-muted mt-2 mb-0">{{ priseDeVue.typeVente.description }}</p>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Non défini</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# Thème #}
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100 bg-light">
+                                <h6 class="text-info">
+                                    <i class="bi bi-palette me-1"></i>Thème
+                                </h6>
+                                {% if priseDeVue.theme %}
+                                    <span class="badge bg-info">{{ priseDeVue.theme.libelle }}</span>
+                                    {% if priseDeVue.theme.description %}
+                                        <p class="small text-muted mt-2 mb-0">{{ priseDeVue.theme.description }}</p>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Non défini</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {# Commentaires #}
-    <div class="card mb-4" {{ stimulus_controller('comment-editor', { updateUrl: path('admin_prise_de_vue_update_comment', {'id': prise_de_vue.id}) }) }}>
-        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Commentaires</h4>
-            {% if can_comment %}
-                <button class="btn btn-sm btn-light" data-action="comment-editor#showEditor">
-                    <i class="bi bi-pencil"></i> Modifier
-                </button>
-            {% endif %}
-        </div>
-        <div class="card-body">
-            {# Affichage du commentaire #}
-            <div data-comment-editor-target="commentDisplay">
-                {% if prise_de_vue.commentaire %}
-                    {{ prise_de_vue.commentaire|nl2br }}
-                {% else %}
-                    <em class="text-muted">Aucun commentaire</em>
-                {% endif %}
-            </div>
-            
-            {# Formulaire d'édition du commentaire #}
-            {% if can_comment %}
-                <div data-comment-editor-target="commentEdit" style="display: none;">
-                    <form data-comment-editor-target="commentForm" data-action="comment-editor#saveComment">
-                        <div class="mb-3">
-                            <textarea name="commentaire" class="form-control" rows="5">{{ prise_de_vue.commentaire }}</textarea>
-                        </div>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="button" class="btn btn-secondary" data-action="comment-editor#hideEditor" data-comment-editor-target="cancelButton">
-                                Annuler
-                            </button>
-                            <button type="submit" class="btn btn-primary" data-comment-editor-target="submitButton">
-                                Enregistrer
-                            </button>
-                        </div>
-                    </form>
+    {# === MATÉRIEL ET SUPPORTS === #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-folder text-secondary me-2"></i>
+                        Matériel et supports
+                    </h4>
                 </div>
-            {% endif %}
+                <div class="card-body">
+                    <div class="row g-4">
+                        {# Pochette individuelle #}
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-person me-1"></i>Pochette individuelle
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if priseDeVue.pochetteIndiv %}
+                                        <h6 class="text-success">{{ priseDeVue.pochetteIndiv.libelle }}</h6>
+                                        {% if priseDeVue.pochetteIndiv.description %}
+                                            <p class="small text-muted mb-0">{{ priseDeVue.pochetteIndiv.description }}</p>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0">Aucune pochette individuelle sélectionnée</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Pochette fratrie #}
+                        <div class="col-md-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-people me-1"></i>Pochette fratrie
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if priseDeVue.pochetteFratrie %}
+                                        <h6 class="text-warning">{{ priseDeVue.pochetteFratrie.libelle }}</h6>
+                                        {% if priseDeVue.pochetteFratrie.description %}
+                                            <p class="small text-muted mb-0">{{ priseDeVue.pochetteFratrie.description }}</p>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0">Aucune pochette fratrie sélectionnée</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Planche #}
+                        <div class="col-md-4">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-grid-3x3 me-1"></i>Planche
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if priseDeVue.planche %}
+                                        <h6 class="text-primary">{{ priseDeVue.planche.libelle }}</h6>
+                                        {% if priseDeVue.planche.description %}
+                                            <p class="small text-muted mb-0">{{ priseDeVue.planche.description }}</p>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0">Aucune planche sélectionnée</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    {# Modal de confirmation de suppression #}
-    {% if can_delete %}
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel">Confirmation de suppression</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    {# === TARIFICATION === #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-currency-euro text-success me-2"></i>
+                        Détail de la tarification
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 text-center">
+                                <h5 class="text-primary mb-2">Prix École</h5>
+                                <div class="h4 text-primary">
+                                    {{ priseDeVue.prixEcole|default(0)|number_format(2, ',', ' ') }} €
+                                </div>
+                                <small class="text-muted">Facturé à l'établissement</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 text-center">
+                                <h5 class="text-info mb-2">Prix Parents</h5>
+                                <div class="h4 text-info">
+                                    {{ priseDeVue.prixParent|default(0)|number_format(2, ',', ' ') }} €
+                                </div>
+                                <small class="text-muted">À la charge des familles</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-success text-white rounded p-3 text-center">
+                                <h5 class="mb-2">Total</h5>
+                                <div class="h4">
+                                    {{ priseDeVue.prixTotal|number_format(2, ',', ' ') }} €
+                                </div>
+                                <small class="opacity-75">Chiffre d'affaires total</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        Êtes-vous sûr de vouloir supprimer cette prise de vue ? Cette action est irréversible.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# === COMMENTAIRES === #}
+    {% if priseDeVue.commentaire %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-chat-text text-secondary me-2"></i>
+                        Commentaires
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-light border-start border-5 border-info">
+                        <p class="mb-0">{{ priseDeVue.commentaire|nl2br }}</p>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <form method="post" action="{{ path('admin_prise_de_vue_delete', {'id': prise_de_vue.id}) }}">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ prise_de_vue.id) }}">
-                            <button type="submit" class="btn btn-danger">Confirmer la suppression</button
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# === ACTIONS === #}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left me-1"></i> Retour à la liste
+                        </a>
+                    </div>
+                    <div class="btn-group" role="group">
+                        {% if is_granted('EDIT', priseDeVue) %}
+                            <a href="{{ path('admin_prise_de_vue_edit', {id: priseDeVue.id}) }}" 
+                               class="btn btn-primary btn-lg">
+                                <i class="bi bi-pencil me-1"></i> Modifier
+                            </a>
+                        {% endif %}
+                        
+                        {% if is_granted('DELETE', priseDeVue) %}
+                            <button type="button" class="btn btn-outline-danger btn-lg" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash me-1"></i> Supprimer
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# === MODAL DE SUPPRESSION === #}
+{% if is_granted('DELETE', priseDeVue) %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">
+                    Êtes-vous sûr de vouloir supprimer cette prise de vue ?
+                </p>
+                <div class="alert alert-warning">
+                    <strong>École :</strong> {{ priseDeVue.ecole.nom }}<br>
+                    <strong>Date :</strong> {{ priseDeVue.datePdv|date('d/m/Y') }}<br>
+                    <strong>Élèves :</strong> {{ priseDeVue.nbEleves }}
+                </div>
+                <p class="text-danger small mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Cette action est irréversible.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <a href="{{ path('admin_prise_de_vue_delete', {id: priseDeVue.id}) }}" 
+                   class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i> Supprimer définitivement
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

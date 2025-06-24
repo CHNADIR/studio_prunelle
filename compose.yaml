@@ -28,9 +28,8 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www/html:cached
-      - /var/www/html/vendor  # Exclut le montage de vendor
-      # On n'exclut PAS var pour permettre la persistance des sessions
-      - prunelle_var:/var/www/html/var:rw  # Utilisation d'un volume nommé pour var
+      - /var/www/html/vendor
+      - prunelle_var:/var/www/html/var:rw
       - prunelle_uploads:/var/www/html/public/uploads:rw
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini:ro
     environment:
@@ -118,6 +117,6 @@ volumes:
   database_data:
     name: prunelle_mysql_data
   prunelle_uploads:
-    external: false  # Ne pas utiliser de volume externe existant
+    external: false  
   prunelle_var:
-    external: false  # Ne pas utiliser de volume externe existant
+    external: false  

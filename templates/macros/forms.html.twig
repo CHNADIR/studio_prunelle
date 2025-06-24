@@ -1,0 +1,262 @@
+{#
+    Macros centralisées pour les formulaires et tables de Studio Prunelle
+    Assure la cohérence de style dans toute l'application
+#}
+
+{# === MACRO POUR CHAMP DE FORMULAIRE STANDARD === #}
+{% macro formRow(form_field, label_text = null, help_text = null, col_class = 'col-md-12') %}
+    <div class="{{ col_class }}">
+        <div class="mb-3">
+            {% if label_text is not null %}
+                <label for="{{ form_field.vars.id }}" class="form-label fw-bold text-secondary">
+                    {{ label_text }}
+                    {% if form_field.vars.required %}
+                        <span class="text-danger">*</span>
+                    {% endif %}
+                </label>
+            {% else %}
+                {{ form_label(form_field, null, {'label_attr': {'class': 'form-label fw-bold text-secondary'}}) }}
+                {% if form_field.vars.required %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            {% endif %}
+            
+            {{ form_widget(form_field, {
+                'attr': {
+                    'class': 'form-control' ~ (form_field.vars.errors|length > 0 ? ' is-invalid' : '') ~ (form_field.vars.valid and form_field.vars.submitted ? ' is-valid' : '')
+                }
+            }) }}
+            
+            {% if form_field.vars.errors|length > 0 %}
+                <div class="invalid-feedback">
+                    {{ form_errors(form_field) }}
+                </div>
+            {% endif %}
+            
+            {% if help_text %}
+                <div class="form-text text-muted">
+                    <i class="bi bi-info-circle me-1"></i>{{ help_text }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{# === MACRO POUR SECTION DE FORMULAIRE === #}
+{% macro formSection(title, icon = null, bg_color = 'primary') %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-{{ bg_color }} text-white">
+            <h4 class="mb-0 d-flex align-items-center">
+                {% if icon %}
+                    <i class="bi bi-{{ icon }} me-2"></i>
+                {% endif %}
+                {{ title }}
+            </h4>
+        </div>
+        <div class="card-body bg-light">
+            {% block section_content %}{% endblock %}
+        </div>
+    </div>
+{% endmacro %}
+
+{# === MACRO POUR TABLEAU STANDARD === #}
+{% macro standardTable(headers, data, actions = true, striped = true, hover = true) %}
+    <div class="table-responsive">
+        <table class="table align-middle mb-0{% if striped %} table-striped{% endif %}{% if hover %} table-hover{% endif %}">
+            <thead class="table-dark">
+                <tr>
+                    {% for header in headers %}
+                        <th class="fw-bold">{{ header }}</th>
+                    {% endfor %}
+                    {% if actions %}
+                        <th class="text-center">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% block table_body %}{% endblock %}
+            </tbody>
+        </table>
+    </div>
+{% endmacro %}
+
+{# === MACRO POUR PAGINATION STANDARD === #}
+{% macro pagination(currentPage, totalPages, routeName, routeParams = {}) %}
+    {% if totalPages > 1 %}
+        <nav aria-label="Navigation des pages" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {# Page précédente #}
+                {% if currentPage > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(routeName, routeParams|merge({page: currentPage - 1})) }}">
+                            <i class="bi bi-chevron-left"></i> Précédent
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="bi bi-chevron-left"></i> Précédent
+                        </span>
+                    </li>
+                {% endif %}
+
+                {# Pages numériques #}
+                {% set startPage = max(1, currentPage - 2) %}
+                {% set endPage = min(totalPages, currentPage + 2) %}
+
+                {% if startPage > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(routeName, routeParams|merge({page: 1})) }}">1</a>
+                    </li>
+                    {% if startPage > 2 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endif %}
+
+                {% for page in startPage..endPage %}
+                    <li class="page-item {{ page == currentPage ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path(routeName, routeParams|merge({page: page})) }}">{{ page }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if endPage < totalPages %}
+                    {% if endPage < totalPages - 1 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(routeName, routeParams|merge({page: totalPages})) }}">{{ totalPages }}</a>
+                    </li>
+                {% endif %}
+
+                {# Page suivante #}
+                {% if currentPage < totalPages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path(routeName, routeParams|merge({page: currentPage + 1})) }}">
+                            Suivant <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Suivant <i class="bi bi-chevron-right"></i>
+                        </span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endmacro %}
+
+{# === MACRO POUR BOUTONS D'ACTION STANDARD === #}
+{% macro actionButtons(showPath, editPath, deletePath, entityId, entityName) %}
+    <div class="btn-group" role="group">
+        <a href="{{ showPath }}" class="btn btn-sm btn-outline-info" title="Voir les détails">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="{{ editPath }}" class="btn btn-sm btn-outline-warning" title="Modifier">
+            <i class="bi bi-pencil"></i>
+        </a>
+        <button type="button" 
+                class="btn btn-sm btn-outline-danger"
+                data-bs-toggle="modal" 
+                data-bs-target="#deleteModal{{ entityId }}"
+                title="Supprimer">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+
+    {# Modal de confirmation de suppression #}
+    <div class="modal fade" id="deleteModal{{ entityId }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirmer la suppression
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Attention !</strong> Cette action est irréversible.
+                    </div>
+                    <p>Êtes-vous sûr de vouloir supprimer <strong>{{ entityName }}</strong> ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Annuler
+                    </button>
+                    <form action="{{ deletePath }}" method="post" style="display:inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ entityId) }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Supprimer définitivement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{# === MACRO POUR BREADCRUMB STANDARD === #}
+{% macro breadcrumb(items) %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for item in items %}
+                {% if loop.last %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.label }}</li>
+                {% else %}
+                    <li class="breadcrumb-item">
+                        {% if item.path %}
+                            <a href="{{ path(item.path, item.params|default({})) }}">{{ item.label }}</a>
+                        {% else %}
+                            {{ item.label }}
+                        {% endif %}
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+{% endmacro %}
+
+{# === MACRO POUR BADGE DE STATUT === #}
+{% macro statusBadge(isActive, activeText = 'Actif', inactiveText = 'Inactif') %}
+    <span class="badge {{ isActive ? 'bg-success' : 'bg-danger' }}">
+        <i class="bi bi-{{ isActive ? 'check-circle' : 'x-circle' }} me-1"></i>
+        {{ isActive ? activeText : inactiveText }}
+    </span>
+{% endmacro %}
+
+{# === MACRO POUR CARTE DE STATISTIQUES === #}
+{% macro statsCard(title, value, icon, color = 'primary', description = null) %}
+    <div class="card h-100 border-{{ color }}">
+        <div class="card-body text-center">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h6 class="card-title text-{{ color }} mb-1">{{ title }}</h6>
+                    <h2 class="card-text text-dark fw-bold">{{ value }}</h2>
+                </div>
+                <div class="text-{{ color }} opacity-75">
+                    <i class="bi bi-{{ icon }} fs-1"></i>
+                </div>
+            </div>
+            {% if description %}
+                <small class="text-muted">{{ description }}</small>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{# === MACRO POUR ZONE VIDE (NO DATA) === #}
+{% macro emptyState(title, description, icon, actionText = null, actionPath = null) %}
+    <div class="text-center py-5">
+        <i class="bi bi-{{ icon }} fs-1 text-muted"></i>
+        <h4 class="text-muted mt-3">{{ title }}</h4>
+        <p class="text-muted">{{ description }}</p>
+        {% if actionText and actionPath %}
+            <a href="{{ actionPath }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>{{ actionText }}
+            </a>
+        {% endif %}
+    </div>
+{% endmacro %} 

@@ -1,59 +1,115 @@
+{% import 'macros/forms.html.twig' as forms %}
+
 {{ form_start(form) }}
-    <div class="mb-3">
-        {{ form_label(form.code) }}
-        {{ form_widget(form.code, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.code) }}
-    </div>
 
-    <div class="mb-3">
-        {{ form_label(form.genre) }}
-        {{ form_widget(form.genre, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.genre) }}
-    </div>
+{# Datalist pour les suggestions de genre d'école #}
+<datalist id="genre-suggestions">
+    <option value="École maternelle">
+    <option value="École primaire">
+    <option value="École élémentaire">
+    <option value="Collège">
+    <option value="Lycée général">
+    <option value="Lycée professionnel">
+    <option value="Lycée technologique">
+    <option value="Université">
+    <option value="École privée">
+    <option value="École publique">
+    <option value="Groupe scolaire">
+</datalist>
 
-    <div class="mb-3">
-        {{ form_label(form.nom) }}
-        {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.nom) }}
+{# === INFORMATIONS PRINCIPALES === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-building me-2"></i>Informations principales
+        </h4>
     </div>
-
-    <div class="mb-3">
-        {{ form_label(form.adresse) }}
-        {{ form_widget(form.adresse, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.adresse) }}
+    <div class="card-body bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                {{ forms.formRow(form.code, 'Code école', 'Code unique de 5 chiffres (ex: 25108)') }}
+            </div>
+            <div class="col-md-6">
+                {{ forms.formRow(form.genre, 'Genre', 'Type d\'établissement') }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {{ forms.formRow(form.nom, 'Nom de l\'école', 'Dénomination complète de l\'établissement') }}
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        {{ form_label(form.ville) }}
-        {{ form_widget(form.ville, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.ville) }}
+{# === ADRESSE === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-info text-white">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-geo-alt me-2"></i>Adresse
+        </h4>
     </div>
-
-    <div class="mb-3">
-        {{ form_label(form.codePostal) }}
-        {{ form_widget(form.codePostal, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.codePostal) }}
+    <div class="card-body bg-light">
+        <div class="row">
+            <div class="col-md-12">
+                {{ forms.formRow(form.adresse, 'Adresse', 'Rue, numéro et complément d\'adresse') }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                {{ forms.formRow(form.ville, 'Ville') }}
+            </div>
+            <div class="col-md-4">
+                {{ forms.formRow(form.codePostal, 'Code postal') }}
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        {{ form_label(form.telephone) }}
-        {{ form_widget(form.telephone, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.telephone) }}
+{# === CONTACT === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-telephone me-2"></i>Contact
+        </h4>
     </div>
-
-    <div class="mb-3">
-        {{ form_label(form.email) }}
-        {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
-        {{ form_errors(form.email) }}
+    <div class="card-body bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                {{ forms.formRow(form.telephone, 'Téléphone', 'Numéro de téléphone principal') }}
+            </div>
+            <div class="col-md-6">
+                {{ forms.formRow(form.email, 'Email', 'Adresse email de contact') }}
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="form-check mb-3">
-        {{ form_widget(form.active, {'attr': {'class': 'form-check-input'}}) }}
-        {{ form_label(form.active, null, {'label_attr': {'class': 'form-check-label'}}) }}
-        {{ form_errors(form.active) }}
+{# === STATUT === #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-toggle2-on me-2"></i>Statut
+        </h4>
     </div>
+    <div class="card-body bg-light">
+        <div class="form-check form-switch">
+            {{ form_widget(form.active, {'attr': {'class': 'form-check-input'}}) }}
+            {{ form_label(form.active, 'École active', {'label_attr': {'class': 'form-check-label'}}) }}
+            {{ form_errors(form.active) }}
+            <div class="form-text">Les écoles inactives n'apparaîtront plus dans les listes de sélection</div>
+        </div>
+    </div>
+</div>
 
-    <button class="btn btn-primary">
-        {{ button_label|default('Enregistrer') }}
+{# === ACTIONS === #}
+<div class="d-flex justify-content-between">
+    <a href="{{ app.request.headers.get('referer') ?: path('admin_ecole_index') }}" 
+       class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Annuler
+    </a>
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> {{ button_label|default('Enregistrer') }}
     </button>
+</div>
+
 {{ form_end(form) }}

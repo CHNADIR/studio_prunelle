@@ -38,17 +38,14 @@ class PriseDeVueController extends AbstractController
         
         $criteria = [];
         
-        // Filtrer par école si spécifié
         if ($request->query->has('ecole') && $request->query->get('ecole')) {
             $criteria['ecole'] = $request->query->get('ecole');
         }
         
-        // Si c'est un photographe (non admin), on filtre sur son id
         if (!$this->isGranted('ROLE_ADMIN')) {
             $criteria['photographe'] = $this->getUser();
         }
         
-        // Filtrer par date si spécifié
         if ($request->query->has('dateStart') && $request->query->get('dateStart')) {
             $criteria['dateDebut'] = new \DateTime($request->query->get('dateStart'));
         }
@@ -59,7 +56,6 @@ class PriseDeVueController extends AbstractController
         
         $data = $this->priseDeVueManager->findByCriteriaPaginated($criteria, $page, $limit);
         
-        // Récupérer la liste des écoles pour le filtre
         $ecoles = $ecoleRepository->findAllOrderedByName();
         
         return $this->render('admin/prise_de_vue/index.html.twig', [
@@ -68,7 +64,7 @@ class PriseDeVueController extends AbstractController
             'currentPage' => $page,
             'itemsPerPage' => $limit,
             'criteria' => $criteria,
-            'ecoles' => $ecoles // Ajout de la liste des écoles
+            'ecoles' => $ecoles
         ]);
     }
     
@@ -76,38 +72,31 @@ class PriseDeVueController extends AbstractController
     #[IsGranted('ROLE_PHOTOGRAPHE')]
     public function new(Request $request, EcoleRepository $ecoleRepository): Response
     {
-        // Si un ID d'école est fourni, charger l'école
         $ecole = null;
         if ($request->query->has('ecole')) {
             $ecoleId = $request->query->get('ecole');
             $ecole = $ecoleRepository->find($ecoleId);
         }
         
-        // Créer une nouvelle instance vide
         $priseDeVue = new PriseDeVue();
-        $priseDeVue->setDate(new \DateTime());
+        $priseDeVue->setDatePdv(new \DateTime());
         
-        // Si une école est fournie, l'associer
         if ($ecole) {
             $priseDeVue->setEcole($ecole);
         }
         
-        // Si c'est un photographe, pré-sélectionner l'utilisateur courant
         if (!$this->isGranted('ROLE_ADMIN')) {
             $priseDeVue->setPhotographe($this->getUser());
         }
         
-        // Créer le formulaire
         $form = $this->createForm(PriseDeVueType::class, $priseDeVue);
         $form->handleRequest($request);
         
         if ($form->isSubmitted() && $form->isValid()) {
-            // Assurer que si c'est un photographe, il ne peut pas modifier le photographe
             if (!$this->isGranted('ROLE_ADMIN')) {
                 $priseDeVue->setPhotographe($this->getUser());
             }
             
-            // Persister l'entité
             $result = $this->priseDeVueManager->save($priseDeVue);
             
             if ($result['success']) {
@@ -130,19 +119,14 @@ class PriseDeVueController extends AbstractController
     #[IsGranted(PriseDeVueVoter::PRISEDEVUE_VIEW, subject: 'priseDeVue')]
     public function show(PriseDeVue $priseDeVue): Response
     {
-        // Calculer les prix totaux
         $prixTotaux = $this->priseDeVueManager->calculerPrixTotal($priseDeVue);
         
-        // Vérifier si l'utilisateur peut commenter
         $canComment = $this->isGranted(PriseDeVueVoter::PRISEDEVUE_COMMENT, $priseDeVue);
         
-        // Vérifier si l'utilisateur peut modifier entièrement
         $canEdit = $this->isGranted(PriseDeVueVoter::PRISEDEVUE_EDIT, $priseDeVue);
         
-        // Vérifier si l'utilisateur peut supprimer
         $canDelete = $this->isGranted(PriseDeVueVoter::PRISEDEVUE_DELETE, $priseDeVue);
         
-        // Rendu de la vue
         return $this->render('admin/prise_de_vue/show.html.twig', [
             'prise_de_vue' => $priseDeVue,
             'prix_totaux' => $prixTotaux,
@@ -157,13 +141,10 @@ class PriseDeVueController extends AbstractController
     #[IsGranted(PriseDeVueVoter::PRISEDEVUE_COMMENT, subject: 'priseDeVue')]
     public function updateComment(Request $request, PriseDeVue $priseDeVue): Response
     {
-        // Récupérer le commentaire depuis la requête
         $commentaire = $request->request->get('commentaire');
         
-        // Mettre à jour le commentaire via le service
         $result = $this->priseDeVueManager->updateComment($priseDeVue, $commentaire);
         
-        // Si c'est une requête AJAX
         if ($request->isXmlHttpRequest()) {
             if ($result['success']) {
                 return $this->json([
@@ -179,7 +160,6 @@ class PriseDeVueController extends AbstractController
             ], 400);
         }
         
-        // Si ce n'est pas une requête AJAX
         if ($result['success']) {
             $this->addFlash('success', 'Commentaire mis à jour avec succès');
         } else {
@@ -193,10 +173,8 @@ class PriseDeVueController extends AbstractController
     #[IsGranted(PriseDeVueVoter::PRISEDEVUE_EDIT, subject: 'priseDeVue')]
     public function edit(Request $request, PriseDeVue $priseDeVue): Response
     {
-        // Créer le formulaire
         $form = $this->createForm(PriseDeVueType::class, $priseDeVue);
         
-        // Si c'est un photographe, il ne peut modifier que le commentaire
         if (!$this->isGranted('ROLE_ADMIN')) {
             $form = $this->createFormBuilder($priseDeVue)
                 ->add('commentaire', TextareaType::class, [
@@ -213,7 +191,6 @@ class PriseDeVueController extends AbstractController
         $form->handleRequest($request);
         
         if ($form->isSubmitted() && $form->isValid()) {
-            // Persister les modifications
             $result = $this->priseDeVueManager->save($priseDeVue);
             
             if ($result['success']) {
@@ -254,5 +231,11 @@ class PriseDeVueController extends AbstractController
         $this->addFlash('success', 'La prise de vue a été clonée avec succès.');
         
         return $this->redirectToRoute('admin_prise_de_vue_edit', ['id' => $clonedPriseDeVue->getId()]);
+    }
+    
+    #[Route('/test-interface', name: 'admin_prise_de_vue_test_interface', methods: ['GET'])]
+    public function testInterface(): Response
+    {
+        return $this->render('admin/prise_de_vue/test_interface.html.twig');
     }
 }

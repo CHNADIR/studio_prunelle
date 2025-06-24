@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel utilisateur - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">👤 Créer un nouvel utilisateur</h1>
+        <a href="{{ path('admin_user_index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    {% include 'admin/_components/flash_messages.html.twig' %}
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-person-plus me-2"></i>Informations du nouvel utilisateur
+            </h5>
+        </div>
+        <div class="card-body">
+            {{ form_start(form, {attr: {class: 'needs-validation', novalidate: true}}) }}
+            
+            <!-- Informations personnelles -->
+            <div class="mb-4">
+                <h6 class="text-primary border-bottom pb-2">
+                    <i class="bi bi-person-badge me-1"></i>Informations personnelles
+                </h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form_label(form.nom, 'Nom complet', {label_attr: {class: 'form-label required'}}) }}
+                        {{ form_widget(form.nom, {attr: {class: 'form-control', placeholder: 'Ex: Jean Dupont'}}) }}
+                        {{ form_errors(form.nom) }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form_label(form.username, 'Nom d\'utilisateur', {label_attr: {class: 'form-label required'}}) }}
+                        {{ form_widget(form.username, {attr: {class: 'form-control', placeholder: 'Ex: jdupont'}}) }}
+                        {{ form_errors(form.username) }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        {{ form_label(form.email, 'Adresse email', {label_attr: {class: 'form-label required'}}) }}
+                        {{ form_widget(form.email, {attr: {class: 'form-control', placeholder: 'utilisateur@studio.fr'}}) }}
+                        {{ form_errors(form.email) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sécurité et accès -->
+            <div class="mb-4">
+                <h6 class="text-success border-bottom pb-2">
+                    <i class="bi bi-shield-lock me-1"></i>Sécurité et accès
+                </h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form_label(form.plainPassword, 'Mot de passe', {label_attr: {class: 'form-label required'}}) }}
+                        <div class="input-group">
+                            {{ form_widget(form.plainPassword, {attr: {class: 'form-control', placeholder: 'Mot de passe sécurisé'}}) }}
+                            <button type="button" class="btn btn-outline-secondary" id="generatePassword" title="Générer un mot de passe">
+                                <i class="bi bi-key"></i>
+                            </button>
+                        </div>
+                        {{ form_errors(form.plainPassword) }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form_label(form.role, 'Rôle utilisateur', {label_attr: {class: 'form-label required'}}) }}
+                        {{ form_widget(form.role, {attr: {class: 'form-select'}}) }}
+                        {{ form_errors(form.role) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons d'action -->
+            <div class="d-flex justify-content-between">
+                <a href="{{ path('admin_user_index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Créer l'utilisateur
+                </button>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation côté client
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+
+    // Génération de mot de passe sécurisé
+    const generateBtn = document.getElementById('generatePassword');
+    const passwordField = document.querySelector('input[type="password"]');
+    
+    if (generateBtn && passwordField) {
+        generateBtn.addEventListener('click', function() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let password = '';
+            for (let i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            passwordField.value = password;
+            
+            // Animation de feedback
+            generateBtn.innerHTML = '<i class="bi bi-check-circle"></i>';
+            generateBtn.classList.add('btn-success');
+            generateBtn.classList.remove('btn-outline-secondary');
+            
+            setTimeout(() => {
+                generateBtn.innerHTML = '<i class="bi bi-key"></i>';
+                generateBtn.classList.remove('btn-success');
+                generateBtn.classList.add('btn-outline-secondary');
+            }, 2000);
+        });
+    }
+
+    // Préselection du rôle Photographe par défaut
+    const roleSelect = document.querySelector('select[name="user[role]"]');
+    if (roleSelect && !roleSelect.value) {
+        roleSelect.value = 'ROLE_PHOTOGRAPHE';
+    }
+});
+</script>
+{% endblock %} 

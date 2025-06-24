@@ -2,24 +2,13 @@
 
 namespace App\Entity;
 
-use App\Enum\PlancheUsage;
 use App\Repository\PlancheRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: PlancheRepository::class)]
-#[ORM\Table(
-    name: 'planche',
-    uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_planche_nom_type', columns: ['nom', 'type'])],
-    indexes: [
-        new ORM\Index(name: 'idx_planche_nom', columns: ['nom']),
-        new ORM\Index(name: 'idx_planche_type', columns: ['type'])
-    ]
-)]
+#[UniqueEntity(fields: ['libelle'], message: 'Cette planche existe déjà')]
 #[ORM\HasLifecycleCallbacks]
 class Planche
 {
@@ -28,71 +17,46 @@ class Planche
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
-    private string $nom;
-
-    #[ORM\Column(type: 'string', enumType: PlancheUsage::class)]
-    private PlancheUsage $type;
+    /**
+     * Libellé de la planche selon cahier des charges
+     * Exemples : pochette en plastique, cartonnage, album, albums nvx arrivants
+     */
+    #[ORM\Column(length: 200, unique: true)]
+    #[Assert\NotBlank(message: 'Le libellé est obligatoire')]
+    #[Assert\Length(
+        max: 200,
+        maxMessage: 'Le libellé ne peut pas dépasser {{ limit }} caractères'
+    )]
+    private ?string $libelle = null;
 
     /**
-     * SEULE  = planche à l'unité  
-     * INCLUSE = vendue dans un pack
+     * Description détaillée de la planche
      */
-    #[ORM\Column(length: 7)]
-    #[Assert\Choice(choices: ['SEULE', 'INCLUSE'])]
-    private string $usage = 'SEULE';
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
 
-    #[ORM\Column(type: Types::JSON)]
-    #[Assert\NotBlank]
-    #[Assert\Json]
-    private array $formats = [];
-
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Assert\PositiveOrZero]
-    private string $prixEcole;
-
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Assert\Positive]
-    private string $prixParents;
-
-    #[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private \DateTimeImmutable $createdAt;
-
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $updatedAt = null;
-
+    /**
+     * Planche active ou inactive
+     */
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
-    private bool $actif = true;
+    private bool $active = true;
 
-    #[ORM\ManyToMany(targetEntity: PriseDeVue::class, mappedBy: 'planchesIndividuelles')]
-    private Collection $prisesDeVue;
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $createdAt = null;
 
-    #[Assert\Callback]
-    public function validatePrix(ExecutionContextInterface $context): void
-    {
-        if (bccomp($this->prixEcole, $this->prixParents, 2) === 1) {
-            $context->buildViolation('Le prix école doit être inférieur ou égal au prix parents.')
-                ->atPath('prixEcole')
-                ->addViolation();
-        }
-    }
-
-    #[ORM\PrePersist]
-    public function onCreate(): void
-    {
-        $this->createdAt = new \DateTimeImmutable();
-    }
-
-    #[ORM\PreUpdate]
-    public function onUpdate(): void
-    {
-        $this->updatedAt = new \DateTimeImmutable();
-    }
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     public function __construct()
     {
-        $this->prisesDeVue = new ArrayCollection();
+        $this->active = true;
+        $this->createdAt = new \DateTime();
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 
     public function getId(): ?int
@@ -100,110 +64,51 @@ class Planche
         return $this->id;
     }
 
-    public function getNom(): ?string
+    public function getLibelle(): ?string
     {
-        return $this->nom;
+        return $this->libelle;
     }
 
-    public function setNom(?string $nom): self
+    public function setLibelle(?string $libelle): self
     {
-        $this->nom = $nom;
+        $this->libelle = $libelle;
         return $this;
     }
 
-    public function getType(): ?PlancheUsage
+    public function getDescription(): ?string
     {
-        return $this->type;
+        return $this->description;
     }
 
-    public function setType(?PlancheUsage $type): self
+    public function setDescription(?string $description): self
     {
-        $this->type = $type;
+        $this->description = $description;
         return $this;
     }
 
-    public function getFormats(): array
+    public function isActive(): bool
     {
-        return $this->formats;
+        return $this->active;
     }
 
-    public function setFormats(array $formats): self
+    public function setActive(bool $active): self
     {
-        $this->formats = $formats;
+        $this->active = $active;
         return $this;
     }
 
-    public function getPrixEcole(): ?string
+    public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->prixEcole;
+        return $this->createdAt;
     }
 
-    public function setPrixEcole(?string $prixEcole): self
+    public function getUpdatedAt(): ?\DateTimeInterface
     {
-        $this->prixEcole = $prixEcole;
-        return $this;
-    }
-
-    public function getPrixParents(): ?string
-    {
-        return $this->prixParents;
-    }
-
-    public function setPrixParents(?string $prixParents): self
-    {
-        $this->prixParents = $prixParents;
-        return $this;
-    }
-    
-    public function isActif(): bool
-    {
-        return $this->actif;
-    }
-
-    public function setActif(bool $actif): self
-    {
-        $this->actif = $actif;
-        return $this;
-    }
-
-    public function getUsage(): string
-    {
-        return $this->usage;
-    }
-
-    public function setUsage(string $usage): self
-    {
-        $this->usage = $usage;
-        return $this;
-    }
-    
-    /**
-     * @return Collection<int, PriseDeVue>
-     */
-    public function getPrisesDeVue(): Collection
-    {
-        return $this->prisesDeVue;
-    }
-
-    public function addPriseDeVue(PriseDeVue $pdv): self
-    {
-        if (!$this->prisesDeVue->contains($pdv)) {
-            $this->prisesDeVue->add($pdv);
-            $pdv->addPlancheIndividuelle($this); // synchro côté owning
-        }
-        return $this;
-    }
-
-    public function removePriseDeVue(PriseDeVue $pdv): self
-    {
-        if ($this->prisesDeVue->removeElement($pdv)) {
-            $pdv->removePlancheIndividuelle($this);
-        }
-        return $this;
+        return $this->updatedAt;
     }
 
     public function __toString(): string
     {
-        return $this->nom ?? '';
+        return $this->libelle ?? 'Planche';
     }
 }

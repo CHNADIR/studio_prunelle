@@ -11,6 +11,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Service gérant les opérations sur les prises de vue
+ * Pattern appliqué: Service Layer Pattern (patterns.md)
+ * Responsabilité: Logique métier centralisée pour PriseDeVue
  */
 class PriseDeVueManager
 {
@@ -36,8 +38,13 @@ class PriseDeVueManager
      */
     public function findByCriteriaPaginated(array $criteria, int $page = 1, int $limit = 10): array
     {
-        // Utiliser la méthode search() au lieu de findByCriteriaPaginated()
-        return $this->priseDeVueRepository->search($criteria, $page, $limit);
+        // Si aucun critère spécifique, utiliser findAllWithPagination
+        if (empty($criteria)) {
+            return $this->priseDeVueRepository->findAllWithPagination($page, $limit, ['typePrise', 'theme', 'pochettes']);
+        }
+        
+        // Utiliser la méthode optimisée avec pagination dans le repository
+        return $this->priseDeVueRepository->findByCriteriaWithPagination($criteria, $page, $limit);
     }
 
     /**
@@ -53,74 +60,48 @@ class PriseDeVueManager
      */
     public function create(PriseDeVue $priseDeVue, User $createdBy): PriseDeVue
     {
+        // Assigner le photographe si non défini
         if (!$priseDeVue->getPhotographe()) {
             $priseDeVue->setPhotographe($createdBy);
         }
         
-        $this->entityManager->persist($priseDeVue);
-        $this->entityManager->flush();
+        // Valider et sauvegarder
+        $result = $this->save($priseDeVue);
         
-        return $priseDeVue;
-    }
-
-    /**
-     * Met à jour une prise de vue existante
-     */
-    public function update(PriseDeVue $priseDeVue): PriseDeVue
-    {
-        $this->entityManager->flush();
-        
-        return $priseDeVue;
-    }
-
-    /**
-     * Met à jour uniquement le commentaire d'une prise de vue
-     */
-    public function updateComment(PriseDeVue $priseDeVue, string $commentaire): array
-    {
-        $priseDeVue->setCommentaire($commentaire);
-        return $this->save($priseDeVue);
-    }
-
-    /**
-     * Supprime une prise de vue
-     */
-    public function delete(PriseDeVue $priseDeVue): bool
-    {
-        try {
-            $this->entityManager->remove($priseDeVue);
-            $this->entityManager->flush();
-            return true;
-        } catch (\Exception $e) {
-            return false;
+        if (!$result['success']) {
+            throw new \InvalidArgumentException('Impossible de créer la prise de vue: ' . implode(', ', $result['errors']));
         }
+        
+        return $result['entity'];
     }
 
     /**
-     * Clone une prise de vue existante
+     * Duplique une prise de vue existante
      */
-    public function clonePriseDeVue(PriseDeVue $original): PriseDeVue
+    public function duplicatePriseDeVue(PriseDeVue $original): PriseDeVue
     {
         $clone = new PriseDeVue();
+        
+        // Copier les propriétés de base
         $clone->setEcole($original->getEcole());
         $clone->setPhotographe($original->getPhotographe());
-        $clone->setDate(new \DateTime());
+        $clone->setDatePdv(new \DateTime()); // Nouvelle date
         $clone->setNbClasses($original->getNbClasses());
         $clone->setNbEleves($original->getNbEleves());
         $clone->setPrixEcole($original->getPrixEcole());
-        $clone->setPrixParents($original->getPrixParents());
+        $clone->setPrixParent($original->getPrixParent());
+        
+        // Copier les références (sélections uniques)
         $clone->setTypePrise($original->getTypePrise());
         $clone->setTypeVente($original->getTypeVente());
         $clone->setTheme($original->getTheme());
+        $clone->setPochetteIndiv($original->getPochetteIndiv());
+        $clone->setPochetteFratrie($original->getPochetteFratrie());
+        $clone->setPlanche($original->getPlanche());
         
-        // Cloner les relations avec les planches
-        foreach ($original->getPlanchesIndividuelles() as $planche) {
-            $clone->addPlanchesIndividuelle($planche);
-        }
-        
-        foreach ($original->getPlanchesFratries() as $planche) {
-            $clone->addPlanchesFratrie($planche);
-        }
+        // Commentaire personnalisé pour la copie
+        $commentaireOriginal = $original->getCommentaire() ?: '';
+        $clone->setCommentaire('Copie de la prise de vue du ' . $original->getDatePdv()?->format('d/m/Y') . '. ' . $commentaireOriginal);
         
         // Persister le clone
         $this->entityManager->persist($clone);
@@ -162,37 +143,108 @@ class PriseDeVueManager
     }
 
     /**
-     * Calcule les prix totaux d'une prise de vue
+     * Supprime une prise de vue
+     */
+    public function delete(PriseDeVue $priseDeVue): array
+    {
+        try {
+            $this->entityManager->remove($priseDeVue);
+            $this->entityManager->flush();
+            
+            return [
+                'success' => true,
+                'message' => 'Prise de vue supprimée avec succès'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Calcule le prix total d'une prise de vue
      */
     public function calculerPrixTotal(PriseDeVue $priseDeVue): array
     {
-        $prixTotalEcole = (float)($priseDeVue->getPrixEcole() ?? 0);
-        $prixTotalParents = (float)($priseDeVue->getPrixParents() ?? 0);
-        
-        // Ajouter les prix des planches individuelles
-        foreach ($priseDeVue->getPlanchesIndividuelles() as $planche) {
-            $prixTotalEcole += (float)$planche->getPrixEcole();
-            $prixTotalParents += (float)$planche->getPrixParents();
-        }
-        
-        // Ajouter les prix des planches fratries
-        foreach ($priseDeVue->getPlanchesFratries() as $planche) {
-            $prixTotalEcole += (float)$planche->getPrixEcole();
-            $prixTotalParents += (float)$planche->getPrixParents();
-        }
+        $prixEcole = $priseDeVue->getPrixEcole() ? (float)$priseDeVue->getPrixEcole() : 0.0;
+        $prixParent = $priseDeVue->getPrixParent() ? (float)$priseDeVue->getPrixParent() : 0.0;
+        $total = $prixEcole + $prixParent;
         
         return [
-            'prixTotalEcole' => $prixTotalEcole,
-            'prixTotalParents' => $prixTotalParents,
-            'prixTotal' => $prixTotalEcole + $prixTotalParents
+            'prix_ecole' => $prixEcole,
+            'prix_parent' => $prixParent,
+            'total' => $total,
+            'total_formate' => number_format($total, 2, ',', ' ') . ' €'
         ];
     }
 
     /**
-     * Alias pour la méthode calculerPrixTotal (compatibilité)
+     * Génère un rapport de synthèse pour une prise de vue
      */
-    public function calculateTotalPrices(PriseDeVue $priseDeVue): array
+    public function genererRapportSynthese(PriseDeVue $priseDeVue): array
     {
-        return $this->calculerPrixTotal($priseDeVue);
+        $synthese = [
+            'id' => $priseDeVue->getId(),
+            'ecole' => [
+                'nom' => $priseDeVue->getEcole()?->getNom(),
+                'code' => $priseDeVue->getEcole()?->getCode(),
+                'ville' => $priseDeVue->getEcole()?->getVille()
+            ],
+            'photographe' => [
+                'nom' => $priseDeVue->getPhotographe()?->getNom(),
+                'email' => $priseDeVue->getPhotographe()?->getEmail()
+            ],
+            'details' => [
+                'date' => $priseDeVue->getDatePdv()?->format('d/m/Y'),
+                'nb_eleves' => $priseDeVue->getNbEleves(),
+                'nb_classes' => $priseDeVue->getNbClasses(),
+                'type_prise' => $priseDeVue->getTypePrise()?->getLibelle(),
+                'theme' => $priseDeVue->getTheme()?->getLibelle(),
+                'type_vente' => $priseDeVue->getTypeVente()?->getLibelle()
+            ],
+            'materiels' => [
+                'planche' => $priseDeVue->getPlanche()?->getLibelle(),
+                'pochette_indiv' => $priseDeVue->getPochetteIndiv()?->getLibelle(),
+                'pochette_fratrie' => $priseDeVue->getPochetteFratrie()?->getLibelle()
+            ],
+            'tarification' => $this->calculerPrixTotal($priseDeVue),
+            'commentaire' => $priseDeVue->getCommentaire(),
+            'metadonnees' => [
+                'created_at' => $priseDeVue->getCreatedAt()?->format('d/m/Y H:i'),
+                'updated_at' => $priseDeVue->getUpdatedAt()?->format('d/m/Y H:i'),
+                'is_complete' => $priseDeVue->isComplete()
+            ]
+        ];
+        
+        return $synthese;
+    }
+
+    /**
+     * Recherche les prises de vue avec des critères flexibles
+     */
+    public function searchPrisesDeVue(string $query, array $filters = [], int $limit = 20): array
+    {
+        return $this->priseDeVueRepository->searchByQuery($query, $filters, $limit);
+    }
+
+    /**
+     * Calcule les statistiques globales des prises de vue
+     */
+    public function calculateStats(?User $photographe = null): array
+    {
+        $filters = [];
+        if ($photographe) {
+            $filters['photographe'] = $photographe;
+        }
+        
+        return [
+            'total_prises_de_vue' => $this->priseDeVueRepository->countByCriteria($filters),
+            'total_eleves' => $this->priseDeVueRepository->sumElevesByCriteria($filters),
+            'ca_total' => $this->priseDeVueRepository->sumChiffreAffaireByCriteria($filters),
+            'moyenne_eleves_par_prise' => $this->priseDeVueRepository->avgElevesByCriteria($filters),
+            'prises_ce_mois' => $this->priseDeVueRepository->countByPeriod(new \DateTime('first day of this month'), new \DateTime('last day of this month'), $filters)
+        ];
     }
 }

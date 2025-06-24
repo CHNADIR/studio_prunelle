@@ -1,13 +1,13 @@
 {% form_theme form 'bootstrap_5_horizontal_layout.html.twig' %}
 
 {{ form_start(form, {attr:{class:'needs-validation'}, novalidate:true}) }}
-    {{ form_row(form.commentaire, {
+  {{ form_row(form.commentaire, {
         help: 'Ajoutez vos commentaires sur cette prise de vue.',
         attr: {rows:4, placeholder:'Commentaires du photographe...'}
-    }) }}
-    <div class="d-flex justify-content-end mt-3">
+  }) }}
+  <div class="d-flex justify-content-end mt-3">
         <button class="btn btn-primary" type="submit">
             <i class="bi bi-save me-1"></i>Enregistrer le commentaire
-        </button>
-    </div>
+    </button>
+  </div>
 {{ form_end(form) }}

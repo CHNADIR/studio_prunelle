@@ -1,14 +1,20 @@
 {% extends 'base.html.twig' %}
-{% import 'macros/form.html.twig' as forms %}
+{% import 'macros/forms.html.twig' as forms %}
 {% import 'macros/messages.html.twig' as messages %}
 
 {% block title %}Nouvelle prise de vue - Studio Prunelle{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
+    {{ forms.breadcrumb([
+        {'label': 'Accueil', 'path': 'home'},
+        {'label': 'Prises de vue', 'path': 'admin_prise_de_vue_index'},
+        {'label': 'Nouvelle prise de vue'}
+    ]) }}
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Créer une nouvelle prise de vue</h1>
-        <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-secondary">
+        <h1><i class="bi bi-camera me-2"></i>Créer une nouvelle prise de vue</h1>
+        <a href="{{ path('admin_prise_de_vue_index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Retour à la liste
         </a>
     </div>
@@ -16,94 +22,6 @@
     {{ messages.flash_messages() }}
     {{ messages.form_errors_summary(form) }}
 
-    <div class="card">
-        <div class="card-body">
-            {{ form_start(form) }}
-                {# Groupe : Informations générales #}
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">Informations générales</h4>
-                    </div>
-                    <div class="card-body">
-                        {{ forms.input_row(form.date, 'Date de la prise de vue', null, null, true) }}
-                        {{ forms.select_row(form.ecole, 'École', 'Sélectionnez une école', null, true) }}
-                        
-                        {% if form.photographe is defined %}
-                            {{ forms.select_row(form.photographe, 'Photographe', 'Sélectionnez un photographe', null, true) }}
-                        {% endif %}
-                    </div>
-                </div>
-
-                {# Groupe : Nombre d'élèves et classes #}
-                <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h4 class="mb-0">Élèves et classes</h4>
-                    </div>
-                    <div class="card-body">
-                        {{ forms.input_row(form.nbEleves, 'Nombre d\'élèves', null, 'Nombre total d\'élèves concernés', true) }}
-                        {{ forms.input_row(form.nbClasses, 'Nombre de classes', null, 'Nombre de classes concernées', false) }}
-                        {{ forms.input_row(form.classes, 'Description des classes', 'Ex: CP, CE1, CE2', 'Description des classes concernées', false) }}
-                    </div>
-                </div>
-
-                {# Groupe : Type de prise et options #}
-                <div class="card mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h4 class="mb-0">Type de prise et options</h4>
-                    </div>
-                    <div class="card-body">
-                        {{ forms.select_row(form.typePrise, 'Type de prise', 'Sélectionnez un type de prise', null, false, path('admin_type_prise_modal_new')) }}
-                        {{ forms.select_row(form.typeVente, 'Type de vente', 'Sélectionnez un type de vente', null, false, path('admin_type_vente_modal_new')) }}
-                        {{ forms.select_row(form.theme, 'Thème', 'Sélectionnez un thème', null, false, path('admin_theme_modal_new')) }}
-                    </div>
-                </div>
-
-                {# Groupe : Planches #}
-                {% if form.planchesIndividuelles is defined and form.planchesFratries is defined %}
-                <div class="card mb-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h4 class="mb-0">Planches</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Planches individuelles</label>
-                            {{ form_widget(form.planchesIndividuelles) }}
-                            {{ form_errors(form.planchesIndividuelles) }}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Planches fratries</label>
-                            {{ form_widget(form.planchesFratries) }}
-                            {{ form_errors(form.planchesFratries) }}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                {# Groupe : Prix #}
-                <div class="card mb-4">
-                    <div class="card-header bg-danger text-white">
-                        <h4 class="mb-0">Prix</h4>
-                    </div>
-                    <div class="card-body">
-                        {{ forms.input_row(form.prixEcole, 'Prix école (€)', null, 'Prix facturé à l\'école', false) }}
-                        {{ forms.input_row(form.prixParents, 'Prix parents (€)', null, 'Prix facturé aux parents', false) }}
-                    </div>
-                </div>
-
-                {# Groupe : Commentaires #}
-                <div class="card mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h4 class="mb-0">Commentaires</h4>
-                    </div>
-                    <div class="card-body">
-                        {{ forms.textarea_row(form.commentaire, 'Commentaires', 4, 'Informations complémentaires sur la prise de vue', false) }}
-                    </div>
-                </div>
-
-                {{ forms.form_buttons(path('admin_prise_de_vue_index'), 'Enregistrer', 'Annuler') }}
-            {{ form_end(form) }}
-        </div>
-    </div>
+    {{ include('admin/prise_de_vue/_form.html.twig') }}
 </div>
 {% endblock %}

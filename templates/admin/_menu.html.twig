@@ -1,5 +1,60 @@
+<!-- Gestion des écoles -->
 <li>
-    <a class="nav-link" href="{{ path('admin_planche_index') }}">
-        <i class="fa fa-images"></i> Planches
+    <a class="nav-link" href="{{ path('admin_ecole_index') }}">
+        <i class="bi bi-building"></i> Écoles
+    </a>
+</li>
+
+<!-- Gestion des prises de vue -->
+<li>
+    <a class="nav-link" href="{{ path('admin_prise_de_vue_index') }}">
+        <i class="bi bi-camera"></i> Prises de Vue
+    </a>
+</li>
+
+<!-- Référentiels dynamiques (selon patterns.md) -->
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="referentielsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-gear"></i> Référentiels
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="referentielsDropdown">
+        <li>
+            <a class="dropdown-item" href="{{ path('admin_planche_index') }}">
+                <i class="bi bi-images"></i> Planches
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{{ path('admin_theme_index') }}">
+                <i class="bi bi-palette"></i> Thèmes
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{{ path('admin_type_prise_index') }}">
+                <i class="bi bi-camera-reels"></i> Types de Prise
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{{ path('admin_type_vente_index') }}">
+                <i class="bi bi-cart"></i> Types de Vente
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item" href="{{ path('admin_pochette_indiv_index') }}">
+                <i class="bi bi-folder"></i> Pochettes Individuelles
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{{ path('admin_pochette_fratrie_index') }}">
+                <i class="bi bi-folders"></i> Pochettes Fratries
+            </a>
+        </li>
+    </ul>
+</li>
+
+<!-- Gestion des utilisateurs (SuperAdmin uniquement) -->
+<li>
+    <a class="nav-link" href="{{ path('admin_user_index') }}">
+        <i class="bi bi-people"></i> Utilisateurs
     </a>
 </li>

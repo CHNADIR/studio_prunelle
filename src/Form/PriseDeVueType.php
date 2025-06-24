@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Ecole;
 use App\Entity\Planche;
+use App\Entity\PochetteIndiv;
+use App\Entity\PochetteFratrie;
 use App\Entity\PriseDeVue;
 use App\Entity\Theme;
 use App\Entity\TypePrise;
@@ -11,6 +13,8 @@ use App\Entity\TypeVente;
 use App\Entity\User;
 use App\Repository\EcoleRepository;
 use App\Repository\PlancheRepository;
+use App\Repository\PochetteIndivRepository;
+use App\Repository\PochetteFratrieRepository;
 use App\Repository\ThemeRepository;
 use App\Repository\TypePriseRepository;
 use App\Repository\TypeVenteRepository;
@@ -21,58 +25,52 @@ use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Security;
-use App\Enum\PlancheUsage;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * FormType pour PriseDeVue avec sélections uniques
+ * Pattern appliqué: FormType Pattern (patterns.md)
+ * Responsabilité: Formulaire optimisé pour sélection unique des entités référentielles
+ */
 class PriseDeVueType extends AbstractType
 {
-    private Security $security;
-    private PlancheRepository $plancheRepository;
-    private TypePriseRepository $typePriseRepository;
-    private TypeVenteRepository $typeVenteRepository;
-    private ThemeRepository $themeRepository;
-    private EcoleRepository $ecoleRepository;
-    private UserRepository $userRepository;
-    private UrlGeneratorInterface $urlGenerator;
-    
     public function __construct(
-        Security $security,
-        PlancheRepository $plancheRepository,
-        TypePriseRepository $typePriseRepository,
-        TypeVenteRepository $typeVenteRepository,
-        ThemeRepository $themeRepository,
-        EcoleRepository $ecoleRepository,
-        UserRepository $userRepository,
-        UrlGeneratorInterface $urlGenerator
-    ) {
-        $this->security            = $security;
-        $this->plancheRepository   = $plancheRepository;
-        $this->typePriseRepository = $typePriseRepository;
-        $this->typeVenteRepository = $typeVenteRepository;
-        $this->themeRepository     = $themeRepository;
-        $this->ecoleRepository     = $ecoleRepository;
-        $this->userRepository      = $userRepository;
-        $this->urlGenerator        = $urlGenerator;
-    }
+        private Security $security,
+        private PlancheRepository $plancheRepository,
+        private TypePriseRepository $typePriseRepository,
+        private TypeVenteRepository $typeVenteRepository,
+        private ThemeRepository $themeRepository,
+        private EcoleRepository $ecoleRepository,
+        private UserRepository $userRepository,
+        private PochetteIndivRepository $pochetteIndivRepository,
+        private PochetteFratrieRepository $pochetteFratrieRepository
+    ) {}
     
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        // Informations générales
+        // === INFORMATIONS GÉNÉRALES ===
         $builder
-            ->add('date', DateType::class, [
+            ->add('datePdv', DateType::class, [
                 'widget' => 'single_text',
                 'label' => 'Date de la prise de vue',
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
-                'row_attr' => ['class' => 'form-group'],
+                'attr' => [
+                    'class' => 'form-control',
+                    'max' => (new \DateTime('+1 year'))->format('Y-m-d')
+                ],
+                'constraints' => [
+                    new Assert\NotNull(message: 'La date de prise de vue est obligatoire')
+                ],
+                'help' => 'Date de réalisation de la séance photo'
             ])
             ->add('ecole', EntityType::class, [
                 'class' => Ecole::class,
-                'choice_label' => 'nom',
+                'choice_label' => function (Ecole $ecole) {
+                    return sprintf('%s - %s (%s)', $ecole->getCode(), $ecole->getNom(), $ecole->getVille());
+                },
                 'query_builder' => function () {
                     return $this->ecoleRepository->createQueryBuilder('e')
                         ->where('e.active = :active')
@@ -82,18 +80,25 @@ class PriseDeVueType extends AbstractType
                 'label' => 'École',
                 'placeholder' => 'Sélectionnez une école',
                 'required' => true,
-                'attr' => ['class' => 'form-select'],
-                'row_attr' => ['class' => 'form-group'],
+                'attr' => [
+                    'class' => 'form-select',
+                    'data-controller' => 'select-autocomplete'
+                ],
+                'help' => 'École où a lieu la prise de vue'
             ]);
             
-        // Afficher le champ photographe uniquement pour les admins
+        // Photographe (seulement pour les admins)
         if ($this->security->isGranted('ROLE_ADMIN')) {
             $builder->add('photographe', EntityType::class, [
                 'class' => User::class,
-                'choice_label' => 'nom',
+                'choice_label' => function (User $user) {
+                    return sprintf('%s (%s)', $user->getNom(), $user->getUserIdentifier());
+                },
                 'query_builder' => function () {
                     return $this->userRepository->createQueryBuilder('u')
-                        ->where('u.roles LIKE :role')
+                        ->where('u.actif = :actif')
+                        ->andWhere('u.roles LIKE :role')
+                        ->setParameter('actif', true)
                         ->setParameter('role', '%ROLE_PHOTOGRAPHE%')
                         ->orderBy('u.nom', 'ASC');
                 },
@@ -101,154 +106,190 @@ class PriseDeVueType extends AbstractType
                 'placeholder' => 'Sélectionnez un photographe',
                 'required' => true,
                 'attr' => ['class' => 'form-select'],
-                'row_attr' => ['class' => 'form-group'],
+                'help' => 'Photographe responsable de cette prise de vue'
             ]);
         }
-        
-        // Nombre d'élèves et classes
+
+        // === ÉLÈVES ET CLASSES ===
         $builder
             ->add('nbEleves', IntegerType::class, [
                 'label' => 'Nombre d\'élèves',
                 'required' => true,
                 'attr' => [
-                    'min' => 1,
                     'class' => 'form-control',
+                    'min' => 1,
+                    'max' => 9999,
+                    'placeholder' => 'Ex: 120'
                 ],
-                'row_attr' => ['class' => 'form-group'],
+                'constraints' => [
+                    new Assert\NotNull(message: 'Le nombre d\'élèves est obligatoire'),
+                    new Assert\GreaterThan(value: 0, message: 'Le nombre d\'élèves doit être supérieur à 0')
+                ],
+                'help' => 'Nombre total d\'élèves photographiés'
             ])
             ->add('nbClasses', IntegerType::class, [
                 'label' => 'Nombre de classes',
                 'required' => false,
                 'attr' => [
-                    'min' => 0,
                     'class' => 'form-control',
+                    'min' => 0,
+                    'max' => 99,
+                    'placeholder' => 'Ex: 5'
                 ],
-                'row_attr' => ['class' => 'form-group'],
-            ])
-            ->add('classes', TextType::class, [
-                'label' => 'Description des classes',
-                'required' => false,
-                'attr' => ['class' => 'form-control'],
-                'row_attr' => ['class' => 'form-group'],
+                'help' => 'Nombre de classes concernées (optionnel)'
             ]);
             
-        // Type de prise et options
+        // === TARIFICATION ===
+        $builder
+            ->add('prixEcole', MoneyType::class, [
+                'label' => 'Prix école',
+                'currency' => 'EUR',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'placeholder' => '0.00',
+                    'step' => '0.01'
+                ],
+                'help' => 'Montant facturé à l\'école'
+            ])
+            ->add('prixParent', MoneyType::class, [
+                'label' => 'Prix parents',
+                'currency' => 'EUR',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'placeholder' => '0.00',
+                    'step' => '0.01'
+                ],
+                'help' => 'Montant facturé aux parents'
+            ]);
+            
+        // === TYPES ET RÉFÉRENCES (SÉLECTIONS UNIQUES) ===
         $builder
             ->add('typePrise', EntityType::class, [
                 'class' => TypePrise::class,
-                'choice_label' => 'nom',
+                'choice_label' => 'libelle',
                 'query_builder' => function () {
                     return $this->typePriseRepository->createQueryBuilder('tp')
                         ->where('tp.active = :active')
                         ->setParameter('active', true)
-                        ->orderBy('tp.nom', 'ASC');
+                        ->orderBy('tp.libelle', 'ASC');
                 },
                 'label' => 'Type de prise',
                 'placeholder' => 'Sélectionnez un type de prise',
                 'required' => false,
                 'attr' => [
-                    'class' => 'form-select select-with-add',
-                    'data-add-url' => '/admin/type-prise/modal-new',
+                    'class' => 'form-select'
                 ],
-                'row_attr' => ['class' => 'form-group'],
+                'help' => 'Type de prise de vue (individuel, groupe, etc.)'
             ])
             ->add('typeVente', EntityType::class, [
                 'class' => TypeVente::class,
-                'choice_label' => 'nom',
+                'choice_label' => 'libelle',
                 'query_builder' => function () {
                     return $this->typeVenteRepository->createQueryBuilder('tv')
                         ->where('tv.active = :active')
                         ->setParameter('active', true)
-                        ->orderBy('tv.nom', 'ASC');
+                        ->orderBy('tv.libelle', 'ASC');
                 },
                 'label' => 'Type de vente',
                 'placeholder' => 'Sélectionnez un type de vente',
                 'required' => false,
                 'attr' => [
-                    'class' => 'form-select select-with-add',
-                    'data-add-url' => '/admin/type-vente/modal-new',
+                    'class' => 'form-select'
                 ],
-                'row_attr' => ['class' => 'form-group'],
+                'help' => 'Modalité de vente (individuel, collectif, etc.)'
             ])
             ->add('theme', EntityType::class, [
                 'class' => Theme::class,
-                'choice_label' => 'nom',
+                'choice_label' => 'libelle',
                 'query_builder' => function () {
                     return $this->themeRepository->createQueryBuilder('t')
                         ->where('t.active = :active')
                         ->setParameter('active', true)
-                        ->orderBy('t.nom', 'ASC');
+                        ->orderBy('t.libelle', 'ASC');
                 },
                 'label' => 'Thème',
                 'placeholder' => 'Sélectionnez un thème',
                 'required' => false,
                 'attr' => [
-                    'class' => 'form-select select-with-add',
-                    'data-add-url' => '/admin/theme/modal-new',
+                    'class' => 'form-select'
                 ],
-                'row_attr' => ['class' => 'form-group'],
+                'help' => 'Thème de la séance photo'
             ]);
             
-        // Planches
+        // === PLANCHES ET POCHETTES (SÉLECTIONS MULTIPLES) ===
         $builder
-            ->add('planchesIndividuelles', EntityType::class, [
-                'class'         => Planche::class,
-                'choice_label'  => 'nom',
-                'query_builder' => fn (PlancheRepository $r) =>
-                    $r->createActivesByTypeQueryBuilder(PlancheUsage::INDIVIDUELLE),
-                'multiple'      => true,          // ManyToMany
-                'expanded'      => true,          // checkboxes (false pour <select multiple>)
-                'by_reference'  => false,         // appelle add/remove (Doctrine)
-                'label'         => 'Planches individuelles',
+            ->add('pochettesIndiv', EntityType::class, [
+                'class' => PochetteIndiv::class,
+                'choice_label' => 'libelle',
+                'query_builder' => function () {
+                    return $this->pochetteIndivRepository->createQueryBuilder('p')
+                        ->where('p.active = :active')
+                        ->setParameter('active', true)
+                        ->orderBy('p.libelle', 'ASC');
+                },
+                'label' => 'Pochettes individuelles',
+                'required' => false,
+                'multiple' => true,
+                'expanded' => false,
                 'attr' => [
-                    'class'        => 'planches-list select-with-add',
-                    'data-add-url' => $this->urlGenerator->generate('admin_planche_modal_new'),
+                    'class' => 'form-select',
+                    'multiple' => 'multiple'
                 ],
-                'row_attr' => ['class' => 'form-group planches-group'],
+                'help' => 'Types de pochettes pour les photos individuelles (sélection multiple)'
             ])
-            ->add('planchesFratries', EntityType::class, [
-                'class'         => Planche::class,
-                'choice_label'  => 'nom',
-                'query_builder' => fn (PlancheRepository $r) =>
-                    $r->createActivesByTypeQueryBuilder(PlancheUsage::FRATRIE),
-                'multiple'      => true,          // ManyToMany
-                'expanded'      => true,          // checkboxes (false pour <select multiple>)
-                'by_reference'  => false,         // appelle add/remove (Doctrine)
-                'label'         => 'Planches fratries',
+            ->add('pochettesFratrie', EntityType::class, [
+                'class' => PochetteFratrie::class,
+                'choice_label' => 'libelle',
+                'query_builder' => function () {
+                    return $this->pochetteFratrieRepository->createQueryBuilder('p')
+                        ->where('p.active = :active')
+                        ->setParameter('active', true)
+                        ->orderBy('p.libelle', 'ASC');
+                },
+                'label' => 'Pochettes fratries',
+                'required' => false,
+                'multiple' => true,
+                'expanded' => false,
                 'attr' => [
-                    'class'        => 'planches-list select-with-add',
-                    'data-add-url' => $this->urlGenerator->generate('admin_planche_modal_new'),
+                    'class' => 'form-select',
+                    'multiple' => 'multiple'
                 ],
-                'row_attr' => ['class' => 'form-group planches-group'],
+                'help' => 'Types de pochettes pour les photos de fratries (sélection multiple)'
+            ])
+            ->add('planches', EntityType::class, [
+                'class' => Planche::class,
+                'choice_label' => 'libelle',
+                'query_builder' => function () {
+                    return $this->plancheRepository->createQueryBuilder('p')
+                        ->where('p.active = :active')
+                        ->setParameter('active', true)
+                        ->orderBy('p.libelle', 'ASC');
+                },
+                'label' => 'Planches',
+                'required' => false,
+                'multiple' => true,
+                'expanded' => false,
+                'attr' => [
+                    'class' => 'form-select',
+                    'multiple' => 'multiple'
+                ],
+                'help' => 'Types de planches ou supports (sélection multiple)'
             ]);
             
-        // Tarification
-        $builder
-            ->add('prixEcole', MoneyType::class, [
-                'label' => 'Prix école (€)',
-                'required' => false,
-                'currency' => 'EUR',
-                'attr' => ['class' => 'form-control'],
-                'row_attr' => ['class' => 'form-group'],
-            ])
-            ->add('prixParents', MoneyType::class, [
-                'label' => 'Prix parents (€)',
-                'required' => false,
-                'currency' => 'EUR',
-                'attr' => ['class' => 'form-control'],
-                'row_attr' => ['class' => 'form-group'],
-            ]);
-            
-        // Commentaires
+        // === COMMENTAIRES ===
         $builder
             ->add('commentaire', TextareaType::class, [
                 'label' => 'Commentaires',
                 'required' => false,
                 'attr' => [
                     'rows' => 4,
-                    'class' => 'form-control'
+                    'class' => 'form-control',
+                    'placeholder' => 'Commentaires ou remarques sur cette prise de vue...',
+                    'maxlength' => 2000
                 ],
-                'row_attr' => ['class' => 'form-group'],
+                'help' => 'Remarques, observations ou informations complémentaires'
             ]);
     }
 
@@ -256,7 +297,10 @@ class PriseDeVueType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => PriseDeVue::class,
-            'validation_groups' => ['Default', 'create'],
+            'attr' => [
+                'novalidate' => 'novalidate', // Désactiver validation HTML5 pour utiliser Symfony
+                'class' => 'needs-validation'
+            ]
         ]);
     }
 }

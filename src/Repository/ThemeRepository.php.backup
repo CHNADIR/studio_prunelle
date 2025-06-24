@@ -1,0 +1,252 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Theme;
+use App\Enum\ThemeEnum;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * Repository pour Theme avec intégration énums
+ * Pattern appliqué: Repository Pattern (patterns.md)
+ * @extends AbstractReferentialRepository<Theme>
+ */
+class ThemeRepository extends AbstractReferentialRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Theme::class);
+    }
+
+    /**
+     * Retourne la classe d'enum associée
+     */
+    protected function getEnumClass(): string
+    {
+        return ThemeEnum::class;
+    }
+
+    /**
+     * Crée une entité Theme depuis un enum
+     */
+    protected function createEntityFromEnum(object $enum): Theme
+    {
+        $theme = new Theme();
+        $theme->setLibelle($enum->getLibelle());
+        $theme->setDescription($enum->getDescription());
+        $theme->setActive(true);
+        
+        return $theme;
+    }
+
+    /**
+     * Retourne l'alias de requête pour ce repository
+     */
+    protected function getQueryAlias(): string
+    {
+        return 't';
+    }
+
+    /**
+     * Trouve tous les thèmes actifs triés par libellé
+     * Pattern: Repository - requête optimisée
+     */
+    public function findAllActive(): array
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.active = :active')
+            ->setParameter('active', true)
+            ->orderBy('t.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve tous les thèmes avec comptage des prises de vue
+     * Pattern: Repository - jointure optimisée
+     */
+    public function findAllWithPriseDeVueCount(): array
+    {
+        return $this->createQueryBuilder('t')
+            ->select('t', 'COUNT(pdv.id) as priseDeVueCount')
+            ->leftJoin('t.prisesDeVue', 'pdv')
+            ->groupBy('t.id')
+            ->orderBy('t.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les thèmes basés sur les énums
+     * Pattern: Repository avec intégration énums
+     */
+    public function findEnumBasedTypes(): array
+    {
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            ThemeEnum::getDefaultValues()
+        );
+
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.libelle IN (:enumLibelles)')
+            ->setParameter('enumLibelles', $enumLibelles)
+            ->orderBy('t.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les thèmes personnalisés (non-énums)
+     * Pattern: Repository avec logique métier
+     */
+    public function findCustomTypes(): array
+    {
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            ThemeEnum::getDefaultValues()
+        );
+
+        $qb = $this->createQueryBuilder('t')
+            ->orderBy('t.libelle', 'ASC');
+
+        if (!empty($enumLibelles)) {
+            $qb->andWhere('t.libelle NOT IN (:enumLibelles)')
+               ->setParameter('enumLibelles', $enumLibelles);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Vérifie si un libellé correspond à un enum
+     */
+    public function isEnumLibelle(string $libelle): bool
+    {
+        foreach (ThemeEnum::getDefaultValues() as $enum) {
+            if ($enum->getLibelle() === $libelle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Trouve ou crée un thème depuis un enum
+     * Pattern: Repository - factory method
+     */
+    public function findOrCreateFromEnum(ThemeEnum $enum): Theme
+    {
+        $theme = $this->findOneBy(['libelle' => $enum->getLibelle()]);
+        
+        if (!$theme) {
+            $theme = new Theme();
+            $theme->setLibelle($enum->getLibelle());
+            $theme->setDescription($enum->getDescription());
+            $theme->setActive(true);
+            
+            $this->getEntityManager()->persist($theme);
+            $this->getEntityManager()->flush();
+        }
+        
+        return $theme;
+    }
+
+    /**
+     * Recherche avec filtres et pagination
+     * Pattern: Repository - requête complexe optimisée
+     */
+    public function findByCriteria(
+        ?string $search = null,
+        ?bool $active = null,
+        string $sort = 'libelle',
+        string $order = 'ASC',
+        int $page = 1,
+        int $limit = 20
+    ): array {
+        $qb = $this->createQueryBuilder('t')
+            ->select('t', 'COUNT(pdv.id) as priseDeVueCount')
+            ->leftJoin('t.prisesDeVue', 'pdv')
+            ->groupBy('t.id');
+
+        // Filtres de recherche
+        if ($search) {
+            $qb->andWhere('(t.libelle LIKE :search OR t.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere('t.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        // Tri
+        $allowedSorts = ['libelle', 'description', 'active', 'priseDeVueCount'];
+        if (in_array($sort, $allowedSorts)) {
+            $qb->orderBy('t.' . $sort, $order);
+        }
+
+        // Pagination
+        $offset = ($page - 1) * $limit;
+        $qb->setFirstResult($offset)
+           ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Compte le total pour la pagination
+     */
+    public function countByCriteria(?string $search = null, ?bool $active = null): int
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)');
+
+        if ($search) {
+            $qb->andWhere('(t.libelle LIKE :search OR t.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere('t.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Recherche de thèmes par libellé
+     * 
+     * @param string $search
+     * @return Theme[]
+     */
+    public function findByLibelle(string $search): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.libelle LIKE :search')
+            ->andWhere('t.active = :active')
+            ->setParameter('search', '%' . $search . '%')
+            ->setParameter('active', true)
+            ->orderBy('t.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function save(Theme $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function remove(Theme $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+} 

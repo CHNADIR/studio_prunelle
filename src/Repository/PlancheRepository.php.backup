@@ -1,0 +1,274 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Planche;
+use App\Enum\PlancheEnum;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * Repository pour Planche avec intégration énums
+ * Pattern appliqué: Repository Pattern (patterns.md)
+ * @extends ServiceEntityRepository<Planche>
+ */
+class PlancheRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Planche::class);
+    }
+
+    /**
+     * Trouve toutes les planches actives triées par libellé
+     * Pattern: Repository - requête optimisée
+     */
+    public function findAllActive(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.active = :active')
+            ->setParameter('active', true)
+            ->orderBy('p.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve toutes les planches avec comptage des prises de vue
+     * Pattern: Repository - jointure optimisée
+     */
+    public function findAllWithPriseDeVueCount(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->select('p')
+            ->where('p.active = :active')
+            ->setParameter('active', true)
+            ->orderBy('p.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les planches basées sur les énums
+     * Pattern: Repository avec intégration énums
+     */
+    public function findEnumBasedTypes(): array
+    {
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            PlancheEnum::getDefaultValues()
+        );
+
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.libelle IN (:enumLibelles)')
+            ->setParameter('enumLibelles', $enumLibelles)
+            ->orderBy('p.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les planches personnalisées (non-énums)
+     * Pattern: Repository avec logique métier
+     */
+    public function findCustomTypes(): array
+    {
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            PlancheEnum::getDefaultValues()
+        );
+
+        $qb = $this->createQueryBuilder('p')
+            ->orderBy('p.libelle', 'ASC');
+
+        if (!empty($enumLibelles)) {
+            $qb->andWhere('p.libelle NOT IN (:enumLibelles)')
+               ->setParameter('enumLibelles', $enumLibelles);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Vérifie si un libellé correspond à un enum
+     */
+    public function isEnumLibelle(string $libelle): bool
+    {
+        foreach (PlancheEnum::getDefaultValues() as $enum) {
+            if ($enum->getLibelle() === $libelle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Trouve ou crée une planche depuis un enum
+     * Pattern: Repository - factory method
+     */
+    public function findOrCreateFromEnum(PlancheEnum $enum): Planche
+    {
+        $planche = $this->findOneBy(['libelle' => $enum->getLibelle()]);
+        
+        if (!$planche) {
+            $planche = new Planche();
+            $planche->setLibelle($enum->getLibelle());
+            $planche->setDescription($enum->getDescription());
+            $planche->setActive(true);
+            
+            $this->getEntityManager()->persist($planche);
+            $this->getEntityManager()->flush();
+        }
+        
+        return $planche;
+    }
+
+    /**
+     * Recherche avec filtres et pagination
+     * Pattern: Repository - requête complexe optimisée
+     */
+    public function findByCriteria(
+        ?string $search = null,
+        ?bool $active = null,
+        string $sort = 'libelle',
+        string $order = 'ASC',
+        int $page = 1,
+        int $limit = 20
+    ): array {
+        $qb = $this->createQueryBuilder('p');
+
+        // Filtres de recherche
+        if ($search) {
+            $qb->andWhere('(p.libelle LIKE :search OR p.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere('p.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        // Tri
+        $allowedSorts = ['libelle', 'description', 'active'];
+        if (in_array($sort, $allowedSorts)) {
+            $qb->orderBy('p.' . $sort, $order);
+        } else {
+            $qb->orderBy('p.libelle', 'ASC');
+        }
+
+        // Pagination
+        $offset = ($page - 1) * $limit;
+        $qb->setFirstResult($offset)
+           ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Compte le total pour la pagination
+     */
+    public function countByCriteria(?string $search = null, ?bool $active = null): int
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)');
+
+        if ($search) {
+            $qb->andWhere('(p.libelle LIKE :search OR p.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere('p.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Recherche de planches par libellé
+     * 
+     * @param string $search
+     * @return Planche[]
+     */
+    public function findByLibelle(string $search): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.libelle LIKE :search')
+            ->andWhere('p.active = :active')
+            ->setParameter('search', '%' . $search . '%')
+            ->setParameter('active', true)
+            ->orderBy('p.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les planches les plus utilisées
+     * 
+     * @param int $limit
+     * @return Planche[]
+     */
+    public function findMostUsed(int $limit = 10): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.active = :active')
+            ->setParameter('active', true)
+            ->orderBy('p.libelle', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les planches utilisées dans des prises de vue
+     */
+    public function findUsedInPrisesDeVue(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.prisesDeVue', 'pdv')
+            ->andWhere('p.active = :active')
+            ->setParameter('active', true)
+            ->groupBy('p.id')
+            ->orderBy('p.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Statistiques sur les planches
+     */
+    public function getPlancheStats(): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id) as total')
+            ->addSelect('COUNT(CASE WHEN p.active = 1 THEN 1 END) as active')
+            ->addSelect('COUNT(CASE WHEN p.active = 0 THEN 1 END) as inactive');
+
+        $result = $qb->getQuery()->getSingleResult();
+
+        return [
+            'total' => (int) $result['total'],
+            'active' => (int) $result['active'],
+            'inactive' => (int) $result['inactive']
+        ];
+    }
+
+    public function save(Planche $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function remove(Planche $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+}

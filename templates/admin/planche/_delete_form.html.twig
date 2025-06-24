@@ -1,5 +1,0 @@
-<form method="post" action="{{ path('admin_planche_delete',{id:p.id}) }}"
-      onsubmit="return confirm('Supprimer ?');">
-    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ p.id) }}">
-    <button class="btn btn-sm btn-danger">🗑</button>
-</form>

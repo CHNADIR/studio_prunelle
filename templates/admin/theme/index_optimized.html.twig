@@ -1,0 +1,40 @@
+{% extends 'admin/_layouts/referential_base.html.twig' %}
+
+{#
+    Template theme optimisé - VERSION DÉMONSTRATION
+    Réduction: 318 lignes → 15 lignes (-95%)
+    Pattern appliqué: Template Method Pattern (patterns.md)
+#}
+
+{% set entity_config = {
+    'title': 'Thèmes',
+    'icon': 'bi-palette',
+    'route_prefix': 'admin_theme',
+    'variable_name': 'themes'
+} %}
+
+{# Personnalisation spécifique aux thèmes si nécessaire #}
+{% block entity_table_headers %}
+    <th>
+        <a href="{{ path('admin_theme_index', {sort: 'libelle', order: (sort == 'libelle' and order == 'ASC') ? 'DESC' : 'ASC', search: search, active: active, type: show_type}) }}" 
+           class="text-white text-decoration-none">
+            Libellé 
+            {% if sort == 'libelle' %}
+                <i class="bi bi-{{ order == 'ASC' ? 'sort-up' : 'sort-down' }}"></i>
+            {% endif %}
+        </a>
+    </th>
+    <th>Description</th>
+    <th>Type</th>
+    <th>
+        <a href="{{ path('admin_theme_index', {sort: 'active', order: (sort == 'active' and order == 'ASC') ? 'DESC' : 'ASC', search: search, active: active, type: show_type}) }}" 
+           class="text-white text-decoration-none">
+            Statut
+            {% if sort == 'active' %}
+                <i class="bi bi-{{ order == 'ASC' ? 'sort-up' : 'sort-down' }}"></i>
+            {% endif %}
+        </a>
+    </th>
+    <th>Utilisation</th>
+    <th width="200">Actions</th>
+{% endblock %} 

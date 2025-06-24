@@ -4,67 +4,319 @@
 
 {% block body %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Liste des Écoles</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-building"></i> Liste des Écoles</h1>
         <a href="{{ path('admin_ecole_new') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Ajouter une école
         </a>
     </div>
 
-    <table class="table table-striped table-bordered align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Code</th>
-                <th>Genre</th>
-                <th>Nom</th>
-                <th>Ville</th>
-                <th>Téléphone</th>
-                <th>Statut</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for ecole_item in ecoles %}
-            <tr>
-                <td>{{ ecole_item.code }}</td>
-                <td>{{ ecole_item.genre }}</td>
-                <td>
-                    <a href="{{ path('admin_ecole_show', { id: ecole_item.id }) }}">
-                        {{ ecole_item.nom }}
+    {# Interface de recherche et filtres #}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-search"></i> Recherche et filtres</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Recherche</label>
+                    <input type="text" 
+                           name="search" 
+                           id="search" 
+                           class="form-control" 
+                           placeholder="Nom, code, ville ou genre..." 
+                           value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Statut</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if status == 'all' %}selected{% endif %}>Toutes</option>
+                        <option value="active" {% if status == 'active' %}selected{% endif %}>Actives</option>
+                        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactives</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="limit" class="form-label">Par page</label>
+                    <select name="limit" id="limit" class="form-select">
+                        <option value="10" {% if itemsPerPage == 10 %}selected{% endif %}>10</option>
+                        <option value="25" {% if itemsPerPage == 25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if itemsPerPage == 50 %}selected{% endif %}>50</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Rechercher
+                    </button>
+                    <a href="{{ path('admin_ecole_index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Réinitialiser
                     </a>
-                </td>
-                <td>{{ ecole_item.ville }}</td>
-                <td>{{ ecole_item.telephone }}</td>
-                <td>
-                    <span class="badge {{ ecole_item.active ? 'bg-success' : 'bg-danger' }}">
-                        {{ ecole_item.active ? 'Active' : 'Inactive' }}
-                    </span>
-                </td>
-                <td>
-                    <a href="{{ path('admin_ecole_edit', { id: ecole_item.id }) }}"
-                       class="btn btn-sm btn-warning">
-                       <i class="bi bi-pencil"></i>
-                    </a>
-                    <form action="{{ path('admin_ecole_delete', { id: ecole_item.id }) }}"
-                          method="post"
-                          style="display:inline"
-                          onsubmit="return confirm('Supprimer ?');">
-                        <input type="hidden" name="_token"
-                               value="{{ csrf_token('delete' ~ ecole_item.id) }}">
-                        <button class="btn btn-sm btn-danger">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="7" class="text-center text-muted">
-                    Aucune école n’a été trouvée.
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                </div>
+                {# Conserver les paramètres de tri #}
+                <input type="hidden" name="sort" value="{{ sortBy }}">
+                <input type="hidden" name="order" value="{{ sortOrder }}">
+            </form>
+        </div>
+    </div>
+
+    {# Résultats #}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>
+                <strong>{{ totalItems }}</strong> école(s) trouvée(s)
+                {% if search %}pour "{{ search }}"{% endif %}
+            </span>
+            <span class="text-muted">
+                Page {{ currentPage }} sur {{ (totalItems / itemsPerPage)|round(0, 'ceil') }}
+            </span>
+        </div>
+        <div class="card-body p-0">
+            {% if ecoles|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>
+                                    <a href="{{ path('admin_ecole_index', app.request.query.all|merge({sort: 'code', order: (sortBy == 'code' and sortOrder == 'asc') ? 'desc' : 'asc'})) }}" 
+                                       class="text-white text-decoration-none">
+                                        Code 
+                                        {% if sortBy == 'code' %}
+                                            <i class="bi bi-arrow-{{ sortOrder == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ path('admin_ecole_index', app.request.query.all|merge({sort: 'genre', order: (sortBy == 'genre' and sortOrder == 'asc') ? 'desc' : 'asc'})) }}" 
+                                       class="text-white text-decoration-none">
+                                        Genre 
+                                        {% if sortBy == 'genre' %}
+                                            <i class="bi bi-arrow-{{ sortOrder == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ path('admin_ecole_index', app.request.query.all|merge({sort: 'nom', order: (sortBy == 'nom' and sortOrder == 'asc') ? 'desc' : 'asc'})) }}" 
+                                       class="text-white text-decoration-none">
+                                        Nom 
+                                        {% if sortBy == 'nom' %}
+                                            <i class="bi bi-arrow-{{ sortOrder == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ path('admin_ecole_index', app.request.query.all|merge({sort: 'ville', order: (sortBy == 'ville' and sortOrder == 'asc') ? 'desc' : 'asc'})) }}" 
+                                       class="text-white text-decoration-none">
+                                        Ville 
+                                        {% if sortBy == 'ville' %}
+                                            <i class="bi bi-arrow-{{ sortOrder == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Contact</th>
+                                <th>
+                                    <a href="{{ path('admin_ecole_index', app.request.query.all|merge({sort: 'active', order: (sortBy == 'active' and sortOrder == 'asc') ? 'desc' : 'asc'})) }}" 
+                                       class="text-white text-decoration-none">
+                                        Statut 
+                                        {% if sortBy == 'active' %}
+                                            <i class="bi bi-arrow-{{ sortOrder == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for ecole_item in ecoles %}
+                            <tr>
+                                <td><strong>{{ ecole_item.code }}</strong></td>
+                                <td>
+                                    <span class="badge bg-info">{{ ecole_item.genre }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ path('admin_ecole_show', { id: ecole_item.id }) }}" 
+                                       class="fw-bold text-decoration-none">
+                                        {{ ecole_item.nom }}
+                                    </a>
+                                </td>
+                                <td>{{ ecole_item.ville }}</td>
+                                <td>
+                                    <small>
+                                        <i class="bi bi-telephone"></i> {{ ecole_item.telephone }}<br>
+                                        {% if ecole_item.email %}
+                                            <i class="bi bi-envelope"></i> {{ ecole_item.email }}
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge {{ ecole_item.active ? 'bg-success' : 'bg-danger' }}">
+                                        <i class="bi bi-{{ ecole_item.active ? 'check-circle' : 'x-circle' }}"></i>
+                                        {{ ecole_item.active ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ path('admin_ecole_show', { id: ecole_item.id }) }}"
+                                           class="btn btn-sm btn-outline-info"
+                                           title="Voir la fiche">
+                                           <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ path('admin_ecole_edit', { id: ecole_item.id }) }}"
+                                           class="btn btn-sm btn-outline-warning"
+                                           title="Modifier">
+                                           <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteModal{{ ecole_item.id }}"
+                                                title="Supprimer">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    {# Modal de confirmation de suppression #}
+                                    <div class="modal fade" id="deleteModal{{ ecole_item.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmer la suppression</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Êtes-vous sûr de vouloir supprimer l'école <strong>{{ ecole_item.nom }}</strong> ?
+                                                    <br><small class="text-muted">Cette action est irréversible.</small>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                    <form action="{{ path('admin_ecole_delete', { id: ecole_item.id }) }}"
+                                                          method="post" style="display:inline">
+                                                        <input type="hidden" name="_token"
+                                                               value="{{ csrf_token('delete' ~ ecole_item.id) }}">
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="bi bi-trash"></i> Supprimer
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-building-slash fs-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">Aucune école trouvée</h4>
+                    {% if search %}
+                        <p class="text-muted">Essayez de modifier vos critères de recherche.</p>
+                        <a href="{{ path('admin_ecole_index') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left"></i> Voir toutes les écoles
+                        </a>
+                    {% else %}
+                        <p class="text-muted">Commencez par ajouter une école.</p>
+                        <a href="{{ path('admin_ecole_new') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Ajouter une école
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Pagination #}
+    {% if totalItems > itemsPerPage %}
+        <nav aria-label="Pagination des écoles" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {# Page précédente #}
+                {% if currentPage > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('admin_ecole_index', app.request.query.all|merge({page: currentPage - 1})) }}">
+                            <i class="bi bi-chevron-left"></i> Précédent
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Précédent</span>
+                    </li>
+                {% endif %}
+
+                {# Pages numériques #}
+                {% set totalPages = (totalItems / itemsPerPage)|round(0, 'ceil') %}
+                {% set startPage = max(1, currentPage - 2) %}
+                {% set endPage = min(totalPages, currentPage + 2) %}
+
+                {% if startPage > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('admin_ecole_index', app.request.query.all|merge({page: 1})) }}">1</a>
+                    </li>
+                    {% if startPage > 2 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endif %}
+
+                {% for page in startPage..endPage %}
+                    <li class="page-item {{ page == currentPage ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('admin_ecole_index', app.request.query.all|merge({page: page})) }}">{{ page }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if endPage < totalPages %}
+                    {% if endPage < totalPages - 1 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('admin_ecole_index', app.request.query.all|merge({page: totalPages})) }}">{{ totalPages }}</a>
+                    </li>
+                {% endif %}
+
+                {# Page suivante #}
+                {% if currentPage < totalPages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('admin_ecole_index', app.request.query.all|merge({page: currentPage + 1})) }}">
+                            Suivant <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Suivant <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                {% endif %}
+            </ul>
+            
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    Affichage de {{ ((currentPage - 1) * itemsPerPage) + 1 }} à {{ min(currentPage * itemsPerPage, totalItems) }} 
+                    sur {{ totalItems }} école(s)
+                </small>
+            </div>
+        </nav>
+    {% endif %}
 </div>
+
+{# Script pour améliorer l'UX de la recherche #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-soumission du formulaire lors du changement de statut ou de limite
+    document.getElementById('status').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    document.getElementById('limit').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    // Recherche en temps réel (avec délai pour éviter trop de requêtes)
+    let searchTimeout;
+    document.getElementById('search').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (this.value.length >= 3 || this.value.length === 0) {
+                this.form.submit();
+            }
+        }, 500);
+    });
+});
+</script>
 {% endblock %}

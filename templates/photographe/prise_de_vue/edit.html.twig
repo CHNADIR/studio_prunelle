@@ -6,7 +6,7 @@
   <i class="bi bi-arrow-left"></i> Retour
 </a>
 
-{% include 'partials/_flash_messages.html.twig' %}
+{% include 'admin/_components/flash_messages.html.twig' %}
 
 <div class="card shadow-sm">
   <div class="card-header">
@@ -15,7 +15,7 @@
   <div class="card-body">
     <dl class="row">
       <dt class="col-sm-3">Date</dt>
-      <dd class="col-sm-9">{{ prise.date|date('d/m/Y') }}</dd>
+      <dd class="col-sm-9">{{ prise.datePdv|date('d/m/Y') }}</dd>
 
       <dt class="col-sm-3">École</dt>
       <dd class="col-sm-9">{{ prise.ecole.nom }}</dd>
@@ -23,7 +23,7 @@
       <dt class="col-sm-3">Formats commandés</dt>
       <dd class="col-sm-9">
         {% for p in prise.planches %}
-          <span class="badge text-bg-secondary me-1">{{ p.nom }}</span>
+          <span class="badge text-bg-secondary me-1">{{ p.libelle }}</span>
         {% endfor %}
       </dd>
 

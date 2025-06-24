@@ -1,0 +1,183 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des utilisateurs - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">👥 Gestion des utilisateurs</h1>
+        <a href="{{ path('admin_user_new') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Ajouter un utilisateur
+        </a>
+    </div>
+
+    {% include 'admin/_components/flash_messages.html.twig' %}
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-people me-2"></i>
+                Liste des utilisateurs 
+                <span class="badge bg-light text-dark ms-2">{{ totalItems }} utilisateur{{ totalItems > 1 ? 's' : '' }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if users|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Rôles</th>
+                                <th>Dernière connexion</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>
+                                    <strong>{{ user.nom }}</strong>
+                                </td>
+                                <td>
+                                    <i class="bi bi-envelope me-1"></i>{{ user.email }}
+                                </td>
+                                <td>
+                                    {% for role in user.roles %}
+                                        {% set badge_class = 'bg-primary' %}
+                                        {% if role == 'ROLE_SUPERADMIN' %}
+                                            {% set badge_class = 'bg-danger' %}
+                                        {% elseif role == 'ROLE_ADMIN' %}
+                                            {% set badge_class = 'bg-warning text-dark' %}
+                                        {% elseif role == 'ROLE_PHOTOGRAPHE' %}
+                                            {% set badge_class = 'bg-info' %}
+                                        {% endif %}
+                                        
+                                        <span class="badge {{ badge_class }} me-1">
+                                            {% if role == 'ROLE_SUPERADMIN' %}
+                                                <i class="bi bi-shield-fill-check me-1"></i>Super Admin
+                                            {% elseif role == 'ROLE_ADMIN' %}
+                                                <i class="bi bi-gear-fill me-1"></i>Admin
+                                            {% elseif role == 'ROLE_PHOTOGRAPHE' %}
+                                                <i class="bi bi-camera-fill me-1"></i>Photographe
+                                            {% else %}
+                                                {{ role|replace({'ROLE_':' '})|title }}
+                                            {% endif %}
+                                        </span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if user.lastLogin %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock me-1"></i>{{ user.lastLogin|date('d/m/Y H:i') }}
+                                        </small>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Jamais connecté</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ path('admin_user_show', {'id': user.id}) }}" 
+                                           class="btn btn-outline-primary btn-sm" 
+                                           title="Voir le détail">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ path('admin_user_edit', {'id': user.id}) }}" 
+                                           class="btn btn-outline-warning btn-sm" 
+                                           title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-outline-danger btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteModal{{ user.id }}"
+                                                title="Supprimer">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Modal de confirmation de suppression -->
+                                    <div class="modal fade" id="deleteModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmer la suppression</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ user.nom }}</strong> ?
+                                                    </div>
+                                                    <p class="text-muted small">Cette action est irréversible.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                    <form method="post" action="{{ path('admin_user_delete', {'id': user.id}) }}" class="d-inline">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="bi bi-trash me-1"></i>Supprimer
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if totalItems > itemsPerPage %}
+                    <nav aria-label="Navigation des utilisateurs">
+                        <ul class="pagination justify-content-center">
+                            {% set totalPages = (totalItems / itemsPerPage)|round(0, 'ceil') %}
+                            
+                            <!-- Page précédente -->
+                            {% if currentPage > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('admin_user_index', {'page': currentPage - 1}) }}">
+                                        <i class="bi bi-chevron-left"></i> Précédent
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            <!-- Pages -->
+                            {% for page in 1..totalPages %}
+                                {% if page == currentPage %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('admin_user_index', {'page': page}) }}">{{ page }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            <!-- Page suivante -->
+                            {% if currentPage < totalPages %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('admin_user_index', {'page': currentPage + 1}) }}">
+                                        Suivant <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Aucun utilisateur trouvé. 
+                    <a href="{{ path('admin_user_new') }}" class="alert-link">Créer le premier utilisateur</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

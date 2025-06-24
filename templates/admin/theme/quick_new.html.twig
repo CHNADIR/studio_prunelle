@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau Thème Rapide - Studio Prunelle{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-plus-circle text-primary"></i> Créer un Nouveau Thème</h1>
+        <div class="btn-group">
+            <a href="{{ path('admin_theme_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-list"></i> Liste des thèmes
+            </a>
+            <a href="{{ path('admin_theme_new') }}" class="btn btn-outline-info">
+                <i class="bi bi-palette"></i> Création avancée
+            </a>
+        </div>
+    </div>
+
+    {# Messages flash unifiés #}
+    {% include 'admin/_components/flash_messages.html.twig' %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-palette"></i> Nouveau Thème
+                    </h5>
+                    <small class="opacity-75">Création rapide d'un thème personnalisé</small>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Création rapide :</strong> 
+                        Créez un nouveau thème personnalisé en quelques clics. 
+                        Pour utiliser les thèmes standards, utilisez la 
+                        <a href="{{ path('admin_theme_new') }}" class="alert-link">création avancée</a>.
+                    </div>
+                    
+                    {{ form_start(form, {attr: {class: 'needs-validation', novalidate: true}}) }}
+                    
+                    <div class="mb-3">
+                        {{ form_row(form.libelle) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_row(form.description) }}
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form_widget(form.active) }}
+                            {{ form_label(form.active) }}
+                        </div>
+                        <div class="form-text">{{ form_help(form.active) }}</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> Créer le Thème
+                        </button>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                    </div>
+                    
+                    {{ form_end(form) }}
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        <i class="bi bi-lightbulb"></i>
+                        <strong>Astuce :</strong> 
+                        Choisissez un nom descriptif pour faciliter la sélection lors des prises de vue.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation Bootstrap
+    const form = document.querySelector('.needs-validation');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    }
+    
+    // Focus automatique sur le champ libellé
+    const libelleInput = document.querySelector('#simple_theme_libelle');
+    if (libelleInput) {
+        libelleInput.focus();
+    }
+});
+</script>
+{% endblock %} 

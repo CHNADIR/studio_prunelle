@@ -6,10 +6,12 @@ use App\Entity\Ecole;
 use App\Entity\PriseDeVue;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * Repository pour la gestion des prises de vue
+ */
 class PriseDeVueRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -19,7 +21,6 @@ class PriseDeVueRepository extends ServiceEntityRepository
     
     /**
      * Création d'une QueryBuilder de base pour les prises de vue
-     * Optimisée en utilisant des jointures conditionnelles
      */
     private function createBaseQueryBuilder(array $associations = []): QueryBuilder
     {
@@ -46,10 +47,11 @@ class PriseDeVueRepository extends ServiceEntityRepository
                ->addSelect('t');
         }
         
-        if (in_array('planches', $associations)) {
-            $qb->leftJoin('p.planchesIndividuelles', 'pi')
-               ->leftJoin('p.planchesFratries', 'pf')
-               ->addSelect('pi', 'pf');
+        if (in_array('pochettes', $associations)) {
+            $qb->leftJoin('p.pochettesIndiv', 'pi')
+               ->leftJoin('p.pochettesFratrie', 'pf')
+               ->leftJoin('p.planches', 'pl')
+               ->addSelect('pi', 'pf', 'pl');
         }
         
         return $qb;
@@ -57,15 +59,14 @@ class PriseDeVueRepository extends ServiceEntityRepository
     
     /**
      * Trouve toutes les prises de vue avec pagination
-     * @param array $associations Relations à charger
      */
-    public function findAllPaginated(
+    public function findAllWithPagination(
         int $page = 1, 
-        int $limit = 10, 
+        int $limit = 20, 
         array $associations = ['typePrise', 'theme']
     ): array {
         $query = $this->createBaseQueryBuilder($associations)
-            ->orderBy('p.date', 'DESC')
+            ->orderBy('p.datePdv', 'DESC')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);
             
@@ -76,23 +77,20 @@ class PriseDeVueRepository extends ServiceEntityRepository
     }
 
     /**
-     * Trouve les prises de vue d'un photographe spécifique
-     * Utilise un hint de query pour optimiser le chargement
+     * Trouve les prises de vue d'un photographe spécifique (selon pattern)
      */
     public function findByPhotographe(
         User $photographe, 
         int $page = 1, 
-        int $limit = 10, 
+        int $limit = 20, 
         array $associations = ['typePrise', 'theme']
     ): array {
         $query = $this->createBaseQueryBuilder($associations)
             ->andWhere('p.photographe = :photographe')
             ->setParameter('photographe', $photographe)
-            ->orderBy('p.date', 'DESC')
+            ->orderBy('p.datePdv', 'DESC')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);
-        
-        $query->getQuery()->setHint(\Doctrine\ORM\Query::HINT_FORCE_PARTIAL_LOAD, true);
             
         $countQb = $this->createQueryBuilder('p')
             ->select('COUNT(p.id)')
@@ -106,45 +104,25 @@ class PriseDeVueRepository extends ServiceEntityRepository
     }
 
     /**
-     * Trouve les prises de vue d'une école spécifique
+     * Trouve les dernières prises de vue d'une école (pour fiche école)
      */
-    public function findByEcole(
-        Ecole $ecole, 
-        int $page = 1, 
-        int $limit = 10, 
-        array $associations = ['typePrise', 'theme']
-    ): array {
-        $query = $this->createBaseQueryBuilder($associations)
+    public function findLastByEcole(Ecole $ecole, int $limit = 5): array
+    {
+        return $this->createBaseQueryBuilder(['typePrise', 'theme', 'pochettes'])
             ->andWhere('p.ecole = :ecole')
             ->setParameter('ecole', $ecole)
-            ->orderBy('p.date', 'DESC')
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit);
-            
-        $countQb = $this->createQueryBuilder('p')
-            ->select('COUNT(p.id)')
-            ->andWhere('p.ecole = :ecole')
-            ->setParameter('ecole', $ecole);
-            
-        return [
-            'results' => $query->getQuery()->getResult(),
-            'totalItems' => (int)$countQb->getQuery()->getSingleScalarResult(),
-        ];
+            ->orderBy('p.datePdv', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
     
     /**
      * Recherche de prises de vue avec filtres multiples
-     * Optimisée pour n'inclure que les jointures nécessaires
      */
-    public function search(
-        array $criteria, 
-        int $page = 1, 
-        int $limit = 10
-    ): array {
-        // Déterminer quelles jointures sont nécessaires
-        $associations = ['typePrise', 'theme'];
-        
-        $qb = $this->createBaseQueryBuilder($associations);
+    public function findByCriteria(array $criteria): array
+    {
+        $qb = $this->createBaseQueryBuilder(['typePrise', 'theme']);
         
         if (!empty($criteria['ecole'])) {
             $qb->andWhere('p.ecole = :ecole')
@@ -162,35 +140,26 @@ class PriseDeVueRepository extends ServiceEntityRepository
         }
         
         if (!empty($criteria['dateDebut'])) {
-            $qb->andWhere('p.date >= :dateDebut')
+            $qb->andWhere('p.datePdv >= :dateDebut')
                ->setParameter('dateDebut', $criteria['dateDebut']);
         }
         
         if (!empty($criteria['dateFin'])) {
-            $qb->andWhere('p.date <= :dateFin')
+            $qb->andWhere('p.datePdv <= :dateFin')
                ->setParameter('dateFin', $criteria['dateFin']);
         }
         
-        $countQb = clone $qb;
-        $countQb->select('COUNT(p.id)');
-        
-        $qb->orderBy('p.date', 'DESC')
-           ->setFirstResult(($page - 1) * $limit)
-           ->setMaxResults($limit);
-        
-        return [
-            'results' => $qb->getQuery()->getResult(),
-            'totalItems' => (int)$countQb->getQuery()->getSingleScalarResult(),
-        ];
+        return $qb->orderBy('p.datePdv', 'DESC')
+                  ->getQuery()
+                  ->getResult();
     }
 
     /**
      * Trouve une prise de vue par ID avec tous les détails
-     * pour l'affichage complet (optimisation)
      */
     public function findOneWithAllDetails(int $id): ?PriseDeVue
     {
-        return $this->createBaseQueryBuilder(['typePrise', 'typeVente', 'theme', 'planches'])
+        return $this->createBaseQueryBuilder(['typePrise', 'typeVente', 'theme', 'pochettes'])
             ->andWhere('p.id = :id')
             ->setParameter('id', $id)
             ->getQuery()
@@ -198,13 +167,138 @@ class PriseDeVueRepository extends ServiceEntityRepository
     }
     
     /**
-     * QueryBuilder personnalisé pour les prises de vue d'un photographe
+     * Query Builder pour les prises du photographe connecté
      */
-    public function qbMesPrises(User $photographe)
+    public function qbMesPrises(User $photographe): QueryBuilder
     {
-        return $this->createQueryBuilder('p')
-            ->where('p.photographe = :photographe')
+        return $this->createBaseQueryBuilder(['typePrise', 'theme'])
+            ->andWhere('p.photographe = :photographe')
             ->setParameter('photographe', $photographe)
-            ->orderBy('p.date', 'DESC');
+            ->orderBy('p.datePdv', 'DESC');
+    }
+
+    /**
+     * Statistiques pour dashboard
+     */
+    public function getStats(): array
+    {
+        $total = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $thisMonth = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->where('p.datePdv >= :startMonth')
+            ->setParameter('startMonth', new \DateTime('first day of this month'))
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $totalEleves = $this->createQueryBuilder('p')
+            ->select('SUM(p.nbEleves)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return [
+            'total_prises' => $total,
+            'ce_mois' => $thisMonth,
+            'total_eleves' => $totalEleves ?: 0
+        ];
+    }
+
+    /**
+     * Calcul du chiffre d'affaires total
+     */
+    public function getChiffreAffaires(?\DateTime $dateDebut = null, ?\DateTime $dateFin = null): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('SUM(p.prixEcole) as ca_ecole', 'SUM(p.prixParent) as ca_parent');
+
+        if ($dateDebut) {
+            $qb->andWhere('p.datePdv >= :dateDebut')
+               ->setParameter('dateDebut', $dateDebut);
+        }
+
+        if ($dateFin) {
+            $qb->andWhere('p.datePdv <= :dateFin')
+               ->setParameter('dateFin', $dateFin);
+        }
+
+        $result = $qb->getQuery()->getSingleResult();
+
+        return [
+            'ca_ecole' => $result['ca_ecole'] ?: '0.00',
+            'ca_parent' => $result['ca_parent'] ?: '0.00',
+            'ca_total' => bcadd($result['ca_ecole'] ?: '0.00', $result['ca_parent'] ?: '0.00', 2)
+        ];
+    }
+
+    /**
+     * Trouve les prises de vue selon des critères avec pagination
+     */
+    public function findByCriteriaWithPagination(
+        array $criteria, 
+        int $page = 1, 
+        int $limit = 20
+    ): array {
+        $qb = $this->createBaseQueryBuilder(['typePrise', 'theme']);
+        
+        if (!empty($criteria['ecole'])) {
+            $qb->andWhere('p.ecole = :ecole')
+               ->setParameter('ecole', $criteria['ecole']);
+        }
+        
+        if (!empty($criteria['photographe'])) {
+            $qb->andWhere('p.photographe = :photographe')
+               ->setParameter('photographe', $criteria['photographe']);
+        }
+        
+        if (!empty($criteria['typePrise'])) {
+            $qb->andWhere('p.typePrise = :typePrise')
+               ->setParameter('typePrise', $criteria['typePrise']);
+        }
+        
+        if (!empty($criteria['dateDebut'])) {
+            $qb->andWhere('p.datePdv >= :dateDebut')
+               ->setParameter('dateDebut', $criteria['dateDebut']);
+        }
+        
+        if (!empty($criteria['dateFin'])) {
+            $qb->andWhere('p.datePdv <= :dateFin')
+               ->setParameter('dateFin', $criteria['dateFin']);
+        }
+        
+        // Compter le total
+        $countQb = clone $qb;
+        $countQb->select('COUNT(p.id)');
+        $totalItems = (int)$countQb->getQuery()->getSingleScalarResult();
+        
+        // Appliquer la pagination
+        $qb->orderBy('p.datePdv', 'DESC')
+           ->setFirstResult(($page - 1) * $limit)
+           ->setMaxResults($limit);
+           
+        return [
+            'results' => $qb->getQuery()->getResult(),
+            'totalItems' => $totalItems,
+        ];
+    }
+
+    public function save(PriseDeVue $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function remove(PriseDeVue $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
     }
 }

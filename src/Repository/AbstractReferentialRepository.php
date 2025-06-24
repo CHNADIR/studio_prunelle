@@ -3,121 +3,276 @@
 namespace App\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * Classe abstraite pour les repositories de référentiels
+ * Repository abstrait pour les référentiels avec intégration énums
+ * Pattern appliqué: Abstract Repository Pattern (patterns.md)
+ * 
+ * Factorise les méthodes communes des repositories référentiels :
+ * - PlancheRepository, TypePriseRepository, TypeVenteRepository
+ * - ThemeRepository, PochetteIndivRepository, PochetteFratrieRepository
+ * 
+ * @template T of object
+ * @extends ServiceEntityRepository<T>
  */
 abstract class AbstractReferentialRepository extends ServiceEntityRepository
 {
-    /**
-     * Retourne le nom court de l'alias de table pour les requêtes
-     */
-    abstract protected function getAlias(): string;
-    
-    /**
-     * Trouve toutes les entités actives
-     * 
-     * @param string $orderField Champ de tri (défaut: 'nom')
-     * @param string $orderDirection Direction du tri (défaut: 'ASC')
-     * @return array
-     */
-    public function findAllActive(string $orderField = 'nom', string $orderDirection = 'ASC'): array
+    public function __construct(ManagerRegistry $registry, string $entityClass)
     {
-        return $this->createQueryBuilder($this->getAlias())
-            ->where($this->getAlias() . '.active = :active')
-            ->setParameter('active', true)
-            ->orderBy($this->getAlias() . '.' . $orderField, $orderDirection)
-            ->getQuery()
-            ->getResult();
-    }
-    
-    /**
-     * Trouve toutes les entités paginées
-     * 
-     * @param int $page Numéro de page
-     * @param int $limit Nombre d'éléments par page
-     * @param string $orderField Champ de tri (défaut: 'nom')
-     * @param string $orderDirection Direction du tri (défaut: 'ASC')
-     * @return array [results, totalItems]
-     */
-    public function findAllPaginated(int $page = 1, int $limit = 10, string $orderField = 'nom', string $orderDirection = 'ASC'): array
-    {
-        $query = $this->createQueryBuilder($this->getAlias())
-            ->orderBy($this->getAlias() . '.' . $orderField, $orderDirection)
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit);
-        
-        $countQuery = $this->createQueryBuilder($this->getAlias())
-            ->select('COUNT(' . $this->getAlias() . '.id)');
-        
-        return [
-            'results' => $query->getQuery()->getResult(),
-            'totalItems' => (int)$countQuery->getQuery()->getSingleScalarResult()
-        ];
-    }
-    
-    /**
-     * Recherche avec filtres
-     * 
-     * @param array $criteria Critères de recherche
-     * @param int $page Numéro de page
-     * @param int $limit Nombre d'éléments par page
-     * @return array [results, totalItems]
-     */
-    public function search(array $criteria, int $page = 1, int $limit = 10): array
-    {
-        $qb = $this->createSearchQueryBuilder($criteria);
-        
-        $countQb = clone $qb;
-        $countQb->select('COUNT(' . $this->getAlias() . '.id)');
-        
-        $qb->setFirstResult(($page - 1) * $limit)
-           ->setMaxResults($limit);
-        
-        return [
-            'results' => $qb->getQuery()->getResult(),
-            'totalItems' => (int)$countQb->getQuery()->getSingleScalarResult()
-        ];
-    }
-    
-    /**
-     * Crée un QueryBuilder pour la recherche (à surcharger dans les classes filles)
-     * 
-     * @param array $criteria Critères de recherche
-     * @return QueryBuilder
-     */
-    protected function createSearchQueryBuilder(array $criteria): QueryBuilder
-    {
-        $qb = $this->createQueryBuilder($this->getAlias());
-        
-        if (isset($criteria['active'])) {
-            $qb->andWhere($this->getAlias() . '.active = :active')
-               ->setParameter('active', $criteria['active']);
-        }
-        
-        if (isset($criteria['nom'])) {
-            $qb->andWhere($this->getAlias() . '.nom LIKE :nom')
-               ->setParameter('nom', '%' . $criteria['nom'] . '%');
-        }
-        
-        return $qb->orderBy($this->getAlias() . '.nom', 'ASC');
+        parent::__construct($registry, $entityClass);
     }
 
     /**
-     * Trouve les entités utilisées dans des prises de vue
-     * Méthode commune pour éviter la duplication
-     * 
-     * @return array
+     * Retourne la classe d'enum associée à ce repository
+     * À implémenter dans chaque repository concret
      */
-    public function findUsedInPrisesDeVue(): array
+    abstract protected function getEnumClass(): string;
+
+    /**
+     * Crée une entité depuis un enum
+     * À implémenter dans chaque repository concret
+     */
+    abstract protected function createEntityFromEnum(object $enum): object;
+
+    /**
+     * Retourne l'alias de requête pour ce repository
+     * À implémenter dans chaque repository concret
+     */
+    abstract protected function getQueryAlias(): string;
+
+    /**
+     * Trouve toutes les entités actives triées par libellé
+     * Pattern: Repository - requête optimisée
+     */
+    public function findAllActive(): array
     {
-        return $this->createQueryBuilder($this->getAlias())
-            ->join($this->getAlias() . '.prisesDeVue', 'pdv')
-            ->orderBy($this->getAlias() . '.nom', 'ASC')
-            ->groupBy($this->getAlias() . '.id')
+        $alias = $this->getQueryAlias();
+        
+        return $this->createQueryBuilder($alias)
+            ->andWhere($alias . '.active = :active')
+            ->setParameter('active', true)
+            ->orderBy($alias . '.libelle', 'ASC')
             ->getQuery()
             ->getResult();
     }
-}
+
+    /**
+     * Trouve toutes les entités avec comptage des prises de vue
+     * Pattern: Repository - jointure optimisée
+     */
+    public function findAllWithPriseDeVueCount(): array
+    {
+        $alias = $this->getQueryAlias();
+        
+        return $this->createQueryBuilder($alias)
+            ->select($alias)
+            ->where($alias . '.active = :active')
+            ->setParameter('active', true)
+            ->orderBy($alias . '.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les entités basées sur les énums
+     * Pattern: Repository avec intégration énums
+     */
+    public function findEnumBasedTypes(): array
+    {
+        $enumClass = $this->getEnumClass();
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            $enumClass::getDefaultValues()
+        );
+
+        $alias = $this->getQueryAlias();
+        
+        return $this->createQueryBuilder($alias)
+            ->andWhere($alias . '.libelle IN (:enumLibelles)')
+            ->setParameter('enumLibelles', $enumLibelles)
+            ->orderBy($alias . '.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les entités personnalisées (non-énums)
+     * Pattern: Repository avec logique métier
+     */
+    public function findCustomTypes(): array
+    {
+        $enumClass = $this->getEnumClass();
+        $enumLibelles = array_map(
+            fn($enum) => $enum->getLibelle(), 
+            $enumClass::getDefaultValues()
+        );
+
+        $alias = $this->getQueryAlias();
+        $qb = $this->createQueryBuilder($alias)
+            ->orderBy($alias . '.libelle', 'ASC');
+
+        if (!empty($enumLibelles)) {
+            $qb->andWhere($alias . '.libelle NOT IN (:enumLibelles)')
+               ->setParameter('enumLibelles', $enumLibelles);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Vérifie si un libellé correspond à un enum
+     */
+    public function isEnumLibelle(string $libelle): bool
+    {
+        $enumClass = $this->getEnumClass();
+        
+        foreach ($enumClass::getDefaultValues() as $enum) {
+            if ($enum->getLibelle() === $libelle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Trouve ou crée une entité depuis un enum
+     * Pattern: Repository - factory method
+     */
+    public function findOrCreateFromEnum(object $enum): object
+    {
+        $entity = $this->findOneBy(['libelle' => $enum->getLibelle()]);
+        
+        if (!$entity) {
+            $entity = $this->createEntityFromEnum($enum);
+            
+            $this->getEntityManager()->persist($entity);
+            $this->getEntityManager()->flush();
+        }
+        
+        return $entity;
+    }
+
+    /**
+     * Recherche avec filtres et pagination
+     * Pattern: Repository - requête complexe optimisée
+     */
+    public function findByCriteria(
+        ?string $search = null,
+        ?bool $active = null,
+        string $sort = 'libelle',
+        string $order = 'ASC',
+        int $page = 1,
+        int $limit = 20
+    ): array {
+        $alias = $this->getQueryAlias();
+        $qb = $this->createQueryBuilder($alias);
+
+        // Filtres de recherche
+        if ($search) {
+            $qb->andWhere('(' . $alias . '.libelle LIKE :search OR ' . $alias . '.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere($alias . '.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        // Tri
+        $allowedSorts = ['libelle', 'description', 'active'];
+        if (in_array($sort, $allowedSorts)) {
+            $qb->orderBy($alias . '.' . $sort, $order);
+        } else {
+            $qb->orderBy($alias . '.libelle', 'ASC');
+        }
+
+        // Pagination
+        $offset = ($page - 1) * $limit;
+        $qb->setFirstResult($offset)
+           ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Compte le total pour la pagination
+     */
+    public function countByCriteria(?string $search = null, ?bool $active = null): int
+    {
+        $alias = $this->getQueryAlias();
+        $qb = $this->createQueryBuilder($alias)
+            ->select('COUNT(' . $alias . '.id)');
+
+        if ($search) {
+            $qb->andWhere('(' . $alias . '.libelle LIKE :search OR ' . $alias . '.description LIKE :search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($active !== null) {
+            $qb->andWhere($alias . '.active = :active')
+               ->setParameter('active', $active);
+        }
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Recherche d'entités par libellé
+     */
+    public function findByLibelle(string $search): array
+    {
+        $alias = $this->getQueryAlias();
+        
+        return $this->createQueryBuilder($alias)
+            ->where($alias . '.libelle LIKE :search')
+            ->andWhere($alias . '.active = :active')
+            ->setParameter('search', '%' . $search . '%')
+            ->setParameter('active', true)
+            ->orderBy($alias . '.libelle', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les entités les plus utilisées
+     */
+    public function findMostUsed(int $limit = 10): array
+    {
+        $alias = $this->getQueryAlias();
+        
+        return $this->createQueryBuilder($alias)
+            ->andWhere($alias . '.active = :active')
+            ->setParameter('active', true)
+            ->orderBy($alias . '.libelle', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Sauvegarde une entité
+     * Pattern: Repository - méthode de persistance
+     */
+    public function save(object $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    /**
+     * Supprime une entité
+     * Pattern: Repository - méthode de suppression
+     */
+    public function remove(object $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+} 

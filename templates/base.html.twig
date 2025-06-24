@@ -34,15 +34,32 @@
                                 <a class="nav-link {% if app.request.get('_route') starts with 'admin_prise_de_vue' %}active{% endif %}" href="{{ path('admin_prise_de_vue_index') }}">Prises de vue</a>
                             </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle {% if app.request.get('_route') matches '/admin_(theme|type_prise|type_vente)/' %}active{% endif %}" href="#" id="referentielsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Référentiels
+                                <a class="nav-link dropdown-toggle {% if app.request.get('_route') matches '/admin_(theme|type_prise|type_vente|planche|pochette)/' %}active{% endif %}" href="#" id="referentielsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-gear"></i> Référentiels
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="referentielsDropdown">
-                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_theme' %}active{% endif %}" href="{{ path('admin_theme_index') }}">Thèmes</a></li>
-                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_type_prise' %}active{% endif %}" href="{{ path('admin_type_prise_index') }}">Types de prise</a></li>
-                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_type_vente' %}active{% endif %}" href="{{ path('admin_type_vente_index') }}">Types de vente</a></li>
+                                    <li><h6 class="dropdown-header"><i class="bi bi-camera"></i> Photo</h6></li>
+                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_theme' %}active{% endif %}" href="{{ path('admin_theme_index') }}">
+                                        <i class="bi bi-palette"></i> Thèmes
+                                    </a></li>
+                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_type_prise' %}active{% endif %}" href="{{ path('admin_type_prise_index') }}">
+                                        <i class="bi bi-camera-reels"></i> Types de prise
+                                    </a></li>
+                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_type_vente' %}active{% endif %}" href="{{ path('admin_type_vente_index') }}">
+                                        <i class="bi bi-cart"></i> Types de vente
+                                    </a></li>
+                                    
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_planche' %}active{% endif %}" href="{{ path('admin_planche_index') }}">Planches</a></li>
+                                    <li><h6 class="dropdown-header"><i class="bi bi-images"></i> Planches & Pochettes</h6></li>
+                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_planche' %}active{% endif %}" href="{{ path('admin_planche_index') }}">
+                                        <i class="bi bi-grid-3x3"></i> Planches
+                                    </a></li>
+                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_pochette_indiv' %}active{% endif %}" href="{{ path('admin_pochette_indiv_index') }}">
+                                        <i class="bi bi-person-square"></i> Pochettes individuelles
+                                    </a></li>
+                                    <li><a class="dropdown-item {% if app.request.get('_route') starts with 'admin_pochette_fratrie' %}active{% endif %}" href="{{ path('admin_pochette_fratrie_index') }}">
+                                        <i class="bi bi-people-fill"></i> Pochettes fratries
+                                    </a></li>
                                 </ul>
                             </li>
                         {% endif %}
@@ -90,7 +107,7 @@
         
         <main>
             <div class="container mt-3">
-                {% include 'partials/_flash_messages.html.twig' %}
+                {% include 'admin/_components/flash_messages.html.twig' %}
             </div>
             {% block body %}{% endblock %}
         </main>

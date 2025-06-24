@@ -3,144 +3,83 @@
 namespace App\Repository;
 
 use App\Entity\Planche;
-use App\Enum\PlancheUsage;
-use BackedEnum;
-use Doctrine\ORM\QueryBuilder;
+use App\Enum\PlancheEnum;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * Repository pour Planche avec intégration énums
+ * Pattern appliqué: Repository Pattern (patterns.md)
+ * @extends AbstractReferentialRepository<Planche>
+ */
 class PlancheRepository extends AbstractReferentialRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Planche::class);
     }
-    
+
     /**
-     * Retourne l'alias de table pour les requêtes
+     * Retourne la classe d'enum associée
      */
-    protected function getAlias(): string
+    protected function getEnumClass(): string
+    {
+        return PlancheEnum::class;
+    }
+
+    /**
+     * Crée une entité Planche depuis un enum
+     */
+    protected function createEntityFromEnum(object $enum): Planche
+    {
+        $planche = new Planche();
+        $planche->setLibelle($enum->getLibelle()); 
+        $planche->setDescription($enum->getDescription());
+        $planche->setActive(true);
+        
+        return $planche;
+    }
+
+    /**
+     * Retourne l'alias de requête pour ce repository
+     */
+    protected function getQueryAlias(): string
     {
         return 'p';
     }
-    
-    /**
-     * Trouve les planches actives par type
-     * @return Planche[] Returns an array of active Planche objects by type
-     */
-    public function findActiveByType(PlancheUsage|string $type): array
-    {
-        $value = $type instanceof BackedEnum ? $type->value : $type;
-        
-        return $this->createQueryBuilder($this->getAlias())
-            ->andWhere($this->getAlias() . '.actif = :actif')
-            ->andWhere($this->getAlias() . '.type = :type')
-            ->setParameter('actif', true)
-            ->setParameter('type', $value)
-            ->orderBy($this->getAlias() . '.nom', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
 
     /**
-     * QueryBuilder pour les planches actives par type
-     */
-    public function createActivesByTypeQueryBuilder(
-        PlancheUsage|string $type
-    ): QueryBuilder {
-        $value = $type instanceof BackedEnum ? $type->value : $type;
-
-        return $this->createQueryBuilder('p')
-            ->where('p.actif = true')
-            ->andWhere('p.type = :type')
-            ->setParameter('type', $value)
-            ->orderBy('p.nom', 'ASC');
-    }
-    
-    /**
-     * Trouve toutes les planches actives (override from parent)
-     */
-    public function findAllActive(string $orderField = 'nom', string $orderDirection = 'ASC'): array
-    {
-        return $this->createQueryBuilder($this->getAlias())
-            ->where($this->getAlias() . '.actif = :actif')
-            ->setParameter('actif', true)
-            ->orderBy($this->getAlias() . '.' . $orderField, $orderDirection)
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * Étend la méthode createSearchQueryBuilder pour ajouter les critères de recherche spécifiques
-     */
-    protected function createSearchQueryBuilder(array $criteria): QueryBuilder
-    {
-        $qb = $this->createQueryBuilder($this->getAlias());
-        
-        // Utiliser 'actif' au lieu de 'active' pour l'entité Planche
-        if (isset($criteria['actif'])) {
-            $qb->andWhere($this->getAlias() . '.actif = :actif')
-               ->setParameter('actif', $criteria['actif']);
-        }
-        
-        if (isset($criteria['nom'])) {
-            $qb->andWhere($this->getAlias() . '.nom LIKE :nom')
-               ->setParameter('nom', '%' . $criteria['nom'] . '%');
-        }
-        
-        if (isset($criteria['type'])) {
-            $qb->andWhere($this->getAlias() . '.type = :type')
-               ->setParameter('type', $criteria['type']);
-        }
-        
-        if (isset($criteria['usage'])) {
-            $qb->andWhere($this->getAlias() . '.usage = :usage')
-               ->setParameter('usage', $criteria['usage']);
-        }
-        
-        return $qb->orderBy($this->getAlias() . '.nom', 'ASC');
-    }
-
-    /**
-     * Trouve les planches utilisées dans des prises de vue
+     * Trouve les planches utilisées dans les prises de vue
+     * Méthode spécifique à PlancheRepository
      */
     public function findUsedInPrisesDeVue(): array
     {
-        return $this->createQueryBuilder($this->getAlias())
-            ->join($this->getAlias() . '.prisesDeVue', 'pdv')
-            ->orderBy($this->getAlias() . '.nom', 'ASC')
-            ->groupBy($this->getAlias() . '.id')
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.prisesDeVue', 'pdv')
+            ->andWhere('p.active = :active')
+            ->setParameter('active', true)
+            ->groupBy('p.id')
+            ->orderBy('p.libelle', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
     /**
-     * Statistiques sur les planches
+     * Statistiques des planches
+     * Méthode spécifique à PlancheRepository
      */
     public function getPlancheStats(): array
     {
-        $total = $this->createQueryBuilder('p')
-            ->select('COUNT(p.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
+        $qb = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id) as total')
+            ->addSelect('COUNT(CASE WHEN p.active = 1 THEN 1 END) as active')
+            ->addSelect('COUNT(CASE WHEN p.active = 0 THEN 1 END) as inactive');
 
-        $actives = $this->createQueryBuilder('p')
-            ->select('COUNT(p.id)')
-            ->where('p.actif = true')
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $parType = $this->createQueryBuilder('p')
-            ->select('p.type, COUNT(p.id) as count')
-            ->where('p.actif = true')
-            ->groupBy('p.type')
-            ->getQuery()
-            ->getResult();
+        $result = $qb->getQuery()->getSingleResult();
 
         return [
-            'total' => (int)$total,
-            'actives' => (int)$actives,
-            'inactives' => (int)$total - (int)$actives,
-            'parType' => $parType
+            'total' => (int) $result['total'],
+            'active' => (int) $result['active'],
+            'inactive' => (int) $result['inactive']
         ];
     }
-}
+} 
