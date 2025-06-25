@@ -1,0 +1,180 @@
+/**
+ * Styles pour l'exportation PDF - École
+ * Pattern appliqué: Component Pattern (patterns.md)
+ * Responsabilité unique: Styles pour documents PDF
+ */
+
+/* Styles généraux pour PDF */
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    margin: 20px;
+    color: #333;
+}
+
+/* En-tête du document */
+.pdf-header {
+    text-align: center;
+    border-bottom: 2px solid #0066cc;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    
+    h1 {
+        color: #0066cc;
+        margin: 0;
+        font-size: 24px;
+    }
+    
+    .subtitle {
+        color: #666;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+}
+
+/* Sections du document */
+.pdf-section {
+    margin-bottom: 25px;
+    page-break-inside: avoid;
+    
+    .section-title {
+        background-color: #f5f5f5;
+        padding: 8px 12px;
+        border-left: 4px solid #0066cc;
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+}
+
+/* Grille d'informations */
+.pdf-info-grid {
+    display: table;
+    width: 100%;
+    margin-bottom: 15px;
+    
+    .info-row {
+        display: table-row;
+        
+        .info-label {
+            display: table-cell;
+            font-weight: bold;
+            width: 150px;
+            padding: 3px 10px 3px 0;
+            vertical-align: top;
+        }
+        
+        .info-value {
+            display: table-cell;
+            padding: 3px 0;
+            vertical-align: top;
+        }
+    }
+}
+
+/* Badges et étiquettes */
+.pdf-badge {
+    background-color: #0066cc;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    
+    &.success {
+        background-color: #28a745;
+    }
+    
+    &.danger {
+        background-color: #dc3545;
+    }
+    
+    &.info {
+        background-color: #17a2b8;
+    }
+    
+    &.secondary {
+        background-color: #6c757d;
+    }
+}
+
+/* Tableaux */
+.pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+    
+    .text-right {
+        text-align: right;
+    }
+}
+
+/* Éléments de mise en page */
+.pdf-no-break {
+    page-break-inside: avoid;
+}
+
+.pdf-small-text {
+    font-size: 10px;
+    color: #666;
+}
+
+/* Pied de page */
+.pdf-footer {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    color: #666;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+}
+
+/* Classes utilitaires pour PDF */
+.pdf-text-center {
+    text-align: center;
+}
+
+.pdf-text-right {
+    text-align: right;
+}
+
+.pdf-text-muted {
+    color: #666;
+    font-style: italic;
+}
+
+.pdf-text-bold {
+    font-weight: bold;
+}
+
+/* Amélioration de la lisibilité pour l'impression PDF */
+@media print {
+    body {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+    
+    .pdf-section {
+        page-break-inside: avoid;
+    }
+    
+    .pdf-no-break {
+        page-break-inside: avoid;
+    }
+} 

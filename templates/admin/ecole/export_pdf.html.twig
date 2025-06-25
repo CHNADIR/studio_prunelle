@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche École - {{ ecole.nom }}</title>
+    {{ encore_entry_link_tags('pdf-export') }}
+</head>
+<body>
+    <div class="pdf-header">
+        <h1>📋 Fiche École - {{ ecole.nom }}</h1>
+        <div class="subtitle">
+            Code: <strong>{{ ecole.code }}</strong> | 
+            Généré le {{ dateGeneration|date('d/m/Y à H:i') }}
+        </div>
+    </div>
+
+    {# Informations de l'école #}
+    <div class="pdf-section">
+        <div class="section-title">🏫 Informations Générales</div>
+        <div class="pdf-info-grid">
+            <div class="info-row">
+                <div class="info-label">Code École:</div>
+                <div class="info-value"><span class="pdf-badge">{{ ecole.code }}</span></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Genre:</div>
+                <div class="info-value"><span class="pdf-badge info">{{ ecole.genre }}</span></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Nom:</div>
+                <div class="info-value"><span class="pdf-text-bold">{{ ecole.nom }}</span></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Adresse:</div>
+                <div class="info-value">{{ ecole.adresse }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Ville:</div>
+                <div class="info-value">{{ ecole.ville }} {{ ecole.codePostal }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Contact:</div>
+                <div class="info-value">
+                    📞 {{ ecole.telephone }}
+                    {% if ecole.email %}
+                        <br>📧 {{ ecole.email }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Statut:</div>
+                <div class="info-value">
+                    <span class="pdf-badge {{ ecole.active ? 'success' : 'danger' }}">
+                        {{ ecole.active ? 'Active' : 'Inactive' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Statistiques globales #}
+    <div class="pdf-section">
+        <div class="section-title">📊 Statistiques Globales</div>
+        <div class="pdf-info-grid">
+            <div class="info-row">
+                <div class="info-label">Nombre de prises de vue:</div>
+                <div class="info-value"><span class="pdf-text-bold">{{ prisesDeVue|length }}</span></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Total élèves photographiés:</div>
+                <div class="info-value">
+                    <span class="pdf-text-bold">
+                        {% set totalEleves = 0 %}
+                        {% for pdv in prisesDeVue %}
+                            {% set totalEleves = totalEleves + pdv.nbEleves %}
+                        {% endfor %}
+                        {{ totalEleves }}
+                    </span>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Dernière prise de vue:</div>
+                <div class="info-value">
+                    {% if prisesDeVue|length > 0 %}
+                        {% set dernierePrise = ecole.dernierePriseDeVue() %}
+                        {% if dernierePrise %}
+                            {{ dernierePrise.datePdv|date('d/m/Y') }}
+                        {% else %}
+                            <em class="pdf-text-muted">Aucune</em>
+                        {% endif %}
+                    {% else %}
+                        <em class="pdf-text-muted">Aucune</em>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Détail des prises de vue #}
+    {% if prisesDeVue|length > 0 %}
+        <div class="pdf-section">
+            <div class="section-title">📸 Détail des Prises de Vue</div>
+            
+            <table class="pdf-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type de prise de vue</th>
+                        <th>Nb Classes</th>
+                        <th>Nb Élèves</th>
+                        <th>Type de vente</th>
+                        <th>Thème</th>
+                        <th>Planches</th>
+                        <th>Prix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for priseDeVue in prisesDeVue %}
+                        <tr class="pdf-no-break">
+                            <td>{{ priseDeVue.datePdv|date('d/m/Y') }}</td>
+                            <td>
+                                {% if priseDeVue.typePrise %}
+                                    {{ priseDeVue.typePrise.libelle }}
+                                {% else %}
+                                    <em class="pdf-small-text">Non spécifié</em>
+                                {% endif %}
+                            </td>
+                            <td class="pdf-text-center">
+                                {% if priseDeVue.nbClasses %}
+                                    {{ priseDeVue.nbClasses }}
+                                {% else %}
+                                    <em class="pdf-small-text">-</em>
+                                {% endif %}
+                            </td>
+                            <td class="pdf-text-center">{{ priseDeVue.nbEleves }}</td>
+                            <td>
+                                {% if priseDeVue.typeVente %}
+                                    {{ priseDeVue.typeVente.libelle }}
+                                {% else %}
+                                    <em class="pdf-small-text">Non spécifié</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if priseDeVue.theme %}
+                                    {{ priseDeVue.theme.libelle }}
+                                {% else %}
+                                    <em class="pdf-small-text">Non spécifié</em>
+                                {% endif %}
+                            </td>
+                            <td class="pdf-small-text">
+                                {# Utilisation de la méthode DTO pour afficher toutes les planches #}
+                                {% set toutesLesPlanchesSélectionnées = priseDeVue.toutesLesPlanchesSélectionnées() %}
+                                {% if toutesLesPlanchesSélectionnées|length > 0 %}
+                                    {% for planche in toutesLesPlanchesSélectionnées %}
+                                        <span class="pdf-text-bold">{{ planche.type|title }}:</span> {{ planche.libelle }}
+                                        {% if planche.entity.prixParents is defined and planche.entity.prixParents %}
+                                            ({{ planche.entity.prixParents }}€)
+                                        {% endif %}
+                                        <br>
+                                    {% endfor %}
+                                {% else %}
+                                    <em class="pdf-text-muted">Aucune planche sélectionnée</em>
+                                {% endif %}
+                            </td>
+                            <td class="pdf-text-right pdf-small-text">
+                                {% if priseDeVue.prixEcole %}
+                                    <span class="pdf-text-bold">École:</span> {{ priseDeVue.prixEcole }}€<br>
+                                {% endif %}
+                                {% if priseDeVue.prixParent %}
+                                    <span class="pdf-text-bold">Parent:</span> {{ priseDeVue.prixParent }}€
+                                {% endif %}
+                                {% if not priseDeVue.prixEcole and not priseDeVue.prixParent %}
+                                    <em class="pdf-text-muted">Non renseigné</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="pdf-section">
+            <div class="section-title">📸 Prises de Vue</div>
+            <p><em class="pdf-text-muted">Aucune prise de vue enregistrée pour cette école.</em></p>
+        </div>
+    {% endif %}
+
+    <div class="pdf-footer">
+        Studio Prunelle - Fiche École {{ ecole.code }} - Généré le {{ dateGeneration|date('d/m/Y à H:i:s') }}
+    </div>
+</body>
+</html> 

@@ -46,8 +46,8 @@ class UserFixtures extends Fixture implements FixtureGroupInterface
             [
                 'nom' => 'Directeur Technique',
                 'username' => 'tech',
-                'email' => 'tech@studio-prunelle.fr',
-                'password' => 'TechAdmin123!',
+                'email' => 'admin@studioprunelle.fr',
+                'password' => 'password',
                 'roles' => ['ROLE_SUPERADMIN']
             ]
         ];

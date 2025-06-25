@@ -422,6 +422,7 @@ class PriseDeVue
     /**
      * Retourne toutes les planches sélectionnées (combinaison de toutes les relations)
      * Méthode pour compatibilité avec les templates existants
+     * Pattern appliqué: DTO Pattern (patterns.md)
      */
     public function toutesLesPlanchesSélectionnées(): array
     {
@@ -429,33 +430,108 @@ class PriseDeVue
         
         // Ajouter les planches directes (Many-to-Many)
         foreach ($this->planches as $planche) {
-            $planches[] = $planche;
+            $planches[] = (object) [
+                'libelle' => $planche->getLibelle(),
+                'type' => 'planche',
+                'icon' => 'bi bi-grid-3x3',
+                'badgeClass' => 'bg-primary',
+                'entity' => $planche
+            ];
         }
         
         // Ajouter les pochettes individuelles comme "planches"
         foreach ($this->pochettesIndiv as $pochetteIndiv) {
-            $planches[] = $pochetteIndiv;
+            $planches[] = (object) [
+                'libelle' => $pochetteIndiv->getLibelle(),
+                'type' => 'individuelle',
+                'icon' => 'bi bi-person',
+                'badgeClass' => 'bg-success',
+                'entity' => $pochetteIndiv
+            ];
         }
         
         // Ajouter les pochettes fratries comme "planches"
         foreach ($this->pochettesFratrie as $pochetteFratrie) {
-            $planches[] = $pochetteFratrie;
+            $planches[] = (object) [
+                'libelle' => $pochetteFratrie->getLibelle(),
+                'type' => 'fratrie',
+                'icon' => 'bi bi-people',
+                'badgeClass' => 'bg-warning text-dark',
+                'entity' => $pochetteFratrie
+            ];
         }
         
         // Compatibilité avec les anciennes relations Many-to-One (deprecated)
-        if ($this->getPochetteIndiv() && !in_array($this->getPochetteIndiv(), $planches, true)) {
-            $planches[] = $this->getPochetteIndiv();
+        if ($this->getPochetteIndiv() && !$this->pochetteIndivAlreadyInArray($planches)) {
+            $pochetteIndiv = $this->getPochetteIndiv();
+            $planches[] = (object) [
+                'libelle' => $pochetteIndiv->getLibelle(),
+                'type' => 'individuelle',
+                'icon' => 'bi bi-person',
+                'badgeClass' => 'bg-success',
+                'entity' => $pochetteIndiv
+            ];
         }
         
-        if ($this->getPochetteFratrie() && !in_array($this->getPochetteFratrie(), $planches, true)) {
-            $planches[] = $this->getPochetteFratrie();
+        if ($this->getPochetteFratrie() && !$this->pochetteFratrieAlreadyInArray($planches)) {
+            $pochetteFratrie = $this->getPochetteFratrie();
+            $planches[] = (object) [
+                'libelle' => $pochetteFratrie->getLibelle(),
+                'type' => 'fratrie',
+                'icon' => 'bi bi-people',
+                'badgeClass' => 'bg-warning text-dark',
+                'entity' => $pochetteFratrie
+            ];
         }
         
-        if ($this->getPlanche() && !in_array($this->getPlanche(), $planches, true)) {
-            $planches[] = $this->getPlanche();
+        if ($this->getPlanche() && !$this->plancheAlreadyInArray($planches)) {
+            $planche = $this->getPlanche();
+            $planches[] = (object) [
+                'libelle' => $planche->getLibelle(),
+                'type' => 'planche',
+                'icon' => 'bi bi-grid-3x3',
+                'badgeClass' => 'bg-primary',
+                'entity' => $planche
+            ];
         }
         
         return $planches;
+    }
+    
+    /**
+     * Méthodes helper pour éviter les doublons
+     */
+    private function pochetteIndivAlreadyInArray(array $planches): bool
+    {
+        $pochetteIndiv = $this->getPochetteIndiv();
+        foreach ($planches as $planche) {
+            if ($planche->entity === $pochetteIndiv) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private function pochetteFratrieAlreadyInArray(array $planches): bool
+    {
+        $pochetteFratrie = $this->getPochetteFratrie();
+        foreach ($planches as $planche) {
+            if ($planche->entity === $pochetteFratrie) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private function plancheAlreadyInArray(array $planches): bool
+    {
+        $planche = $this->getPlanche();
+        foreach ($planches as $plancheItem) {
+            if ($plancheItem->entity === $planche) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

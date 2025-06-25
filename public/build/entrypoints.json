@@ -10,6 +10,14 @@
         "/build/280.fa9c4c04.css",
         "/build/app.fcc6bd0f.css"
       ]
+    },
+    "pdf-export": {
+      "js": [
+        "/build/runtime.79fc3901.js"
+      ],
+      "css": [
+        "/build/pdf-export.21d6efb9.css"
+      ]
     }
   }
 }

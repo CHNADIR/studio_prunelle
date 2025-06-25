@@ -6,6 +6,7 @@ use App\Entity\Ecole;
 use App\Form\EcoleType;
 use App\Security\Voter\EcoleVoter;
 use App\Service\EcoleManager;
+use App\Service\PdfGeneratorService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class EcoleController extends AbstractController
 {
     public function __construct(
-        private readonly EcoleManager $ecoleManager
+        private readonly EcoleManager $ecoleManager,
+        private readonly PdfGeneratorService $pdfGeneratorService
     ) {}
 
     #[Route('/', name: 'admin_ecole_index', methods: ['GET'])]
@@ -87,6 +89,36 @@ class EcoleController extends AbstractController
             'ecole' => $ecole,
             'can_delete' => $this->ecoleManager->canDelete($ecole),
         ]);
+    }
+
+    #[Route('/{id}/export-pdf', name: 'admin_ecole_export_pdf', methods: ['GET'])]
+    #[IsGranted(EcoleVoter::ECOLE_VIEW, subject: 'ecole')]
+    public function exportPdf(Ecole $ecole): Response
+    {
+        // Récupération des prises de vue de l'école
+        $prisesDeVue = $ecole->getPrisesDeVue();
+
+        // Génération du HTML pour le PDF
+        $html = $this->renderView('admin/ecole/export_pdf.html.twig', [
+            'ecole' => $ecole,
+            'prisesDeVue' => $prisesDeVue,
+            'dateGeneration' => new \DateTime(),
+        ]);
+
+        // Génération du nom de fichier
+        $filename = sprintf('ecole_%s_%s.pdf', 
+            $ecole->getCode(), 
+            (new \DateTime())->format('Y-m-d_H-i-s')
+        );
+
+        // Options pour le PDF
+        $options = [
+            'paper' => 'A4',
+            'orientation' => 'portrait',
+            'disposition' => 'inline'
+        ];
+
+        return $this->pdfGeneratorService->generatePdfResponse($html, $filename, $options);
     }
 
     #[Route('/{id}/edit', name: 'admin_ecole_edit', methods: ['GET','POST'])]

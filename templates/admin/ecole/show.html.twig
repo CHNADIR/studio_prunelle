@@ -16,6 +16,9 @@
             <h1><i class="bi bi-building"></i> Fiche École</h1>
         </div>
         <div>
+            <a href="{{ path('admin_ecole_export_pdf', {'id': ecole.id}) }}" class="btn btn-info" target="_blank">
+                <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+            </a>
             <a href="{{ path('admin_ecole_edit', {'id': ecole.id}) }}" class="btn btn-warning">
                 <i class="bi bi-pencil"></i> Modifier
             </a>
@@ -203,7 +206,7 @@
                                             {% set toutesLesPlanchesSélectionnées = prise_de_vue.toutesLesPlanchesSélectionnées() %}
                                             {% if toutesLesPlanchesSélectionnées|length > 0 %}
                                                 {% for planche in toutesLesPlanchesSélectionnées %}
-                                                    <span class="badge {{ planche.type == 'individuelle' ? 'bg-success' : (planche.type == 'fratrie' ? 'bg-warning text-dark' : 'bg-primary') }}">
+                                                    <span class="badge {{ planche.badgeClass }}">
                                                         <i class="{{ planche.icon }}"></i> {{ planche.libelle }}
                                                     </span>
                                                 {% endfor %}
