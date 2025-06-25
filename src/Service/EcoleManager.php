@@ -140,6 +140,13 @@ class EcoleManager
         
         return $ecole;
     }
+    public function edit(): Ecole
+    {
+        $ecole = new Ecole();
+        $ecole->setActive(true);
+        
+        return $ecole;
+    }
 
     /**
      * Recherche d'écoles avec critères
