@@ -420,6 +420,45 @@ class PriseDeVue
     }
 
     /**
+     * Retourne toutes les planches sélectionnées (combinaison de toutes les relations)
+     * Méthode pour compatibilité avec les templates existants
+     */
+    public function toutesLesPlanchesSélectionnées(): array
+    {
+        $planches = [];
+        
+        // Ajouter les planches directes (Many-to-Many)
+        foreach ($this->planches as $planche) {
+            $planches[] = $planche;
+        }
+        
+        // Ajouter les pochettes individuelles comme "planches"
+        foreach ($this->pochettesIndiv as $pochetteIndiv) {
+            $planches[] = $pochetteIndiv;
+        }
+        
+        // Ajouter les pochettes fratries comme "planches"
+        foreach ($this->pochettesFratrie as $pochetteFratrie) {
+            $planches[] = $pochetteFratrie;
+        }
+        
+        // Compatibilité avec les anciennes relations Many-to-One (deprecated)
+        if ($this->getPochetteIndiv() && !in_array($this->getPochetteIndiv(), $planches, true)) {
+            $planches[] = $this->getPochetteIndiv();
+        }
+        
+        if ($this->getPochetteFratrie() && !in_array($this->getPochetteFratrie(), $planches, true)) {
+            $planches[] = $this->getPochetteFratrie();
+        }
+        
+        if ($this->getPlanche() && !in_array($this->getPlanche(), $planches, true)) {
+            $planches[] = $this->getPlanche();
+        }
+        
+        return $planches;
+    }
+
+    /**
      * Représentation textuelle de la prise de vue
      */
     public function __toString(): string

@@ -58,11 +58,11 @@
                     <tbody>
                         {% for prise_de_vue in prises_de_vue %}
                             <tr>
-                                <td>{{ prise_de_vue.datepdv|date('d/m/Y') }}</td>
+                                <td>{{ prise_de_vue.datePdv|date('d/m/Y') }}</td>
                                 <td>{{ prise_de_vue.ecole.nom }}</td>
                                 <td>{{ prise_de_vue.photographe.nom }}</td>
-                                <td>{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.nom : '-' }}</td>
-                                <td>{{ prise_de_vue.theme ? prise_de_vue.theme.nom : '-' }}</td>
+                                <td>{{ prise_de_vue.typePrise ? prise_de_vue.typePrise.libelle : '-' }}</td>
+                                <td>{{ prise_de_vue.theme ? prise_de_vue.theme.libelle : '-' }}</td>
                                 <td>{{ prise_de_vue.nbEleves }}</td>
                                 <td>{{ prise_de_vue.nbClasses }}</td>
                                 <td>
@@ -87,7 +87,7 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    Êtes-vous sûr de vouloir supprimer cette prise de vue du {{ prise_de_vue.datepdv|date('d/m/Y') }} à {{ prise_de_vue.ecole.nom }} ?
+                                                    Êtes-vous sûr de vouloir supprimer cette prise de vue du {{ prise_de_vue.datePdv|date('d/m/Y') }} à {{ prise_de_vue.ecole.nom }} ?
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>

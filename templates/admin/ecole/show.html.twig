@@ -171,36 +171,36 @@
                         </tr>
                     </thead>
                     <tbody>
-                            {% for priseDeVue in ecole.dernieresPrisesDeVue(10) %}
+                            {% for prise_de_vue in ecole.dernieresPrisesDeVue(10) %}
                             <tr>
                                     <td>
-                                        <strong>{{ priseDeVue.datePdv|date('d/m/Y') }}</strong>
-                                        <br><small class="text-muted">{{ priseDeVue.datePdv|date('l') }}</small>
+                                        <strong>{{ prise_de_vue.datePdv|date('d/m/Y') }}</strong>
+                                        <br><small class="text-muted">{{ prise_de_vue.datePdv|date('l') }}</small>
                                     </td>
                                     <td>
-                                        {% if priseDeVue.typePrise %}
-                                            <span class="badge bg-info">{{ priseDeVue.typePrise.libelle }}</span>
+                                        {% if prise_de_vue.typePrise %}
+                                            <span class="badge bg-info">{{ prise_de_vue.typePrise.libelle }}</span>
                                         {% else %}
                                             <span class="text-muted">Non spécifié</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if priseDeVue.theme %}
-                                            <span class="badge bg-secondary">{{ priseDeVue.theme.libelle }}</span>
+                                        {% if prise_de_vue.theme %}
+                                            <span class="badge bg-secondary">{{ prise_de_vue.theme.libelle }}</span>
                                         {% else %}
                                             <span class="text-muted">Non spécifié</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <strong>{{ priseDeVue.nbEleves }}</strong> élèves
-                                        {% if priseDeVue.nbClasses %}
-                                            <br><small class="text-muted">{{ priseDeVue.nbClasses }} classe(s)</small>
+                                        <strong>{{ prise_de_vue.nbEleves }}</strong> élèves
+                                        {% if prise_de_vue.nbClasses %}
+                                            <br><small class="text-muted">{{ prise_de_vue.nbClasses }} classe(s)</small>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <div class="d-flex flex-column gap-1">
                                             {# Affichage des nouvelles relations Many-to-Many (sélection multiple) #}
-                                            {% set toutesLesPlanchesSélectionnées = priseDeVue.toutesLesPlanchesSélectionnées() %}
+                                            {% set toutesLesPlanchesSélectionnées = prise_de_vue.toutesLesPlanchesSélectionnées() %}
                                             {% if toutesLesPlanchesSélectionnées|length > 0 %}
                                                 {% for planche in toutesLesPlanchesSélectionnées %}
                                                     <span class="badge {{ planche.type == 'individuelle' ? 'bg-success' : (planche.type == 'fratrie' ? 'bg-warning text-dark' : 'bg-primary') }}">
@@ -209,37 +209,37 @@
                                                 {% endfor %}
                                             {% else %}
                                                 {# Fallback sur les anciennes relations Many-to-One #}
-                                                {% if priseDeVue.pochetteIndiv %}
+                                                {% if prise_de_vue.pochetteIndiv %}
                                                     <span class="badge bg-success">
-                                                        <i class="bi bi-person"></i> {{ priseDeVue.pochetteIndiv.libelle }}
+                                                        <i class="bi bi-person"></i> {{ prise_de_vue.pochetteIndiv.libelle }}
                                                     </span>
                                                 {% endif %}
-                                                {% if priseDeVue.pochetteFratrie %}
+                                                {% if prise_de_vue.pochetteFratrie %}
                                                     <span class="badge bg-warning text-dark">
-                                                        <i class="bi bi-people"></i> {{ priseDeVue.pochetteFratrie.libelle }}
+                                                        <i class="bi bi-people"></i> {{ prise_de_vue.pochetteFratrie.libelle }}
                                                     </span>
                                                 {% endif %}
-                                                {% if priseDeVue.planche %}
+                                                {% if prise_de_vue.planche %}
                                                     <span class="badge bg-primary">
-                                                        <i class="bi bi-grid-3x3"></i> {{ priseDeVue.planche.libelle }}
+                                                        <i class="bi bi-grid-3x3"></i> {{ prise_de_vue.planche.libelle }}
                                                     </span>
                                                 {% endif %}
-                                                {% if not priseDeVue.pochetteIndiv and not priseDeVue.pochetteFratrie and not priseDeVue.planche %}
+                                                {% if not prise_de_vue.pochetteIndiv and not prise_de_vue.pochetteFratrie and not prise_de_vue.planche %}
                                                     <small class="text-muted">Aucune planche sélectionnée</small>
                                                 {% endif %}
                                             {% endif %}
                                         </div>
                                     </td>
                                     <td>
-                                        {% if priseDeVue.prixEcole %}
-                                            <strong class="text-success">{{ priseDeVue.prixEcole|number_format(2, ',', ' ') }} €</strong>
+                                        {% if prise_de_vue.prixEcole %}
+                                            <strong class="text-success">{{ prise_de_vue.prixEcole|number_format(2, ',', ' ') }} €</strong>
                                         {% else %}
                                             <span class="text-muted">Non défini</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if priseDeVue.prixParent %}
-                                            <strong class="text-primary">{{ priseDeVue.prixParent|number_format(2, ',', ' ') }} €</strong>
+                                        {% if prise_de_vue.prixParent %}
+                                            <strong class="text-primary">{{ prise_de_vue.prixParent|number_format(2, ',', ' ') }} €</strong>
                                         {% else %}
                                             <span class="text-muted">Non défini</span>
                                         {% endif %}
@@ -247,16 +247,16 @@
                                     <td>
                                         <small>
                                             <i class="bi bi-person-badge"></i> 
-                                            {{ priseDeVue.photographe.nom }}
+                                            {{ prise_de_vue.photographe.nom }}
                                         </small>
                                     </td>
                                     <td>
                                         <div class="btn-group-vertical" role="group">
-                                            <a href="{{ path('admin_prise_de_vue_show', {'id': priseDeVue.id}) }}" 
+                                            <a href="{{ path('admin_prise_de_vue_show', {'id': prise_de_vue.id}) }}" 
                                                class="btn btn-sm btn-outline-info" title="Voir détails">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ path('admin_prise_de_vue_edit', {'id': priseDeVue.id}) }}" 
+                                            <a href="{{ path('admin_prise_de_vue_edit', {'id': prise_de_vue.id}) }}" 
                                                class="btn btn-sm btn-outline-warning" title="Modifier">
                                                 <i class="bi bi-pencil"></i>
                                     </a>
